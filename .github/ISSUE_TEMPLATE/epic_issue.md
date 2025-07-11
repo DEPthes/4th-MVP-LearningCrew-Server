@@ -1,9 +1,10 @@
 ---
-name: "Epic 이슈"
-description: "여러 하위 이슈를 포함하는 Epic 이슈 템플릿입니다."
+name: Epic 이슈
+about: 에픽 이슈 생성을 위한 템플릿
 title: "[Epic] "
-labels: ["epic"]
-assignees: []
+labels: ''
+assignees: ''
+
 ---
 
 ## 🏆 Epic 개요
