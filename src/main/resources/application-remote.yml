@@ -1,0 +1,21 @@
+spring:
+  h2:
+    console:
+      enabled: true
+
+  datasource:
+    url: jdbc:mariadb://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  # jpa설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+# 로그 레벨 설정
+logging:
+  level:
+    org.hibernate.SQL: off
+    org.hibernate.type: off # 실제 들어가는 파라미터값 찍어주는 설정
