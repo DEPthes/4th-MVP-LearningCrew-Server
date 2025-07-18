@@ -11,6 +11,7 @@ spring:
 
   # jpa설정
   jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
     properties: # property 사용 설정
