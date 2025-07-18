@@ -1,8 +1,8 @@
 package com.depth.learningcrew.system.configuration.security;
 
 import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
-import com.depth.learningcrew.system.security.utility.JwtTokenProvider;
-import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
+import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
+import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;

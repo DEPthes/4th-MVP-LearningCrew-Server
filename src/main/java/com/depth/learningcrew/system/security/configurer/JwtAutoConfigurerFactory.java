@@ -1,7 +1,7 @@
 package com.depth.learningcrew.system.security.configurer;
 
 import com.depth.learningcrew.system.security.service.UserLoadService;
-import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
+import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 

@@ -2,7 +2,7 @@ package com.depth.learningcrew.system.security.configurer;
 
 import com.depth.learningcrew.system.security.filter.JwtAuthenticationFilter;
 import com.depth.learningcrew.system.security.service.UserLoadService;
-import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
+import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.config.Customizer;

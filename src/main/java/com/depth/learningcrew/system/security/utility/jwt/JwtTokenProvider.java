@@ -1,4 +1,4 @@
-package com.depth.learningcrew.system.security.utility;
+package com.depth.learningcrew.system.security.utility.jwt;
 
 import com.depth.learningcrew.system.security.model.AuthDetails;
 import com.depth.learningcrew.system.security.model.JwtDto;

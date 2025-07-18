@@ -4,7 +4,7 @@ import com.depth.learningcrew.system.security.exception.JwtAuthenticationExcepti
 import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException;
 import com.depth.learningcrew.system.security.exception.JwtTokenMissingException;
 import com.depth.learningcrew.system.security.service.UserLoadService;
-import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
+import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
