@@ -14,8 +14,8 @@ import java.time.LocalDate;
 @Table(name = "USER")
 public class User extends TimeStampedEntity {
     @Id @Setter(AccessLevel.NONE)
-    @Column(name= "id", length = 50)
-    private String email;
+    @Column(length = 50)
+    private String id;
 
     @Column(nullable=false, length = 50)
     private String password;
