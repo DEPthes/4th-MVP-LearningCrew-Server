@@ -3,6 +3,7 @@ package com.depth.learningcrew.system.configuration.security;
 import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
+import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +21,13 @@ import java.security.Key;
 public class JwtConfig {
     private final Key secret;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private final RedisUtil redisUtil;
 
     public JwtConfig(
-            HandlerExceptionResolver handlerExceptionResolver,
             @Value("${jwt.secret:#{null}}")
-            String secretText
+            String secretText,
+            HandlerExceptionResolver handlerExceptionResolver,
+            RedisUtil redisUtil
     ) {
         if(StringUtils.hasText(secretText) && secretText.length() < 32) {
             throw new IllegalStateException("Jwt Secret 은 32자 이상이어야 합니다.");
@@ -38,6 +41,7 @@ public class JwtConfig {
         }
 
         this.handlerExceptionResolver = handlerExceptionResolver;
+        this.redisUtil = redisUtil;
     }
 
     @Bean
@@ -49,7 +53,7 @@ public class JwtConfig {
     @Bean
     @ConditionalOnMissingBean
     public JwtTokenResolver jwtTokenResolver() {
-        return new JwtTokenResolver(secret);
+        return new JwtTokenResolver(secret, redisUtil);
     }
 
     @Bean
