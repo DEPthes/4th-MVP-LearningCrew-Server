@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.configuration.security;
 
+import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
 import com.depth.learningcrew.system.security.utility.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -49,5 +50,11 @@ public class JwtConfig {
     @ConditionalOnMissingBean
     public JwtTokenResolver jwtTokenResolver() {
         return new JwtTokenResolver(secret);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public JwtAutoConfigurerFactory jwtAutoConfigurerFactory() {
+        return new JwtAutoConfigurerFactory(this.handlerExceptionResolver, jwtTokenResolver());
     }
 }
