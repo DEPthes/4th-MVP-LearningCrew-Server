@@ -1,6 +1,7 @@
 package com.depth.learningcrew.system.security.filter;
 
 import com.depth.learningcrew.system.security.exception.JwtAuthenticationException;
+import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
 import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException;
 import com.depth.learningcrew.system.security.exception.JwtTokenMissingException;
 import com.depth.learningcrew.system.security.service.UserLoadService;
@@ -42,14 +43,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String token = jwtTokenResolver.parseTokenFromRequest(request)
                         .orElseThrow(JwtTokenMissingException::new);
 
-                // var 쓰는 기준 : 타입이 뻔히 보이는 경우, 길어서 가독성 해치는 경우
+                if (!jwtTokenResolver.validateToken(token)) {throw new JwtBlacklistedTokenException();}
+
                 var parsedTokenData = jwtTokenResolver.resolveTokenFromString(token);
                 var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
 
-                if(userDetails.isEmpty()) {
-                    throw new JwtInvalidTokenException();
-                }
+                if(userDetails.isEmpty()) {throw new JwtInvalidTokenException();}
 
+                /* 추후 리팩토링 고려 지점 -> JwtTokenProvider에서 getAuthentication을 하는게 가독성 측면에선 깔끔
+                *  Resolver와 Provider의 역할을 분리하는게 맞는지 고민 필요
+                *  SRP에 의하면 분리하는게 맞긴한데, 가독성까지 챙겨가자니 DI가 너무 가중됨
+                *  만약 Provider에서 Validation과 getAuthentication을 모두 처리한다면 8줄을 날릴 수 있음
+                *  대신 Provider가 너무 많은 책임을 가지게 됨
+                */
                 SecurityContextHolder.getContext()
                         .setAuthentication(
                                 new UsernamePasswordAuthenticationToken(
@@ -58,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         userDetails.get().getAuthorities()
                                 )
                         );
+
                 filterChain.doFilter(request, response);
             }catch (Exception e) {
                 if (e instanceof JwtAuthenticationException) {
