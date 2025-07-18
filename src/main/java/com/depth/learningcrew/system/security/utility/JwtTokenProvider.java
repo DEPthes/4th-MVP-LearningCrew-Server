@@ -5,6 +5,7 @@ import com.depth.learningcrew.system.security.model.JwtDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.security.Key;
 import java.time.LocalDateTime;
@@ -15,18 +16,24 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final Key secret;
 
-    public JwtDto.TokenData createToken(AuthDetails authDetails, Long expiration, TokenType tokenType) {
+    @Value("${jwt.access-token-expiration-minutes}")
+    private Long accessTokenExpirationMinutes;
+
+    @Value("${jwt.refresh-token-expiration-weeks}")
+    private Long refreshTokenExpirationWeeks;
+
+    public JwtDto.TokenData createToken(AuthDetails authDetails, TokenType tokenType) {
         Claims claims = Jwts.claims().setSubject(authDetails.getName());
 
         LocalDateTime expireLocalDateTime;
         switch (tokenType) {
             case ACCESS -> {
                 claims.put("tokenType", "ACCESS");
-                expireLocalDateTime = LocalDateTime.now().plusMinutes(expiration);
+                expireLocalDateTime = LocalDateTime.now().plusMinutes(accessTokenExpirationMinutes);
             }
             case REFRESH -> {
                 claims.put("tokenType", "REFRESH");
-                expireLocalDateTime = LocalDateTime.now().plusWeeks(expiration);
+                expireLocalDateTime = LocalDateTime.now().plusWeeks(refreshTokenExpirationWeeks);
             }
             default -> throw new IllegalArgumentException("Unknown token type: " + tokenType);
         }
