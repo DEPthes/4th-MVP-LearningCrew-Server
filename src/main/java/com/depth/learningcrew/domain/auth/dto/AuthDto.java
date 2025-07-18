@@ -39,5 +39,19 @@ public class AuthDto {
 
         @Schema(description = "Refresh Token 만료 시간")
         private LocalDateTime refreshTokenExpiresAt;
+
+        public static TokenInfo of(
+                String accessToken,
+                String refreshToken,
+                LocalDateTime accessTokenExpiresAt,
+                LocalDateTime refreshTokenExpiresAt
+        ) {
+            return TokenInfo.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .accessTokenExpiresAt(accessTokenExpiresAt)
+                    .refreshTokenExpiresAt(refreshTokenExpiresAt)
+                    .build();
+        }
     }
 }
