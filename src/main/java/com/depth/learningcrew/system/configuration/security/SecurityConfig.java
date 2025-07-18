@@ -34,7 +34,6 @@ public class SecurityConfig {
                     it.excludePath("/api/auth/register");
                     it.excludePath("/api/auth/login");
                     it.excludePath("/api/auth/id-exist");
-                    it.excludePath("/api/auth/token/refresh");
                 })
                 .configure(httpSecurity);
 
