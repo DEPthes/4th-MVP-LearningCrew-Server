@@ -4,6 +4,7 @@ package com.depth.learningcrew.system.exception.handler;
 import com.depth.learningcrew.system.exception.dto.ErrorDto;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
+import com.depth.learningcrew.system.security.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,44 +22,44 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-//    @ExceptionHandler({JwtTokenMissingException.class})
-//    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtTokenMissingException() {
-//
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_NOT_FOUND));
-//    }
-//
-//    @ExceptionHandler({JwtTokenExpiredException.class})
-//    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtTokenExpiredException() {
-//
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_EXPIRED));
-//    }
-//
-//    @ExceptionHandler({JwtAuthenticationException.class})
-//    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtAuthenticationException() {
-//
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_INVALID));
-//    }
+    @ExceptionHandler({JwtTokenMissingException.class})
+    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtTokenMissingException() {
 
-//    @ExceptionHandler({JwtInvalidTokenException.class})
-//    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtInvalidTokenException() {
-//
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_INVALID));
-//    }
-//    @ExceptionHandler({JwtParseException.class})
-//    public ResponseEntity<ErrorDto.ErrorResponse> handleJJwtParseException() {
-//
-//        return ResponseEntity
-//                .status(HttpStatus.UNAUTHORIZED)
-//                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_MALFORMED));
-//    }
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_NOT_FOUND));
+    }
+
+    @ExceptionHandler({JwtTokenExpiredException.class})
+    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtTokenExpiredException() {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_EXPIRED));
+    }
+
+    @ExceptionHandler({JwtAuthenticationException.class})
+    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtAuthenticationException() {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_INVALID));
+    }
+
+    @ExceptionHandler({JwtInvalidTokenException.class})
+    public ResponseEntity<ErrorDto.ErrorResponse> handleJwtInvalidTokenException() {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_INVALID));
+    }
+    @ExceptionHandler({JwtParseException.class})
+    public ResponseEntity<ErrorDto.ErrorResponse> handleJJwtParseException() {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorDto.ErrorResponse.from(ErrorCode.AUTH_TOKEN_MALFORMED));
+    }
 
     @ExceptionHandler({HttpMessageConversionException.class})
     public ResponseEntity<ErrorDto.ErrorResponse> handleRestException() {
