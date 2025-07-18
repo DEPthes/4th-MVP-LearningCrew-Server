@@ -1,9 +1,13 @@
 package com.depth.learningcrew.system.configuration.security;
 
+import com.depth.learningcrew.system.security.utility.JwtTokenProvider;
+import com.depth.learningcrew.system.security.utility.JwtTokenResolver;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -33,5 +37,17 @@ public class JwtConfig {
         }
 
         this.handlerExceptionResolver = handlerExceptionResolver;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public JwtTokenProvider jwtTokenProvider() {
+        return new JwtTokenProvider(secret);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public JwtTokenResolver jwtTokenResolver() {
+        return new JwtTokenResolver(secret);
     }
 }
