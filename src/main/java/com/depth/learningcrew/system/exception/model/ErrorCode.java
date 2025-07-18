@@ -37,6 +37,7 @@ public enum ErrorCode {
     AUTH_USER_NOT_FOUND(404, "등록된 유저를 찾을 수 없습니다."),
     AUTH_FORBIDDEN(403, "접근 권한이 없습니다."),
     AUTH_CANNOT_GENERATE_TOKEN(400, "인증키를 생성 할 수 없습니다."),
+    AUTH_TOKEN_MISSING(401, "JWT 토큰이 누락되었습니다."),
 
     // File
     FILE_ALREADY_EXISTS(400, "파일이 이미 존재합니다."),
