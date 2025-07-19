@@ -1,10 +1,7 @@
 package com.depth.learningcrew.domain.auth.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +11,7 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @Getter
     @Schema(description = "토큰 재발행 DTO")
     public static class RecreateRequest {
         @Schema(description = "확인할 ID", example = "dev1234")
@@ -26,6 +24,7 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @Getter
     @Schema(description = "토큰 정보 DTO")
     public static class TokenInfo {
         @Schema(description = "발급된 Access Token")
