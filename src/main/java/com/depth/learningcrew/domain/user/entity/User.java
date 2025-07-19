@@ -3,17 +3,18 @@ package com.depth.learningcrew.domain.user.entity;
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
 @Entity
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Setter
-@Table(name = "USER")
+@Table(name = "users")
 public class User extends TimeStampedEntity {
-    @Id @Setter(AccessLevel.NONE)
+    @Id
     @Column(length = 50)
     private String id;
 
