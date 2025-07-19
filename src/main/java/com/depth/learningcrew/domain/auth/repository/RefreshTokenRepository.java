@@ -1,15 +1,16 @@
-package com.depth.learningcrew.domain.auth.service;
+package com.depth.learningcrew.domain.auth.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
-@Service
+@Repository
 @RequiredArgsConstructor
-public class RefreshTokenService {
+public class RefreshTokenRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
