@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Table(name = "users")
+@Table(name = "USER_ACCOUNT")
 public class User extends TimeStampedEntity {
     @Id
     @Column(length = 50)
