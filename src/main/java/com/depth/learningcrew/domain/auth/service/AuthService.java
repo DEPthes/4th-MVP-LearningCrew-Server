@@ -37,18 +37,18 @@ public class AuthService {
                 .map(UserDetails::from)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_USER_NOT_FOUND));
 
-        Object storedRefreshToken = refreshTokenRepository.getRefreshToken(id);
+        Object storedRefreshToken = refreshTokenRepository.getById(id);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new RestException(ErrorCode.AUTH_TOKEN_INVALID);
         }
 
         // 기존 Refresh Token 제거 (RTR 정책)
-        refreshTokenRepository.deleteRefreshToken(id);
+        refreshTokenRepository.deleteById(id);
 
         // Access Token -> Blacklist
         String accessToken = jwtTokenResolver.parseTokenFromRequest(httpRequest)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
-        redisUtil.setBlackList(accessToken, 30); //
+        redisUtil.setBlackList(accessToken, TokenType.ACCESS); //
 
         if(!redisUtil.hasKeyBlackList(accessToken)) {
             throw new JwtBlacklistedTokenException("Access Token 이 블랙리스트에 등록되지 않았습니다.");
@@ -57,7 +57,7 @@ public class AuthService {
         var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
         var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
 
-        refreshTokenRepository.storeRefreshToken(id, newRefreshToken.getTokenString());
+        refreshTokenRepository.setByIdAndRtk(id, newRefreshToken);
 
         return AuthDto.TokenInfo.of(
                 newAccessToken.getTokenString(),

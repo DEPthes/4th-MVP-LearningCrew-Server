@@ -1,32 +1,39 @@
 package com.depth.learningcrew.domain.auth.repository;
 
+import com.depth.learningcrew.system.security.utility.jwt.TokenType;
 import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+
+import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
 public class BlacklistTokenRepository {
 
-    @Value("${jwt.access-token-expiration-minutes}")
-    private int accessTokenExpirationMinutes;
-
     private final RedisUtil redisUtil;
 
-    public void add(String  token) {
-        redisUtil.setBlackList(token, accessTokenExpirationMinutes);
+    public void setByAtk(String  token) {
+        redisUtil.setBlackList(token, TokenType.ACCESS);
     }
 
-    public boolean exists(String token) {
+    public Object getByAtk(String token) {
+        return redisUtil.getBlackList(token);
+    }
+
+    public boolean existsByAtk(String token) {
         return redisUtil.hasKeyBlackList(token);
     }
 
-    public boolean delete(String token) {
+    public boolean deleteByAtk(String token) {
         return redisUtil.deleteBlackList(token);
     }
 
-    public long getTTL(String token) {
-        return redisUtil.getExpire(token, null);
+    public boolean hasKeyByAtk(String token) {
+        return redisUtil.hasKeyBlackList(token);
+    }
+
+    public long getExpireByAtk(String token) {
+        return redisUtil.getBlacklistExpire(token, TimeUnit.SECONDS);
     }
 }

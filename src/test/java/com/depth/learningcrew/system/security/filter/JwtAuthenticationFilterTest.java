@@ -84,7 +84,7 @@ class JwtAuthenticationFilterTest {
         accessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS).getTokenString();
         refreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH).getTokenString();
 
-        refreshTokenRepository.storeRefreshToken(userId, refreshToken);
+        refreshTokenRepository.setByIdAndRtk(userId, refreshToken);
     }
 
     @AfterEach
@@ -99,7 +99,7 @@ class JwtAuthenticationFilterTest {
         assertThat(accessToken).isNotBlank();
         assertThat(refreshToken).isNotBlank();
 
-        String storedRefresh = (String) refreshTokenRepository.getRefreshToken(userId);
+        String storedRefresh = (String) refreshTokenRepository.getById(userId);
         assertThat(storedRefresh).isEqualTo(refreshToken);
     }
 
@@ -107,8 +107,8 @@ class JwtAuthenticationFilterTest {
     @Order(2)
     @DisplayName("2. Refresh Token으로 Access/Refresh Token 재발행 후 검증")
     void testTokenRecreationProperly() {
-        refreshTokenRepository.deleteRefreshToken(userId);
-        assertThat(refreshTokenRepository.getRefreshToken(userId)).isNull();
+        refreshTokenRepository.deleteById(userId);
+        assertThat(refreshTokenRepository.getById(userId)).isNull();
 
         UserDetails userDetails = userRepository.findById(userId)
                 .map(UserDetails::from)
@@ -117,10 +117,10 @@ class JwtAuthenticationFilterTest {
         var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
         var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
 
-        refreshTokenRepository.storeRefreshToken(userId, newRefreshToken.getTokenString());
+        refreshTokenRepository.setByIdAndRtk(userId, newRefreshToken);
 
-        String storedRefresh = (String) refreshTokenRepository.getRefreshToken(userId);
-        assertThat(storedRefresh).isEqualTo(newRefreshToken.getTokenString());
+        String storedRefresh = (String) refreshTokenRepository.getById(userId);
+        assertThat(storedRefresh).isEqualTo(newRefreshToken);
 
         boolean isAccessTokenValid = jwtTokenResolver.validateToken(newAccessToken.getTokenString());
         assertThat(isAccessTokenValid).isTrue();
@@ -144,7 +144,7 @@ class JwtAuthenticationFilterTest {
 
         // then
         // 1. 이전 Refresh Token 삭제 여부
-        assertThat(refreshTokenRepository.getRefreshToken(userId)).isEqualTo(tokenInfo.getRefreshToken());
+        assertThat(refreshTokenRepository.getById(userId)).isEqualTo(tokenInfo.getRefreshToken());
 
         // 2. Access Token Blacklist 등록 확인
         assertThat(redisUtil.hasKeyBlackList(accessToken)).isTrue();
@@ -158,11 +158,11 @@ class JwtAuthenticationFilterTest {
 
     @Test
     @Order(4)
-    @DisplayName("4. Access Token Blacklist TTL은 30분")
+    @DisplayName("4. Access Token Blacklist TTL은 30분 (application-test.yml 설정)")
     void testBlacklistTTL() {
-        redisUtil.setBlackList(accessToken, 30);
+        redisUtil.setBlackList(accessToken, TokenType.ACCESS);
 
-        Long ttl = redisUtil.getExpire(accessToken, TimeUnit.MINUTES);
+        Long ttl = redisUtil.getBlacklistExpire(accessToken, TimeUnit.MINUTES);
         assertThat(ttl).isBetween(29L, 30L);
     }
 
@@ -217,7 +217,7 @@ class JwtAuthenticationFilterTest {
                 exceptionResolver
         );
 
-        redisUtil.setBlackList(accessToken, 30);
+        redisUtil.setBlackList(accessToken, TokenType.ACCESS);
 
         when(mockJwtTokenResolver.parseTokenFromRequest(any())).thenReturn(Optional.of(accessToken));
         when(mockJwtTokenResolver.validateToken(accessToken)).thenCallRealMethod();

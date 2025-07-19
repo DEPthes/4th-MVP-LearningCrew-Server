@@ -1,10 +1,12 @@
 package com.depth.learningcrew.system.security.utility.redis;
 
+import com.depth.learningcrew.system.security.utility.jwt.TokenType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -13,41 +15,62 @@ public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisTemplate<String, Object> redisBlackListTemplate;
 
-    public void set(String key, Object o, int minutes) {
-        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(o.getClass()));
-        redisTemplate.opsForValue().set(key, o, minutes, TimeUnit.MINUTES);
+    @Value("${jwt.access-token-expiration-minutes}")
+    private long accessTokenExpirationMinutes;
+
+    @Value("${jwt.refresh-token-expiration-weeks}")
+    private long refreshTokenExpirationWeeks;
+
+    /* Refresh Token Redis Utils */
+    public void setRefreshToken(String key, Object refreshToken) {
+        redisTemplate.opsForValue().set(key, refreshToken, getExpirationSeconds(TokenType.REFRESH), TimeUnit.SECONDS);
     }
 
-    public Object get(String key) {
-        return redisTemplate.opsForValue().get(key);
+    public Object getRefreshToken(String key) {
+        return redisTemplate.opsForValue().get(getRefreshKey(key));
     }
 
-    public boolean delete(String key) {
-        return redisTemplate.delete(key);
+    public boolean deleteRefreshToken(String key) {
+        return redisTemplate.delete(getRefreshKey(key));
     }
 
-    public boolean hasKey(String key) {
-        return redisTemplate.hasKey(key);
+    public boolean hasKeyRefreshToken(String key) {
+        return redisTemplate.hasKey(getRefreshKey(key));
     }
 
-    public void setBlackList(String key, int minutes) {
-        redisBlackListTemplate.opsForValue().set(key, "accessToken", minutes, TimeUnit.MINUTES);
+    public long getRefreshTokenExpire(String key, TimeUnit timeUnit) {
+        return redisTemplate.getExpire(getRefreshKey(key), timeUnit);
     }
 
-    public Object getBlackList(String key) {
-        return redisBlackListTemplate.opsForValue().get(key);
+    /* Blacklist Token Redis Utils */
+    public void setBlackList(String accessToken, TokenType tokenType) {
+        redisBlackListTemplate.opsForValue().set(accessToken, "access_token", getExpirationSeconds(tokenType), TimeUnit.SECONDS);
     }
 
-    public boolean deleteBlackList(String key) {
-        return redisBlackListTemplate.delete(key);
+    public Object getBlackList(String accessToken) {
+        return redisBlackListTemplate.opsForValue().get(accessToken);
     }
 
-    public boolean hasKeyBlackList(String key) {
-        return redisBlackListTemplate.hasKey(key);
+    public boolean deleteBlackList(String accessToken) {
+        return redisBlackListTemplate.delete(accessToken);
     }
 
-    public long getExpire(String key, TimeUnit timeUnit) {
-        return redisBlackListTemplate.getExpire(key, timeUnit);
+    public boolean hasKeyBlackList(String accessToken) {
+        return redisBlackListTemplate.hasKey(accessToken);
     }
 
+    public long getBlacklistExpire(String accessToken, TimeUnit timeUnit) {
+        return redisBlackListTemplate.getExpire(accessToken, timeUnit);
+    }
+
+    private long getExpirationSeconds(TokenType tokenType) {
+        return switch (tokenType) {
+            case ACCESS -> Duration.ofMinutes(accessTokenExpirationMinutes).getSeconds();
+            case REFRESH -> Duration.ofDays(refreshTokenExpirationWeeks * 7).getSeconds();
+        };
+    }
+
+    private String getRefreshKey(String key) {
+        return "refresh_token:" + key;
+    }
 }

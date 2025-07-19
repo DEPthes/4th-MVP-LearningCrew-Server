@@ -1,5 +1,7 @@
 package com.depth.learningcrew.domain.auth.repository;
 
+import com.depth.learningcrew.system.security.utility.jwt.TokenType;
+import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -7,31 +9,31 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
 public class RefreshTokenRepository {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisUtil redisUtil;
 
-    @Value("${jwt.refresh-token-expiration-weeks}")
-    private Long refreshTokenExpirationWeeks;
-
-    public void storeRefreshToken(String userKey, String refreshToken) {
-
-        long expirationSeconds = Duration.ofDays(refreshTokenExpirationWeeks*7).getSeconds();
-        redisTemplate.opsForValue().set(getRefreshKey(userKey), refreshToken, Duration.ofSeconds(expirationSeconds));
+    public void setByIdAndRtk(String userKey, Object refreshToken) {
+        redisUtil.setRefreshToken(userKey, refreshToken);
     }
 
-    public Object getRefreshToken(String userKey) {
-        return redisTemplate.opsForValue().get(getRefreshKey(userKey));
+    public Object getById(String userKey) {
+        return redisUtil.getRefreshToken(userKey);
     }
 
-    public void deleteRefreshToken(String userKey) {
-        redisTemplate.delete(getRefreshKey(userKey));
+    public void deleteById(String userKey) {
+        redisUtil.deleteRefreshToken(userKey);
     }
 
-    private String getRefreshKey(String userKey) {
-        return "refresh_token:" + userKey;
+    public boolean existsById(String userKey) {
+        return redisUtil.hasKeyRefreshToken(userKey);
+    }
+
+    public long getExpireById(String userKey, TimeUnit timeUnit) {
+        return redisUtil.getRefreshTokenExpire(userKey, timeUnit);
     }
 }
