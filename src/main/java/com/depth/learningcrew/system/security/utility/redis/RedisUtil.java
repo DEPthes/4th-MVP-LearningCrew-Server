@@ -46,4 +46,8 @@ public class RedisUtil {
         return redisBlackListTemplate.hasKey(key);
     }
 
+    public long getExpire(String key, TimeUnit timeUnit) {
+        return redisBlackListTemplate.getExpire(key, timeUnit);
+    }
+
 }
