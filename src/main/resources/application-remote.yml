@@ -11,11 +11,22 @@ spring:
 
   # jpa설정
   jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
 # 로그 레벨 설정
 logging:
   level:
     org.hibernate.SQL: off
     org.hibernate.type: off # 실제 들어가는 파라미터값 찍어주는 설정
+
+jwt:
+  secret: ${JWT_SECRET_KEY} # base64 encoded & len > 32 여야함
+  access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:30}
+  refresh-token-expiration-weeks: ${JWT_REFRESH_TOKEN_EXPIRATION_WEEKS:2}
