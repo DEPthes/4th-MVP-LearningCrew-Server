@@ -1,6 +1,7 @@
 package com.depth.learningcrew.domain.auth.service;
 
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
+import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
 import com.depth.learningcrew.domain.auth.repository.RefreshTokenRepository;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
@@ -22,8 +23,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RedisUtil redisUtil;
     private final JwtTokenResolver jwtTokenResolver;
+    private final BlacklistTokenRepository blacklistTokenRepository;
 
     @Transactional
     public AuthDto.TokenInfo recreateToken(
@@ -48,9 +49,9 @@ public class AuthService {
         // Access Token -> Blacklist
         String accessToken = jwtTokenResolver.parseTokenFromRequest(httpRequest)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
-        redisUtil.setBlackList(accessToken, TokenType.ACCESS); //
+        blacklistTokenRepository.setByAtk(accessToken);
 
-        if(!redisUtil.hasKeyBlackList(accessToken)) {
+        if(!blacklistTokenRepository.existsByAtk(accessToken)) {
             throw new JwtBlacklistedTokenException("Access Token 이 블랙리스트에 등록되지 않았습니다.");
         }
 

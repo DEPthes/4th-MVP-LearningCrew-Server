@@ -1,6 +1,7 @@
 package com.depth.learningcrew.system.security.filter;
 
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
+import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
 import com.depth.learningcrew.domain.auth.service.AuthService;
 import com.depth.learningcrew.domain.auth.repository.RefreshTokenRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
@@ -14,7 +15,6 @@ import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
-import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.*;
@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -45,11 +44,11 @@ class JwtAuthenticationFilterTest {
 
     @Autowired JwtTokenProvider jwtTokenProvider;
     @Autowired RefreshTokenRepository refreshTokenRepository;
-    @Autowired RedisUtil redisUtil;
     @Autowired UserLoadService userLoadService;
     @Autowired JwtTokenResolver jwtTokenResolver;
     @Autowired AuthService authService;
     @Autowired UserRepository userRepository;
+    @Autowired BlacklistTokenRepository blacklistTokenRepository;
 
     JwtAuthenticationFilter jwtAuthenticationFilter;
     HandlerExceptionResolver exceptionResolver;
@@ -147,7 +146,7 @@ class JwtAuthenticationFilterTest {
         assertThat(refreshTokenRepository.getById(userId)).isEqualTo(tokenInfo.getRefreshToken());
 
         // 2. Access Token Blacklist 등록 확인
-        assertThat(redisUtil.hasKeyBlackList(accessToken)).isTrue();
+        assertThat(blacklistTokenRepository.existsByAtk(accessToken)).isTrue();
 
         // 3. 새 Access/Refresh Token 이 정상 생성되었는지
         assertThat(tokenInfo.getAccessToken()).isNotBlank();
@@ -160,10 +159,10 @@ class JwtAuthenticationFilterTest {
     @Order(4)
     @DisplayName("4. Access Token Blacklist TTL은 30분 (application-test.yml 설정)")
     void testBlacklistTTL() {
-        redisUtil.setBlackList(accessToken, TokenType.ACCESS);
+        blacklistTokenRepository.setByAtk(accessToken);
 
-        Long ttl = redisUtil.getBlacklistExpire(accessToken, TimeUnit.MINUTES);
-        assertThat(ttl).isBetween(29L, 30L);
+        Long ttl = blacklistTokenRepository.getExpireByAtk(accessToken);
+        assertThat(ttl).isBetween(29*60L, 30*60L);
     }
 
     @Test
@@ -217,7 +216,7 @@ class JwtAuthenticationFilterTest {
                 exceptionResolver
         );
 
-        redisUtil.setBlackList(accessToken, TokenType.ACCESS);
+        blacklistTokenRepository.setByAtk(accessToken);
 
         when(mockJwtTokenResolver.parseTokenFromRequest(any())).thenReturn(Optional.of(accessToken));
         when(mockJwtTokenResolver.validateToken(accessToken)).thenCallRealMethod();
