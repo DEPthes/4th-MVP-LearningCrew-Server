@@ -33,7 +33,7 @@ public class BlacklistTokenRepository {
         return redisUtil.hasKeyBlackList(token);
     }
 
-    public long getExpireByAtk(String token) {
-        return redisUtil.getBlacklistExpire(token, TimeUnit.SECONDS);
+    public long getExpireByAtk(String token, TimeUnit timeUnit) {
+        return redisUtil.getBlacklistExpire(token, timeUnit);
     }
 }

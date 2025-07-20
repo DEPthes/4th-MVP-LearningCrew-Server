@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -161,8 +162,8 @@ class JwtAuthenticationFilterTest {
     void testBlacklistTTL() {
         blacklistTokenRepository.setByAtk(accessToken);
 
-        Long ttl = blacklistTokenRepository.getExpireByAtk(accessToken);
-        assertThat(ttl).isBetween(29*60L, 30*60L);
+        Long ttl = blacklistTokenRepository.getExpireByAtk(accessToken, TimeUnit.MINUTES);
+        assertThat(ttl).isBetween(29L, 30L);
     }
 
     @Test
