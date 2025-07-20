@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  learnit:
+    container_name: learnit
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - mariadb_net
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - TZ=Asia/Seoul
+    volumes:
+      - ${DEPLOY_PATH}/uploaded:/uploaded
+
+networks:
+  mariadb_net:
+    external: true
