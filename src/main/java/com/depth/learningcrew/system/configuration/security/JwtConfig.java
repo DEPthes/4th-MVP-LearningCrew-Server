@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.configuration.security;
 
+import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
 import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
@@ -21,13 +22,13 @@ import java.security.Key;
 public class JwtConfig {
     private final Key secret;
     private final HandlerExceptionResolver handlerExceptionResolver;
-    private final RedisUtil redisUtil;
+    private final BlacklistTokenRepository blacklistTokenRepository;
 
     public JwtConfig(
             @Value("${jwt.secret:#{null}}")
             String secretText,
             HandlerExceptionResolver handlerExceptionResolver,
-            RedisUtil redisUtil
+            BlacklistTokenRepository blacklistTokenRepository
     ) {
         if(StringUtils.hasText(secretText) && secretText.length() < 32) {
             throw new IllegalStateException("Jwt Secret 은 32자 이상이어야 합니다.");
@@ -41,7 +42,7 @@ public class JwtConfig {
         }
 
         this.handlerExceptionResolver = handlerExceptionResolver;
-        this.redisUtil = redisUtil;
+        this.blacklistTokenRepository = blacklistTokenRepository;
     }
 
     @Bean
@@ -53,7 +54,7 @@ public class JwtConfig {
     @Bean
     @ConditionalOnMissingBean
     public JwtTokenResolver jwtTokenResolver() {
-        return new JwtTokenResolver(secret, redisUtil);
+        return new JwtTokenResolver(secret, blacklistTokenRepository);
     }
 
     @Bean

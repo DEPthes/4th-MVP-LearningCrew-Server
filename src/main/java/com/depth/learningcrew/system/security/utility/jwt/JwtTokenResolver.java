@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.security.utility.jwt;
 
+import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
 import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
 import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException;
 import com.depth.learningcrew.system.security.exception.JwtParseException;
@@ -21,7 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JwtTokenResolver {
     private final Key secret;
-    private final RedisUtil redisUtil;
+    private final BlacklistTokenRepository blacklistTokenRepository;
 
     public Optional<String> parseTokenFromRequest(HttpServletRequest request) {
         Optional<String> bearerToken;
@@ -62,7 +63,7 @@ public class JwtTokenResolver {
     public boolean validateToken(String token) {
         parseClaims(token);
 
-        if (redisUtil.hasKeyBlackList(token)) {
+        if (blacklistTokenRepository.existsByAtk(token)) {
             throw new JwtBlacklistedTokenException();
         }
 
