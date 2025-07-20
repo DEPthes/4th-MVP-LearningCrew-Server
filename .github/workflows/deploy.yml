@@ -65,13 +65,22 @@ jobs:
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} build/libs/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/app.jar
                     sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/Dockerfile
 
-      # 10. Transfer docker-compose.prod.yml and .env.prod
+      # 10. Create .env.prod from secret
+      - name: Create .env.prod from secret
+        run: |
+          echo "DB_HOST=${{ secrets.ENV_DB_HOST }}" >> .env.prod
+          echo "DB_NAME=${{ secrets.ENV_DB_NAME }}" >> .env.prod
+          echo "DB_USERNAME=${{ secrets.ENV_DB_USERNAME }}" >> .env.prod
+          echo "DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}" >> .env.prod
+          echo "DEPLOY_PATH=${{ secrets.ENV_DEPLOY_PATH }}" >> .env.prod
+
+      # 11. Transfer docker-compose.prod.yml and .env.prod
       - name: Send docker-compose.prod.yml
         run: |
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/docker-compose.prod.yml
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} .env.prod ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/.env.prod
 
-      # 11. Deploy with Docker Compose on Remote Server
+      # 12. Deploy with Docker Compose on Remote Server
       - name: Remote Deploy with Docker Compose
         run: |
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
