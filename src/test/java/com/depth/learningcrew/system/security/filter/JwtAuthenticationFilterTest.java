@@ -117,10 +117,10 @@ class JwtAuthenticationFilterTest {
         var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
         var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
 
-        refreshTokenRepository.setByIdAndRtk(userId, newRefreshToken);
+        refreshTokenRepository.setByIdAndRtk(userId, newRefreshToken.getTokenString());
 
         String storedRefresh = (String) refreshTokenRepository.getById(userId);
-        assertThat(storedRefresh).isEqualTo(newRefreshToken);
+        assertThat(storedRefresh).isEqualTo(newRefreshToken.getTokenString());
 
         boolean isAccessTokenValid = jwtTokenResolver.validateToken(newAccessToken.getTokenString());
         assertThat(isAccessTokenValid).isTrue();

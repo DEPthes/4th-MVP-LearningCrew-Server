@@ -22,7 +22,7 @@ public class RedisUtil {
     private long refreshTokenExpirationWeeks;
 
     /* Refresh Token Redis Utils */
-    public void setRefreshToken(String key, Object refreshToken) {
+    public void setRefreshToken(String key, String refreshToken) {
         redisTemplate.opsForValue().set(getRefreshKey(key), refreshToken, getExpirationSeconds(TokenType.REFRESH), TimeUnit.SECONDS);
     }
 

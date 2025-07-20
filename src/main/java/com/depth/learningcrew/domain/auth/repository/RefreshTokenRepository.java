@@ -17,7 +17,7 @@ public class RefreshTokenRepository {
 
     private final RedisUtil redisUtil;
 
-    public void setByIdAndRtk(String userKey, Object refreshToken) {
+    public void setByIdAndRtk(String userKey, String refreshToken) {
         redisUtil.setRefreshToken(userKey, refreshToken);
     }
 

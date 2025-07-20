@@ -57,7 +57,7 @@ public class AuthService {
         var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
         var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
 
-        refreshTokenRepository.setByIdAndRtk(id, newRefreshToken);
+        refreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
 
         return AuthDto.TokenInfo.of(
                 newAccessToken.getTokenString(),
