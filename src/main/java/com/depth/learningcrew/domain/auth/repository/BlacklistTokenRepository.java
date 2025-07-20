@@ -13,7 +13,7 @@ public class BlacklistTokenRepository {
 
     private final RedisUtil redisUtil;
 
-    public void setByAtk(String  token) {
+    public void setByAtk(String token) {
         redisUtil.setBlackList(token, TokenType.ACCESS);
     }
 
