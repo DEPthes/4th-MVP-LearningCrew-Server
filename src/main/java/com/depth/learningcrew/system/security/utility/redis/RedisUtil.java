@@ -15,15 +15,12 @@ public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisTemplate<String, Object> redisBlackListTemplate;
 
-    @Value("${jwt.access-token-expiration-minutes}")
-    private long accessTokenExpirationMinutes;
-
     @Value("${jwt.refresh-token-expiration-weeks}")
     private long refreshTokenExpirationWeeks;
 
     /* Refresh Token Redis Utils */
     public void setRefreshToken(String key, String refreshToken) {
-        redisTemplate.opsForValue().set(getRefreshKey(key), refreshToken, getExpirationSeconds(TokenType.REFRESH), TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(getRefreshKey(key), refreshToken, getRtkExpireSeconds(), TimeUnit.SECONDS);
     }
 
     public Object getRefreshToken(String key) {
@@ -43,8 +40,8 @@ public class RedisUtil {
     }
 
     /* Blacklist Token Redis Utils */
-    public void setBlackList(String accessToken, TokenType tokenType) {
-        redisBlackListTemplate.opsForValue().set(accessToken, "access_token", getExpirationSeconds(tokenType), TimeUnit.SECONDS);
+    public void setBlackList(String accessToken, long remainingExpiration) {
+        redisBlackListTemplate.opsForValue().set(accessToken, "access_token", remainingExpiration, TimeUnit.SECONDS);
     }
 
     public Object getBlackList(String accessToken) {
@@ -63,11 +60,8 @@ public class RedisUtil {
         return redisBlackListTemplate.getExpire(accessToken, timeUnit);
     }
 
-    private long getExpirationSeconds(TokenType tokenType) {
-        return switch (tokenType) {
-            case ACCESS -> Duration.ofMinutes(accessTokenExpirationMinutes).getSeconds();
-            case REFRESH -> Duration.ofDays(refreshTokenExpirationWeeks * 7).getSeconds();
-        };
+    private long getRtkExpireSeconds() {
+        return Duration.ofDays(refreshTokenExpirationWeeks * 7).getSeconds();
     }
 
     private String getRefreshKey(String key) {

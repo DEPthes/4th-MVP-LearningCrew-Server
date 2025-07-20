@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -47,9 +50,9 @@ public class AuthService {
         refreshTokenRepository.deleteById(id);
 
         // Access Token -> Blacklist
-        String accessToken = jwtTokenResolver.parseTokenFromRequest(httpRequest)
-                .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
-        blacklistTokenRepository.setByAtk(accessToken);
+        String accessToken = getAccessTokenFromRequest(httpRequest);
+        long remainingExpiration = getRemainingExpiration(accessToken);
+        blacklistTokenRepository.setByAtk(accessToken, remainingExpiration);
 
         if(!blacklistTokenRepository.existsByAtk(accessToken)) {
             throw new JwtBlacklistedTokenException("Access Token 이 블랙리스트에 등록되지 않았습니다.");
@@ -66,5 +69,18 @@ public class AuthService {
                 newAccessToken.getExpireAt(),
                 newRefreshToken.getExpireAt()
         );
+    }
+
+    private String getAccessTokenFromRequest(HttpServletRequest request) {
+        return jwtTokenResolver.parseTokenFromRequest(request)
+                .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
+    }
+
+    private long getRemainingExpiration(String accessToken){
+        var parsed = jwtTokenResolver.resolveTokenFromString(accessToken);
+        return Duration.between(
+                LocalDateTime.now(),
+                parsed.getExpireAt()
+        ).getSeconds();
     }
 }

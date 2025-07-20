@@ -29,7 +29,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -160,7 +162,13 @@ class JwtAuthenticationFilterTest {
     @Order(4)
     @DisplayName("4. Access Token Blacklist TTL은 30분 (application-test.yml 설정)")
     void testBlacklistTTL() {
-        blacklistTokenRepository.setByAtk(accessToken);
+        var parsed = jwtTokenResolver.resolveTokenFromString(accessToken);
+        long remainingExpiration = Duration.between(
+                LocalDateTime.now(),
+                parsed.getExpireAt()
+        ).getSeconds();
+
+        blacklistTokenRepository.setByAtk(accessToken, remainingExpiration);
 
         Long ttl = blacklistTokenRepository.getExpireByAtk(accessToken, TimeUnit.MINUTES);
         assertThat(ttl).isBetween(29L, 30L);
@@ -217,7 +225,13 @@ class JwtAuthenticationFilterTest {
                 exceptionResolver
         );
 
-        blacklistTokenRepository.setByAtk(accessToken);
+        var parsed = jwtTokenResolver.resolveTokenFromString(accessToken);
+        long remainingExpiration = Duration.between(
+                LocalDateTime.now(),
+                parsed.getExpireAt()
+        ).getSeconds();
+
+        blacklistTokenRepository.setByAtk(accessToken, remainingExpiration);
 
         when(mockJwtTokenResolver.parseTokenFromRequest(any())).thenReturn(Optional.of(accessToken));
         when(mockJwtTokenResolver.validateToken(accessToken)).thenCallRealMethod();
