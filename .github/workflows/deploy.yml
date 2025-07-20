@@ -65,16 +65,17 @@ jobs:
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} build/libs/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/app.jar
                     sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/Dockerfile
 
-      # 10. Transfer docker-compose.prod.yml
+      # 10. Transfer docker-compose.prod.yml and .env.prod
       - name: Send docker-compose.prod.yml
         run: |
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/docker-compose.prod.yml
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} .env.prod ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/.env.prod
 
       # 11. Deploy with Docker Compose on Remote Server
       - name: Remote Deploy with Docker Compose
         run: |
           sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
             cd /home/learnit/docker-compose &&
-            docker compose -f docker-compose.prod.yml down &&
-            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose --env-file .env.prod -f docker-compose.prod.yml down &&
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
           "
