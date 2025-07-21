@@ -39,7 +39,7 @@ jobs:
 
       # 5. Build Spring Boot JAR
       - name: Build JAR
-        run: ./gradle bootJar
+        run: ./gradlew bootJar
 
       # 6. Install sshpass
       - name: Install sshpass
