@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,5 +29,12 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "로그인 성공")
     public AuthDto.SignInResponse signIn(@RequestBody @Valid AuthDto.SignInRequest request) {
         return authService.signIn(request);
+    }
+
+    @GetMapping("/id-exist")
+    @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
+    public AuthDto.IdExistResponse checkId(@RequestBody @Valid AuthDto.IdExistRequest request) {
+        return authService.checkIdExist(request);
     }
 }
