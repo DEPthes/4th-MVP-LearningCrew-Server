@@ -3,7 +3,7 @@ package com.depth.learningcrew.system.security.filter;
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
 import com.depth.learningcrew.domain.auth.service.AuthService;
-import com.depth.learningcrew.domain.auth.repository.RefreshTokenRepository;
+import com.depth.learningcrew.domain.auth.repository.RedisRefreshTokenRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
@@ -46,7 +46,8 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterTest {
 
     @Autowired JwtTokenProvider jwtTokenProvider;
-    @Autowired RefreshTokenRepository refreshTokenRepository;
+    @Autowired
+    RedisRefreshTokenRepository refreshTokenRepository;
     @Autowired UserLoadService userLoadService;
     @Autowired JwtTokenResolver jwtTokenResolver;
     @Autowired AuthService authService;

@@ -2,7 +2,7 @@ package com.depth.learningcrew.domain.auth.service;
 
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
-import com.depth.learningcrew.domain.auth.repository.RefreshTokenRepository;
+import com.depth.learningcrew.domain.auth.repository.RedisRefreshTokenRepository;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -11,7 +11,6 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
-import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,7 @@ import java.time.LocalDateTime;
 public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RedisRefreshTokenRepository redisRefreshTokenRepository;
     private final JwtTokenResolver jwtTokenResolver;
     private final BlacklistTokenRepository blacklistTokenRepository;
 
@@ -41,13 +40,13 @@ public class AuthService {
                 .map(UserDetails::from)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_USER_NOT_FOUND));
 
-        Object storedRefreshToken = refreshTokenRepository.getById(id);
+        Object storedRefreshToken = redisRefreshTokenRepository.getById(id);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new RestException(ErrorCode.AUTH_TOKEN_INVALID);
         }
 
         // 기존 Refresh Token 제거 (RTR 정책)
-        refreshTokenRepository.deleteById(id);
+        redisRefreshTokenRepository.deleteById(id);
 
         // Access Token -> Blacklist
         String accessToken = getAccessTokenFromRequest(httpRequest);
@@ -61,7 +60,7 @@ public class AuthService {
         var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
         var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
 
-        refreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
+        redisRefreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
 
         return AuthDto.TokenInfo.of(
                 newAccessToken.getTokenString(),

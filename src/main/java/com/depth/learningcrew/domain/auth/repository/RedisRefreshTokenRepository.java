@@ -1,19 +1,14 @@
 package com.depth.learningcrew.domain.auth.repository;
 
-import com.depth.learningcrew.system.security.utility.jwt.TokenType;
 import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
-public class RefreshTokenRepository {
+public class RedisRefreshTokenRepository {
 
     private final RedisUtil redisUtil;
 
