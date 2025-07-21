@@ -21,8 +21,25 @@ public class JwtDto {
     @NoArgsConstructor
     @Getter
     @Builder
+    public static class TokenPair {
+        JwtDto.TokenData refreshToken;
+        JwtDto.TokenData accessToken;
+
+        public static TokenPair of(JwtDto.TokenData refreshToken, JwtDto.TokenData accessToken) {
+            return TokenPair.builder()
+                    .refreshToken(refreshToken)
+                    .accessToken(accessToken)
+                    .build();
+        }
+    }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    @Builder
     public static class ParsedTokenData {
         private LocalDateTime expireAt;
         private String subject;
+        private String refreshUuid;
     }
 }
