@@ -62,8 +62,8 @@ jobs:
       # 9. Transfer Files to Remote
       - name: Send app.jar and Dockerfile
         run: |
-          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} build/libs/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/app.jar
-                    sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/Dockerfile
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} build/libs/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/app.jar
+                    sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/Dockerfile
 
       # 10. Create .env.prod from secret
       - name: Create .env.prod from secret
