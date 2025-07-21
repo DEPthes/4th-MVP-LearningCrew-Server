@@ -109,4 +109,10 @@ public class AuthService {
 
         return AuthDto.SignInResponse.of(UserDto.UserResponse.from(found), tokenInfo);
     }
+
+    @Transactional(readOnly = true)
+    public AuthDto.IdExistResponse checkIdExist(AuthDto.IdExistRequest request) {
+        boolean exists = userRepository.existsById(request.getId());
+        return AuthDto.IdExistResponse.from(exists);
+    }
 }
