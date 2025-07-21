@@ -143,4 +143,33 @@ public class AuthDto {
                     .build();
         }
     }
+
+    // 아이디 중복 인증 확인 요청 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "아이디 중복 확인 요청 DTO")
+    public static class IdExistRequest {
+        @NotBlank(message = "확인할 아이디(이메일 주소)를 입력해주세요.")
+        @Schema(description = "확인할 아이디(이메일 주소)", example = "learnit@mju.ac.kr")
+        private String id;
+    }
+
+    // 아이디 중복 인증 확인 응답 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "아이디 중복 확인 응답 DTO")
+    public static class IdExistResponse {
+        @Schema(description = "아이디 존재 여부 (true/false)", example = "false")
+        private boolean isExist;
+
+        public static IdExistResponse from(boolean exists) {
+            return IdExistResponse.builder()
+                    .isExist(exists)
+                    .build();
+        }
+    }
 }
