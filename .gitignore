@@ -39,3 +39,4 @@ out/
 ### Environment ###
 .env
 .db
+.env.prod
