@@ -108,4 +108,19 @@ public class AuthService {
         boolean exists = userRepository.existsById(request.getId());
         return AuthDto.IdExistResponse.from(exists);
     }
+
+    @Transactional
+    public void logout(UserDetails userDetails, HttpServletRequest request) {
+        String accessToken = getAccessTokenFromRequest(request);
+        String refreshUuid = jwtTokenResolver.resolveTokenFromString(accessToken).getRefreshUuid();
+
+        refreshTokenValidator.validateOrThrow(userDetails.getKey(), refreshUuid);
+        refreshTokenRepository.deleteByUuid(refreshUuid);
+        refreshTokenCacheRepository.evictRefreshUuid(refreshUuid);
+    }
+
+    private String getAccessTokenFromRequest(HttpServletRequest request) {
+        return jwtTokenResolver.parseTokenFromRequest(request)
+                .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
+    }
 }
