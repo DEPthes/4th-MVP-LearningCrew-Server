@@ -1,7 +1,9 @@
 package com.depth.learningcrew.domain.auth.dto;
 
+import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.security.model.JwtDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -18,6 +20,7 @@ public class AuthDto {
     @Builder
     @Schema(description = "토큰 재발행 DTO")
     public static class RecreateRequest {
+        @NotBlank(message = "Refresh Token을 입력해주세요.")
         @Schema(description = "재발행할 Refresh Token", example = "refreshTokenString")
         private String refreshToken;
     }
@@ -28,16 +31,13 @@ public class AuthDto {
     @Builder
     @Schema(description = "토큰 정보 DTO")
     public static class TokenInfo {
-        @Schema(description = "발급된 Access Token")
+        @Schema(description = "발급된 Access Token", example = "ehJk2Y3Rlc3Q1qW.NjZXNzVG9rZW4=")
         private String accessToken;
-
-        @Schema(description = "발급된 Refresh Token")
+        @Schema(description = "발급된 Refresh Token", example = "ehJk2Y3Rlc3Q1qW.Aw5pdGlhbE9iamVjdA==")
         private String refreshToken;
-
-        @Schema(description = "Access Token 만료 시간")
+        @Schema(description = "Access Token 만료 시간", example = "2023-10-01T12:00:00")
         private LocalDateTime accessTokenExpiresAt;
-
-        @Schema(description = "Refresh Token 만료 시간")
+        @Schema(description = "Refresh Token 만료 시간", example = "2023-12-01T12:00:00")
         private LocalDateTime refreshTokenExpiresAt;
 
         public static TokenInfo of(
@@ -97,6 +97,49 @@ public class AuthDto {
                     .password(encoder.encode(password))
                     .birthday(birthday)
                     .gender(gender)
+                    .build();
+        }
+    }
+
+    // 로그인 요청 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "로그인 요청 DTO")
+    public static class SignInRequest {
+        @NotBlank(message = "이메일을 입력해주세요.")
+        @Email(message = "올바른 이메일 형식이 아닙니다.")
+        @Schema(description = "사용자 아이디(이메일 형식)", example = "learnit@mju.ac.kr")
+        private String id;
+
+        @NotBlank(message = "대소문자 영문자와 숫자를 포함한 8자리 이상의 비밀번호를 입력해주세요.")
+        @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}", message = "비밀번호 조건에 충족되지 않습니다.")
+        @Schema(description = "사용자 비밀번호", example = "newpassword123 || NewPassword123")
+        private String password;
+
+    }
+
+    // 로그인 응답 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "로그인 응답 DTO")
+    public static class SignInResponse {
+        @Schema(description = "발급된 토큰 정보", implementation = TokenInfo.class)
+        private AuthDto.TokenInfo token;
+
+        @Schema(description = "로그인한 사용자 정보", implementation = UserDto.UserResponse.class)
+        private UserDto.UserResponse user;
+
+        public static SignInResponse of(
+                UserDto.UserResponse user,
+                AuthDto.TokenInfo token
+        ) {
+            return SignInResponse.builder()
+                    .user(user)
+                    .token(token)
                     .build();
         }
     }
