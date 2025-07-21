@@ -35,7 +35,7 @@ jobs:
 
       # 4. Make Gradle executable
       - name: Make Gradle executable
-        run: chmod -x ./gradlew
+        run: chmod +x ./gradlew
 
       # 5. Build Spring Boot JAR
       - name: Build JAR
