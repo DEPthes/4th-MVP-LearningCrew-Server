@@ -14,47 +14,6 @@ import java.time.LocalDateTime;
 
 public class AuthDto {
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    @Schema(description = "토큰 재발행 DTO")
-    public static class RecreateRequest {
-        @NotBlank(message = "Refresh Token을 입력해주세요.")
-        @Schema(description = "재발행할 Refresh Token", example = "refreshTokenString")
-        private String refreshToken;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    @Schema(description = "토큰 정보 DTO")
-    public static class TokenInfo {
-        @Schema(description = "발급된 Access Token", example = "ehJk2Y3Rlc3Q1qW.NjZXNzVG9rZW4=")
-        private String accessToken;
-        @Schema(description = "발급된 Refresh Token", example = "ehJk2Y3Rlc3Q1qW.Aw5pdGlhbE9iamVjdA==")
-        private String refreshToken;
-        @Schema(description = "Access Token 만료 시간", example = "2023-10-01T12:00:00")
-        private LocalDateTime accessTokenExpiresAt;
-        @Schema(description = "Refresh Token 만료 시간", example = "2023-12-01T12:00:00")
-        private LocalDateTime refreshTokenExpiresAt;
-
-        public static TokenInfo of(
-                String accessToken,
-                String refreshToken,
-                LocalDateTime accessTokenExpiresAt,
-                LocalDateTime refreshTokenExpiresAt
-        ) {
-            return TokenInfo.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken)
-                    .accessTokenExpiresAt(accessTokenExpiresAt)
-                    .refreshTokenExpiresAt(refreshTokenExpiresAt)
-                    .build();
-        }
-    }
-
     // 회원가입 요청 DTO
     @Data
     @AllArgsConstructor
@@ -127,15 +86,15 @@ public class AuthDto {
     @Builder
     @Schema(description = "로그인 응답 DTO")
     public static class SignInResponse {
-        @Schema(description = "발급된 토큰 정보", implementation = TokenInfo.class)
-        private AuthDto.TokenInfo token;
+        @Schema(description = "발급된 토큰 정보", implementation = JwtDto.TokenInfo.class)
+        private JwtDto.TokenInfo token;
 
         @Schema(description = "로그인한 사용자 정보", implementation = UserDto.UserResponse.class)
         private UserDto.UserResponse user;
 
         public static SignInResponse of(
                 UserDto.UserResponse user,
-                AuthDto.TokenInfo token
+                JwtDto.TokenInfo token
         ) {
             return SignInResponse.builder()
                     .user(user)
@@ -171,5 +130,16 @@ public class AuthDto {
                     .isExist(exists)
                     .build();
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "토큰 재발행 DTO")
+    public static class RecreateRequest {
+        @NotBlank(message = "Refresh Token을 입력해주세요.")
+        @Schema(description = "재발행할 Refresh Token", example = "refreshTokenString")
+        private String refreshToken;
     }
 }

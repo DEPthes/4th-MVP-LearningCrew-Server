@@ -41,7 +41,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public JwtDto.TokenPair recreateToken(AuthDto.RecreateRequest request){
+    public JwtDto.TokenInfo recreateToken(AuthDto.RecreateRequest request){
         String refreshTokenUuid = request.getRefreshToken();
         String id = jwtTokenResolver.resolveTokenFromString(refreshTokenUuid).getSubject();
 
@@ -63,7 +63,7 @@ public class AuthService {
         refreshTokenRepository.save(newRefreshToken);
         refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, userDetails.getKey());
 
-        return tokenPair;
+        return JwtDto.TokenInfo.of(tokenPair);
     }
 
     @Transactional
@@ -100,14 +100,7 @@ public class AuthService {
         refreshTokenRepository.save(refreshToken);
         refreshTokenCacheRepository.cacheRefreshUuid(refreshUuid, userDetails.getKey());
 
-        AuthDto.TokenInfo tokenInfo = AuthDto.TokenInfo.builder()
-                .accessToken(tokenPair.getAccessToken().getTokenString())
-                .refreshToken(tokenPair.getRefreshToken().getTokenString())
-                .accessTokenExpiresAt(tokenPair.getAccessToken().getExpireAt())
-                .refreshTokenExpiresAt(tokenPair.getRefreshToken().getExpireAt())
-                .build();
-
-        return AuthDto.SignInResponse.of(UserDto.UserResponse.from(found), tokenInfo);
+        return AuthDto.SignInResponse.of(UserDto.UserResponse.from(found), JwtDto.TokenInfo.of(tokenPair));
     }
 
     @Transactional(readOnly = true)

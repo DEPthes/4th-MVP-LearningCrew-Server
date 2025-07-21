@@ -1,9 +1,8 @@
 package com.depth.learningcrew.system.security.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -41,5 +40,25 @@ public class JwtDto {
         private LocalDateTime expireAt;
         private String subject;
         private String refreshUuid;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class TokenInfo {
+        private String accessToken;
+        private String refreshToken;
+        private LocalDateTime accessTokenExpiresAt;
+        private LocalDateTime refreshTokenExpiresAt;
+
+        public static TokenInfo of(JwtDto.TokenPair tokenPair) {
+            return TokenInfo.builder()
+                    .accessToken(tokenPair.getAccessToken().getTokenString())
+                    .refreshToken(tokenPair.getRefreshToken().getTokenString())
+                    .accessTokenExpiresAt(tokenPair.getAccessToken().getExpireAt())
+                    .refreshTokenExpiresAt(tokenPair.getRefreshToken().getExpireAt())
+                    .build();
+        }
     }
 }
