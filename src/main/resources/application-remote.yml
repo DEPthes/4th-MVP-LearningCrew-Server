@@ -15,11 +15,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-
 # 로그 레벨 설정
 logging:
   level:
