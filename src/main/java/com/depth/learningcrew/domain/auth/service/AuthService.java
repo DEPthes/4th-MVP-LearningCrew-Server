@@ -6,6 +6,8 @@ import com.depth.learningcrew.domain.auth.token.entity.RefreshToken;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenCacheRepository;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenRepository;
 import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
+import com.depth.learningcrew.domain.user.dto.UserDto;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -18,6 +20,7 @@ import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,7 @@ public class AuthService {
     private final RefreshTokenCacheRepository refreshTokenCacheRepository;
     private final RefreshTokenValidator refreshTokenValidator;
     private final UserLoadService userLoadService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public JwtDto.TokenPair recreateToken(AuthDto.RecreateRequest request){
@@ -59,5 +63,17 @@ public class AuthService {
         refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, userDetails.getKey());
 
         return tokenPair;
+    }
+
+    @Transactional
+    public UserDto.UserResponse signUp(AuthDto.SignUpRequest request) {
+        boolean isExisting = userRepository.existsById(request.getId());
+        if(isExisting)
+            throw new RestException(ErrorCode.GLOBAL_ALREADY_EXIST);
+
+        User toSave = request.toEntity(passwordEncoder);
+        User saved = userRepository.save(toSave);
+
+        return UserDto.UserResponse.from(saved);
     }
 }
