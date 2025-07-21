@@ -18,6 +18,7 @@ import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -75,5 +76,37 @@ public class AuthService {
         User saved = userRepository.save(toSave);
 
         return UserDto.UserResponse.from(saved);
+    }
+
+    @Transactional
+    public AuthDto.SignInResponse signIn(AuthDto.SignInRequest request) {
+        var found = userRepository.findById(request.getId())
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+        if(!passwordEncoder.matches(request.getPassword(), found.getPassword()))
+            throw new RestException(ErrorCode.AUTH_PASSWORD_NOT_MATCH);
+
+        var userDetails = UserDetails.from(found);
+
+        var tokenPair = jwtTokenProvider.createTokenPair(userDetails);
+
+        String refreshUuid = tokenPair.getRefreshToken().getTokenString();
+        RefreshToken refreshToken = RefreshTokenDto.toEntity(
+                refreshUuid,
+                userDetails.getKey(),
+                tokenPair.getRefreshToken().getExpireAt()
+        );
+
+        refreshTokenRepository.save(refreshToken);
+        refreshTokenCacheRepository.cacheRefreshUuid(refreshUuid, userDetails.getKey());
+
+        AuthDto.TokenInfo tokenInfo = AuthDto.TokenInfo.builder()
+                .accessToken(tokenPair.getAccessToken().getTokenString())
+                .refreshToken(tokenPair.getRefreshToken().getTokenString())
+                .accessTokenExpiresAt(tokenPair.getAccessToken().getExpireAt())
+                .refreshTokenExpiresAt(tokenPair.getRefreshToken().getExpireAt())
+                .build();
+
+        return AuthDto.SignInResponse.of(UserDto.UserResponse.from(found), tokenInfo);
     }
 }
