@@ -1,12 +1,9 @@
 package com.depth.learningcrew.system.security.utility.jwt;
 
-import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
-import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
 import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException;
 import com.depth.learningcrew.system.security.exception.JwtParseException;
 import com.depth.learningcrew.system.security.exception.JwtTokenExpiredException;
 import com.depth.learningcrew.system.security.model.JwtDto;
-import com.depth.learningcrew.system.security.utility.redis.RedisUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
