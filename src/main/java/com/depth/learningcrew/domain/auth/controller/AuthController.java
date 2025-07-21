@@ -3,6 +3,7 @@ package com.depth.learningcrew.domain.auth.controller;
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.service.AuthService;
 import com.depth.learningcrew.domain.user.dto.UserDto;
+import com.depth.learningcrew.system.security.model.JwtDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,5 +37,12 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
     public AuthDto.IdExistResponse checkId(@RequestBody @Valid AuthDto.IdExistRequest request) {
         return authService.checkIdExist(request);
+    }
+
+    @PostMapping("/token/refresh")
+    @Operation(summary = "토큰 재발행", description = "새로운 Access/Refresh Token을 재발급받습니다.")
+    @ApiResponse(responseCode = "200", description = "토큰 재발행 성공")
+    public JwtDto.TokenInfo refreshToken(@RequestBody @Valid AuthDto.RecreateRequest request) {
+        return authService.recreateToken(request);
     }
 }
