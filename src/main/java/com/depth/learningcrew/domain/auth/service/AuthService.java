@@ -1,13 +1,18 @@
 package com.depth.learningcrew.domain.auth.service;
 
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
-import com.depth.learningcrew.domain.auth.repository.BlacklistTokenRepository;
-import com.depth.learningcrew.domain.auth.repository.RedisRefreshTokenRepository;
+import com.depth.learningcrew.domain.auth.token.dto.RefreshTokenDto;
+import com.depth.learningcrew.domain.auth.token.entity.RefreshToken;
+import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenCacheRepository;
+import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenRepository;
+import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
+import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
+import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
@@ -24,64 +29,35 @@ import java.time.LocalDateTime;
 public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisRefreshTokenRepository redisRefreshTokenRepository;
     private final JwtTokenResolver jwtTokenResolver;
-    private final BlacklistTokenRepository blacklistTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenCacheRepository refreshTokenCacheRepository;
+    private final RefreshTokenValidator refreshTokenValidator;
+    private final UserLoadService userLoadService;
 
     @Transactional
-    public AuthDto.TokenInfo recreateToken(
-            AuthDto.RecreateRequest recreateRequest,
-            HttpServletRequest httpRequest
-    ){
-        String id = recreateRequest.getId();
-        String refreshToken = recreateRequest.getRefreshToken();
+    public JwtDto.TokenPair recreateToken(AuthDto.RecreateRequest request){
+        String refreshTokenUuid = request.getRefreshToken();
+        String id = jwtTokenResolver.resolveTokenFromString(refreshTokenUuid).getSubject();
 
-        var userDetails = userRepository.findById(id)
-                .map(UserDetails::from)
+        refreshTokenValidator.validateOrThrow(id, refreshTokenUuid);
+        refreshTokenRepository.deleteByUuid(refreshTokenUuid);
+        refreshTokenCacheRepository.evictRefreshUuid(refreshTokenUuid);
+
+        var userDetails = userLoadService.loadUserByKey(id)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_USER_NOT_FOUND));
+        var tokenPair = jwtTokenProvider.createTokenPair(userDetails);
 
-        Object storedRefreshToken = redisRefreshTokenRepository.getById(id);
-        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
-            throw new RestException(ErrorCode.AUTH_TOKEN_INVALID);
-        }
+        String newRefreshUuid = tokenPair.getRefreshToken().getTokenString();
+        RefreshToken newRefreshToken = RefreshTokenDto.toEntity(
+                newRefreshUuid,
+                userDetails.getKey(),
+                tokenPair.getRefreshToken().getExpireAt()
+        );
 
-        // 기존 Refresh Token 제거 (RTR 정책)
-        redisRefreshTokenRepository.deleteById(id);
+        refreshTokenRepository.save(newRefreshToken);
+        refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, userDetails.getKey());
 
-        // Access Token -> Blacklist
-        String accessToken = getAccessTokenFromRequest(httpRequest);
-        long remainingExpiration = getRemainingExpiration(accessToken);
-        blacklistTokenRepository.setByAtk(accessToken, remainingExpiration);
-
-        if(!blacklistTokenRepository.existsByAtk(accessToken)) {
-            throw new JwtBlacklistedTokenException("Access Token 이 블랙리스트에 등록되지 않았습니다.");
-        }
-// RefactoringPoint
-//        var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
-//        var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
-//
-//        redisRefreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
-//
-//        return AuthDto.TokenInfo.of(
-//                newAccessToken.getTokenString(),
-//                newRefreshToken.getTokenString(),
-//                newAccessToken.getExpireAt(),
-//                newRefreshToken.getExpireAt()
-//        );
-
-        return null; // RefactoringPoint
-    }
-
-    private String getAccessTokenFromRequest(HttpServletRequest request) {
-        return jwtTokenResolver.parseTokenFromRequest(request)
-                .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
-    }
-
-    private long getRemainingExpiration(String accessToken){
-        var parsed = jwtTokenResolver.resolveTokenFromString(accessToken);
-        return Duration.between(
-                LocalDateTime.now(),
-                parsed.getExpireAt()
-        ).getSeconds();
+        return tokenPair;
     }
 }
