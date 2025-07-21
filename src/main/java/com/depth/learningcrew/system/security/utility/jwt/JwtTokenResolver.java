@@ -22,7 +22,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JwtTokenResolver {
     private final Key secret;
-    private final BlacklistTokenRepository blacklistTokenRepository;
 
     public Optional<String> parseTokenFromRequest(HttpServletRequest request) {
         Optional<String> bearerToken;
@@ -57,17 +56,12 @@ public class JwtTokenResolver {
         return JwtDto.ParsedTokenData.builder()
                 .subject(parsed.getBody().getSubject())
                 .expireAt(parsed.getBody().getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .refreshUuid(parsed.getBody().get("refreshUuid", String.class))
                 .build();
     }
 
     public boolean validateToken(String token) {
         parseClaims(token);
-
-        if (blacklistTokenRepository.existsByAtk(token)) {
-            throw new JwtBlacklistedTokenException();
-        }
-
         return true;
     }
-
 }
