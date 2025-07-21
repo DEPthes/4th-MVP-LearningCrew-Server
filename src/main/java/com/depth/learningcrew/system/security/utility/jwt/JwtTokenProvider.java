@@ -17,37 +17,53 @@ public class JwtTokenProvider {
     private final Key secret;
 
     @Value("${jwt.access-token-expiration-minutes}")
-    private Long accessTokenExpirationMinutes;
+    private int accessTokenExpirationMinutes;
 
     @Value("${jwt.refresh-token-expiration-weeks}")
-    private Long refreshTokenExpirationWeeks;
+    private int refreshTokenExpirationWeeks;
 
-    public JwtDto.TokenData createToken(AuthDetails authDetails, TokenType tokenType) {
+    public JwtDto.TokenData createRefreshToken(AuthDetails authDetails) {
         Claims claims = Jwts.claims().setSubject(authDetails.getName());
+        claims.put("tokenType", "REFRESH");
 
-        LocalDateTime expireLocalDateTime;
-        switch (tokenType) {
-            case ACCESS -> {
-                claims.put("tokenType", "ACCESS");
-                expireLocalDateTime = LocalDateTime.now().plusMinutes(accessTokenExpirationMinutes);
-            }
-            case REFRESH -> {
-                claims.put("tokenType", "REFRESH");
-                expireLocalDateTime = LocalDateTime.now().plusWeeks(refreshTokenExpirationWeeks);
-            }
-            default -> throw new IllegalArgumentException("Unknown token type: " + tokenType);
-        }
+        LocalDateTime expireLocalDateTime = LocalDateTime.now().plusWeeks(refreshTokenExpirationWeeks);
 
-        String tokenString = Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(new Date())
-                .setExpiration(Date.from(expireLocalDateTime.atZone(ZoneId.systemDefault()).toInstant()))
-                .signWith(secret)
-                .compact();
+        String tokenString = getTokenString(claims, expireLocalDateTime);
 
         return JwtDto.TokenData.builder()
                 .tokenString(tokenString)
                 .expireAt(expireLocalDateTime)
                 .build();
+    }
+
+    public JwtDto.TokenData createAccessToken(AuthDetails authDetails, String refreshUuid) {
+        Claims claims = Jwts.claims().setSubject(authDetails.getName());
+        claims.put("tokenType", "ACCESS");
+        claims.put("refreshUuid", refreshUuid);
+
+        LocalDateTime expireLocalDateTime = LocalDateTime.now().plusMinutes(accessTokenExpirationMinutes);
+
+        String tokenString = getTokenString(claims, expireLocalDateTime);
+
+        return JwtDto.TokenData.builder()
+                .tokenString(tokenString)
+                .expireAt(expireLocalDateTime)
+                .build();
+    }
+
+    public JwtDto.TokenPair createTokenPair(AuthDetails authDetails) {
+        JwtDto.TokenData refreshTokenData = createRefreshToken(authDetails);
+        JwtDto.TokenData accessTokenData = createAccessToken(authDetails, refreshTokenData.getTokenString());
+
+        return JwtDto.TokenPair.of(refreshTokenData, accessTokenData);
+    }
+
+    private String getTokenString(Claims claims, LocalDateTime expireLocalDateTime) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(new Date())
+                .setExpiration(Date.from(expireLocalDateTime.atZone(ZoneId.systemDefault()).toInstant()))
+                .signWith(secret)
+                .compact();
     }
 }

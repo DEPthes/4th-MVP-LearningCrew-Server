@@ -56,18 +56,20 @@ public class AuthService {
         if(!blacklistTokenRepository.existsByAtk(accessToken)) {
             throw new JwtBlacklistedTokenException("Access Token 이 블랙리스트에 등록되지 않았습니다.");
         }
+// RefactoringPoint
+//        var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
+//        var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
+//
+//        redisRefreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
+//
+//        return AuthDto.TokenInfo.of(
+//                newAccessToken.getTokenString(),
+//                newRefreshToken.getTokenString(),
+//                newAccessToken.getExpireAt(),
+//                newRefreshToken.getExpireAt()
+//        );
 
-        var newAccessToken = jwtTokenProvider.createToken(userDetails, TokenType.ACCESS);
-        var newRefreshToken = jwtTokenProvider.createToken(userDetails, TokenType.REFRESH);
-
-        redisRefreshTokenRepository.setByIdAndRtk(id, newRefreshToken.getTokenString());
-
-        return AuthDto.TokenInfo.of(
-                newAccessToken.getTokenString(),
-                newRefreshToken.getTokenString(),
-                newAccessToken.getExpireAt(),
-                newRefreshToken.getExpireAt()
-        );
+        return null; // RefactoringPoint
     }
 
     private String getAccessTokenFromRequest(HttpServletRequest request) {
