@@ -19,9 +19,9 @@ public class UserDto {
         private String id;
         @Schema(description = "사용자 닉네임", example = "LearnIt팀1")
         private String nickname;
-        @Schema(description = "계정 생성 시간")
+        @Schema(description = "계정 생성 시간", example = "2025-10-01T12:00:00")
         private LocalDateTime createdAt;
-        @Schema(description = "마지막 정보 수정 시간")
+        @Schema(description = "마지막 정보 수정 시간", example = "2025-10-01T12:00:00")
         private LocalDateTime lastModifiedAt;
 
         public static UserResponse from(User user) {
