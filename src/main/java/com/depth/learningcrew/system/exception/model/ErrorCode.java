@@ -37,47 +37,17 @@ public enum ErrorCode {
     AUTH_USER_NOT_FOUND(404, "등록된 유저를 찾을 수 없습니다."),
     AUTH_FORBIDDEN(403, "접근 권한이 없습니다."),
     AUTH_CANNOT_GENERATE_TOKEN(400, "인증키를 생성 할 수 없습니다."),
+    AUTH_TOKEN_MISSING(401, "JWT 토큰이 누락되었습니다."),
 
     // File
     FILE_ALREADY_EXISTS(400, "파일이 이미 존재합니다."),
     FILE_NOT_FOUND(404, "파일을 찾을 수 없습니다."),
     FILE_NOT_IMAGE(400, "이미지 파일이 아닙니다."),
 
-    // DiaryBook, Diary
-    DIARYBOOK_NOT_FOUND(404, "일기장을 찾을 수 없습니다."),
-    MEMBER_NOT_FOUND(404, "멤버를 찾을 수 없습니다."),
-    DIARY_NOT_FOUND(404, "일기를 찾을 수 없습니다."),
-
-    STICKER_NOT_FOUND(404, "스티커를 찾을 수 없습니다."),
-
-    REACTION_ALREADY_EXISTS(400, "이미 공감 한 일기입니다."),
-    REACTION_NOT_FOUND(404, "존재하지 않는 공감입니다."),
-
-    DIARYBOOK_ANALYSIS_NOT_FOUND(404, "일기장 분석 결과를 찾을 수 없습니다."),
-
     // Comment
     PARENT_COMMENT_NOT_FOUND(404, "부모 댓글을 찾을 수 없습니다"),
     COMMENT_NOT_FOUND(404, "댓글을 찾을 수 없습니다"),
     COMMENT_NOT_USER_TYPE(403, "사용자 댓글만 수정/삭제할 수 있습니다."),
-
-    // AI
-    AI_IMAGE_CREATION_FAILED(500, "AI 이미지 생성에 실패했습니다."),
-    AI_CHARACTER_NOT_FOUND(404, "AI 캐릭터를 찾을 수 없습니다"),
-    AI_CHARACTER_NOT_CUSTOM(403, "커스텀 AI 캐릭터만 수정/삭제가 가능합니다"),
-    AI_MUSIC_CREATION_FAILED(500, "AI 음악 생성에 실패했습니다."),
-    AI_MUSIC_SERVER_BUSY(429, "현재 다른 음악 생성 요청이 처리 중입니다. 잠시 후 다시 시도해주세요."),
-    AI_MUSIC_JOB_NOT_FOUND(404, "음악 생성 작업을 찾을 수 없습니다."),
-    AI_MUSIC_JOB_FAILED(500, "음악 생성 작업이 실패했습니다."),
-    AI_MUSIC_DOWNLOAD_FAILED(500, "음악 파일 다운로드에 실패했습니다."),
-    AI_NODE_NOT_FOUND(404, "AI 노드를 찾을 수 없습니다."),
-    AI_NODE_URL_ALREADY_EXISTS(400, "이미 등록된 AI 노드 URL입니다."),
-
-    // DiaryBookMember
-    MEMBER_ALREADY_ADMIN(400, "이미 관리자인 멤버입니다."),
-    MEMBER_NOT_ADMIN(400, "일반 멤버입니다"),
-
-    // Sticker
-    STICKER_IMAGE_NOT_FOUND(404, "임시 업로드된 스티커 이미지를 찾을 수 없습니다."),
 
     // Other
     INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."), ;

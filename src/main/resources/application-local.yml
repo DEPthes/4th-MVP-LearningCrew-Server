@@ -11,8 +11,20 @@ spring:
 
   # jpa설정
   jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
     properties: # property 사용 설정
       hibernate: # hibernate property 설정
         format_sql: true
+
+jwt:
+  secret: bGVhcm5pdHNlcnZlcnRlYW1pc2Jlc3R2ZXJ5ZXJ5amFuZ2phbmdtYW4=
+  access-token-expiration-minutes: 30
+  refresh-token-expiration-weeks: 2
+
+cache:
+  specs:
+    refresh-token-uuid:
+      expiration-week: 2
+      maximum-size: 10000
