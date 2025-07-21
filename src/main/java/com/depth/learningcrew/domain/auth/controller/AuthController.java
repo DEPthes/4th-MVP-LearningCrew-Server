@@ -7,10 +7,14 @@ import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,5 +61,24 @@ public class AuthController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return UserDto.UserResponse.from(userDetails.getUser());
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "현재 사용자의 Refresh Token을 삭제하며 로그아웃 처리합니다.")
+    @ApiResponse(
+            responseCode = "200",
+            description = "로그아웃 성공",
+            content = @Content(
+                    mediaType = "text/plain",
+                    examples = @ExampleObject(value = "Logout Successful")
+            )
+    )
+    public ResponseEntity<String> logout(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal UserDetails userDetails,
+            HttpServletRequest request
+    ) {
+        authService.logout(userDetails, request);
+        return ResponseEntity.ok("Logout Successful");
     }
 }
