@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.security.filter;
 
+import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
 import com.depth.learningcrew.system.security.exception.JwtAuthenticationException;
 import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
 import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException;
@@ -30,6 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenResolver jwtTokenResolver;
     private final UserLoadService userLoadService;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private final RefreshTokenValidator refreshTokenValidator;
 
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -40,15 +42,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (this.isMatchingURI(servletPath)) {
             try {
-                String token = jwtTokenResolver.parseTokenFromRequest(request)
+                String accessToken = jwtTokenResolver.parseTokenFromRequest(request)
                         .orElseThrow(JwtTokenMissingException::new);
 
-                if (!jwtTokenResolver.validateToken(token)) {throw new JwtBlacklistedTokenException();}
+                if (!jwtTokenResolver.validateToken(accessToken)) {throw new JwtBlacklistedTokenException();}
 
-                var parsedTokenData = jwtTokenResolver.resolveTokenFromString(token);
+                var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
                 var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
 
                 if(userDetails.isEmpty()) {throw new JwtInvalidTokenException();}
+
+                // Refresh UUID 검증
+                refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(
@@ -58,7 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                         userDetails.get().getAuthorities()
                                 )
                         );
-
                 filterChain.doFilter(request, response);
             }catch (Exception e) {
                 if (e instanceof JwtAuthenticationException) {

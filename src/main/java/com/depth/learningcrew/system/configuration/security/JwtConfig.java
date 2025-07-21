@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.configuration.security;
 
+import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
 import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
@@ -20,11 +21,13 @@ import java.security.Key;
 public class JwtConfig {
     private final Key secret;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private final RefreshTokenValidator refreshTokenValidator;
 
     public JwtConfig(
             @Value("${jwt.secret:#{null}}")
             String secretText,
-            HandlerExceptionResolver handlerExceptionResolver
+            HandlerExceptionResolver handlerExceptionResolver,
+            RefreshTokenValidator refreshTokenValidator
     ) {
         if(StringUtils.hasText(secretText) && secretText.length() < 32) {
             throw new IllegalStateException("Jwt Secret 은 32자 이상이어야 합니다.");
@@ -38,6 +41,7 @@ public class JwtConfig {
         }
 
         this.handlerExceptionResolver = handlerExceptionResolver;
+        this.refreshTokenValidator = refreshTokenValidator;
     }
 
     @Bean
@@ -55,6 +59,6 @@ public class JwtConfig {
     @Bean
     @ConditionalOnMissingBean
     public JwtAutoConfigurerFactory jwtAutoConfigurerFactory() {
-        return new JwtAutoConfigurerFactory(this.handlerExceptionResolver, jwtTokenResolver());
+        return new JwtAutoConfigurerFactory(this.handlerExceptionResolver, jwtTokenResolver(), refreshTokenValidator);
     }
 }

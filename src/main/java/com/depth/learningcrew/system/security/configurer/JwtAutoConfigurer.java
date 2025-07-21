@@ -1,5 +1,6 @@
 package com.depth.learningcrew.system.security.configurer;
 
+import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
 import com.depth.learningcrew.system.security.filter.JwtAuthenticationFilter;
 import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
@@ -20,6 +21,7 @@ public class JwtAutoConfigurer {
     private final UserLoadService userLoadService;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final PathPatternConfigurer pathPatternConfigurer = new PathPatternConfigurer();
+    private final RefreshTokenValidator refreshTokenValidator;
 
     public JwtAutoConfigurer pathConfigure(Customizer<PathPatternConfigurer> customizer) {
         customizer.customize(this.pathPatternConfigurer);
@@ -32,7 +34,8 @@ public class JwtAutoConfigurer {
                 pathPatternConfigurer.getIncludePatternList(),
                 jwtTokenResolver,
                 userLoadService,
-                handlerExceptionResolver
+                handlerExceptionResolver,
+                refreshTokenValidator
         );
 
         http
