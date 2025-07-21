@@ -1,0 +1,90 @@
+name: Build and Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout Repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup Java
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Cache Gradle packages
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 4. Make Gradle executable
+      - name: Make Gradle executable
+        run: chmod -x ./gradlew
+
+      # 5. Build Spring Boot JAR
+      - name: Build JAR
+        run: ./gradle bootJar
+
+      # 6. Install sshpass
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      # 7. Register Remote SSH Host
+      - name: Register SSH Host
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # 8. Prepare Directories on Remote
+      - name: Prepare Remote Directories
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            mkdir -p /home/learnit &&
+            mkdir -p /home/learnit/docker-compose
+          "
+
+      # 9. Transfer Files to Remote
+      - name: Send app.jar and Dockerfile
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} build/libs/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/app.jar
+                    sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} Dockerfile ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/Dockerfile
+
+      # 10. Create .env.prod from secret
+      - name: Create .env.prod from secret
+        run: |
+          echo "DB_HOST=${{ secrets.ENV_DB_HOST }}" >> .env.prod
+          echo "DB_NAME=${{ secrets.ENV_DB_NAME }}" >> .env.prod
+          echo "DB_USERNAME=${{ secrets.ENV_DB_USERNAME }}" >> .env.prod
+          echo "DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}" >> .env.prod
+          echo "DEPLOY_PATH=${{ secrets.ENV_DEPLOY_PATH }}" >> .env.prod
+
+      # 11. Transfer docker-compose.prod.yml and .env.prod
+      - name: Send docker-compose.prod.yml
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} docker-compose.prod.yml ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/docker-compose.prod.yml
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" scp -P ${{ secrets.SERVER_PORT }} .env.prod ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/learnit/docker-compose/.env.prod
+
+      # 12. Deploy with Docker Compose on Remote Server
+      - name: Remote Deploy with Docker Compose
+        run: |
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            cd /home/learnit/docker-compose &&
+            docker compose --env-file .env.prod -f docker-compose.prod.yml down &&
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+          "
