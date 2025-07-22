@@ -72,6 +72,7 @@ jobs:
           echo "DB_NAME=${{ secrets.ENV_DB_NAME }}" >> .env.prod
           echo "DB_USERNAME=${{ secrets.ENV_DB_USERNAME }}" >> .env.prod
           echo "DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}" >> .env.prod
+          echo "DB_PORT=${{ secrets.ENV_DB_PORT }}" >> .env.prod
           echo "DEPLOY_PATH=${{ secrets.ENV_DEPLOY_PATH }}" >> .env.prod
 
       # 11. Transfer docker-compose.prod.yml and .env.prod
