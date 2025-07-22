@@ -70,7 +70,7 @@ public class AuthService {
     public UserDto.UserResponse signUp(AuthDto.SignUpRequest request) {
         boolean isExisting = userRepository.existsById(request.getId());
         if(isExisting)
-            throw new RestException(ErrorCode.GLOBAL_ALREADY_EXIST);
+            throw new RestException(ErrorCode.USER_ALREADY_ID_EXISTS);
 
         User toSave = request.toEntity(passwordEncoder);
         User saved = userRepository.save(toSave);

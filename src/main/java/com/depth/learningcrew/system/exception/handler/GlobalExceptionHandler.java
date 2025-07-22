@@ -6,6 +6,7 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.exception.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConversionException;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -146,4 +148,27 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorDto.ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
     }
+
+    // 중복 데이터 예외 처리
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorDto.ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        String errorMessage = e.getMessage();
+
+        ErrorCode matchedErrorCode = DATA_INTEGRITY_ERROR_MAP.entrySet().stream()
+                .filter(entry -> errorMessage.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(ErrorCode.GLOBAL_ALREADY_EXIST);
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorDto.ErrorResponse.from(matchedErrorCode));
+
+    }
+
+    private static final Map<String, ErrorCode> DATA_INTEGRITY_ERROR_MAP = Map.of(
+            "USER_NICKNAME", ErrorCode.USER_NICKNAME_ALREADY_EXISTS
+            // 필요한 케이스 추가
+    );
+
 }
