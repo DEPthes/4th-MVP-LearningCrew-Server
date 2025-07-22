@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   learnit:
@@ -16,6 +16,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
       - TZ=Asia/Seoul
     volumes:
       - ${DEPLOY_PATH}/uploaded:/uploaded
