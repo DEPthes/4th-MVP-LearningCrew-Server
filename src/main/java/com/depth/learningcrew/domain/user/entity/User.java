@@ -12,13 +12,18 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-@Table(name = "USER_ACCOUNT")
+@Table(
+    name = "USER_ACCOUNT",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "USER_NICKNAME", columnNames = "nickname")
+    }
+)
 public class User extends TimeStampedEntity {
     @Id
     @Column(length = 50)
     private String id;
 
-    @Column(nullable=false, length = 50)
+    @Column(nullable=false, length = 60)
     private String password;
 
     @Column(nullable=false, length = 30)

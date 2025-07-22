@@ -6,6 +6,8 @@ import com.depth.learningcrew.domain.auth.token.entity.RefreshToken;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenCacheRepository;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenRepository;
 import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
+import com.depth.learningcrew.domain.user.dto.UserDto;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -16,8 +18,10 @@ import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
 import com.depth.learningcrew.system.security.utility.jwt.TokenType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,9 +38,10 @@ public class AuthService {
     private final RefreshTokenCacheRepository refreshTokenCacheRepository;
     private final RefreshTokenValidator refreshTokenValidator;
     private final UserLoadService userLoadService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public JwtDto.TokenPair recreateToken(AuthDto.RecreateRequest request){
+    public JwtDto.TokenInfo recreateToken(AuthDto.RecreateRequest request){
         String refreshTokenUuid = request.getRefreshToken();
         String id = jwtTokenResolver.resolveTokenFromString(refreshTokenUuid).getSubject();
 
@@ -58,6 +63,64 @@ public class AuthService {
         refreshTokenRepository.save(newRefreshToken);
         refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, userDetails.getKey());
 
-        return tokenPair;
+        return JwtDto.TokenInfo.of(tokenPair);
+    }
+
+    @Transactional
+    public UserDto.UserResponse signUp(AuthDto.SignUpRequest request) {
+        boolean isExisting = userRepository.existsById(request.getId());
+        if(isExisting)
+            throw new RestException(ErrorCode.USER_ALREADY_ID_EXISTS);
+
+        User toSave = request.toEntity(passwordEncoder);
+        User saved = userRepository.save(toSave);
+
+        return UserDto.UserResponse.from(saved);
+    }
+
+    @Transactional
+    public AuthDto.SignInResponse signIn(AuthDto.SignInRequest request) {
+        var found = userRepository.findById(request.getId())
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+        if(!passwordEncoder.matches(request.getPassword(), found.getPassword()))
+            throw new RestException(ErrorCode.AUTH_PASSWORD_NOT_MATCH);
+
+        var userDetails = UserDetails.from(found);
+
+        var tokenPair = jwtTokenProvider.createTokenPair(userDetails);
+
+        String refreshUuid = tokenPair.getRefreshToken().getTokenString();
+        RefreshToken refreshToken = RefreshTokenDto.toEntity(
+                refreshUuid,
+                userDetails.getKey(),
+                tokenPair.getRefreshToken().getExpireAt()
+        );
+
+        refreshTokenRepository.save(refreshToken);
+        refreshTokenCacheRepository.cacheRefreshUuid(refreshUuid, userDetails.getKey());
+
+        return AuthDto.SignInResponse.of(UserDto.UserResponse.from(found), JwtDto.TokenInfo.of(tokenPair));
+    }
+
+    @Transactional(readOnly = true)
+    public AuthDto.IdExistResponse checkIdExist(AuthDto.IdExistRequest request) {
+        boolean exists = userRepository.existsById(request.getId());
+        return AuthDto.IdExistResponse.from(exists);
+    }
+
+    @Transactional
+    public void logout(UserDetails userDetails, HttpServletRequest request) {
+        String accessToken = getAccessTokenFromRequest(request);
+        String refreshUuid = jwtTokenResolver.resolveTokenFromString(accessToken).getRefreshUuid();
+
+        refreshTokenValidator.validateOrThrow(userDetails.getKey(), refreshUuid);
+        refreshTokenRepository.deleteByUuid(refreshUuid);
+        refreshTokenCacheRepository.evictRefreshUuid(refreshUuid);
+    }
+
+    private String getAccessTokenFromRequest(HttpServletRequest request) {
+        return jwtTokenResolver.parseTokenFromRequest(request)
+                .orElseThrow(() -> new RestException(ErrorCode.AUTH_TOKEN_MISSING));
     }
 }
