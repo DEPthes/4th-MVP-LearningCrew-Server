@@ -86,11 +86,11 @@ public class AuthDto {
     @Builder
     @Schema(description = "로그인 응답 DTO")
     public static class SignInResponse {
-        @Schema(description = "발급된 토큰 정보", implementation = JwtDto.TokenInfo.class)
-        private JwtDto.TokenInfo token;
-
         @Schema(description = "로그인한 사용자 정보", implementation = UserDto.UserResponse.class)
         private UserDto.UserResponse user;
+
+        @Schema(description = "발급된 토큰 정보", implementation = JwtDto.TokenInfo.class)
+        private JwtDto.TokenInfo token;
 
         public static SignInResponse of(
                 UserDto.UserResponse user,
