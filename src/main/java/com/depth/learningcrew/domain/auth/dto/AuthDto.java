@@ -111,6 +111,7 @@ public class AuthDto {
     @Schema(description = "아이디 중복 확인 요청 DTO")
     public static class IdExistRequest {
         @NotBlank(message = "확인할 아이디(이메일 주소)를 입력해주세요.")
+        @Email(message = "올바른 이메일 형식이 아닙니다.")
         @Schema(description = "확인할 아이디(이메일 주소)", example = "learnit@mju.ac.kr")
         private String id;
     }
