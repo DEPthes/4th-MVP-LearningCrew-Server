@@ -60,16 +60,6 @@ public class AuthController {
         return authService.recreateToken(request);
     }
 
-    @GetMapping("/me")
-    @Operation(summary = "내 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "내 정보 조회 성공")
-    public UserDto.UserResponse whoami(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        return UserDto.UserResponse.from(userDetails.getUser());
-    }
-
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "현재 사용자의 Refresh Token을 삭제하며 로그아웃 처리합니다.")
     @ApiResponse(
