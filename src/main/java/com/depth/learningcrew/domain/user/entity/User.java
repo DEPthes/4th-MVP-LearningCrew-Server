@@ -35,4 +35,8 @@ public class User extends TimeStampedEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable=false, length = 20)
     private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length = 20)
+    private Role role = Role.USER;
 }
