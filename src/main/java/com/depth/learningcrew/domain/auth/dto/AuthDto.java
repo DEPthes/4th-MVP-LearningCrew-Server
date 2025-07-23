@@ -2,6 +2,7 @@ package com.depth.learningcrew.domain.auth.dto;
 
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.domain.user.entity.Gender;
+import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -56,6 +57,7 @@ public class AuthDto {
                     .password(encoder.encode(password))
                     .birthday(birthday)
                     .gender(gender)
+                    .role(Role.USER)
                     .build();
         }
     }
