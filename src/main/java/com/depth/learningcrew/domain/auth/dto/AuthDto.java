@@ -24,21 +24,21 @@ public class AuthDto {
     public static class SignUpRequest {
         @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "learnit@mju.ac.kr")
+        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
         private String id;
 
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 닉네임", example = "LearnIt팀1")
+        @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
 
         @NotBlank(message = "대소문자 영문자와 숫자를 포함한 8자리 이상의 비밀번호를 입력해주세요.")
         @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}", message = "비밀번호 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 비밀번호", example = "newpassword123 || NewPassword123")
+        @Schema(description = "사용자 비밀번호", example = "password content")
         private String password;
 
         @NotNull(message = "생년월일을 입력해주세요.")
-        @Schema(description = "사용자 생년월일", example = "2000-01-01")
+        @Schema(description = "사용자 생년월일", example = "yyyy-mm-dd")
         private LocalDate birthday;
 
         // TODO: AttachedFile Entity 구현 이후 주석 해제
@@ -48,7 +48,7 @@ public class AuthDto {
         @NotNull(message = "성별을 입력해주세요.")
         @Schema(
                 description = "사용자 성별",
-                example = "MALE",
+                example = "MALE | FEMALE | OTHER",
                 allowableValues = {"MALE", "FEMALE", "OTHER"}
         )
         private Gender gender;
@@ -75,12 +75,12 @@ public class AuthDto {
     public static class SignInRequest {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "learnit@mju.ac.kr")
+        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
         private String id;
 
         @NotBlank(message = "대소문자 영문자와 숫자를 포함한 8자리 이상의 비밀번호를 입력해주세요.")
         @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}", message = "비밀번호 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 비밀번호", example = "newpassword123 || NewPassword123")
+        @Schema(description = "사용자 비밀번호", example = "password content")
         private String password;
 
     }
@@ -118,7 +118,7 @@ public class AuthDto {
     public static class IdExistRequest {
         @NotBlank(message = "확인할 아이디(이메일 주소)를 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "확인할 아이디(이메일 주소)", example = "learnit@mju.ac.kr")
+        @Schema(description = "확인할 아이디(이메일 주소)", example = "user@email.com")
         private String id;
     }
 
@@ -148,7 +148,7 @@ public class AuthDto {
     public static class NicknameExistRequest {
         @NotBlank(message = "확인할 닉네임 (특수문자를 제외한 2~10자리)을 입력해주세요.")
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 닉네임", example = "LearnIt팀1")
+        @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
     }
 

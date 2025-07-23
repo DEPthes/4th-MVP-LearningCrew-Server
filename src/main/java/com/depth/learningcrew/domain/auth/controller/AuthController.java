@@ -47,8 +47,8 @@ public class AuthController {
     }
 
     @GetMapping("/nickname-exist")
-    @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
-    @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
+    @Operation(summary = "닉네임 중복 확인", description = "입력된 닉네임의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "닉네임 확인 성공")
     public AuthDto.NicknameExistResponse checkNickname(@RequestBody @Valid AuthDto.NicknameExistRequest request) {
         return authService.checkNicknameExist(request);
     }
