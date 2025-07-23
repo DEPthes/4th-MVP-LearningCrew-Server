@@ -46,6 +46,13 @@ public class AuthController {
         return authService.checkIdExist(request);
     }
 
+    @GetMapping("/nickname-exist")
+    @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
+    public AuthDto.NicknameExistResponse checkNickname(@RequestBody @Valid AuthDto.NicknameExistRequest request) {
+        return authService.checkNicknameExist(request);
+    }
+
     @PostMapping("/token/refresh")
     @Operation(summary = "토큰 재발행", description = "새로운 Access/Refresh Token을 재발급받습니다.")
     @ApiResponse(responseCode = "200", description = "토큰 재발행 성공")
