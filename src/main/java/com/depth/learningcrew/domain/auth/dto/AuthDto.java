@@ -41,6 +41,10 @@ public class AuthDto {
         @Schema(description = "사용자 생년월일", example = "2000-01-01")
         private LocalDate birthday;
 
+        // TODO: AttachedFile Entity 구현 이후 주석 해제
+        // @Schema(description = "프로필 이미지 정보")
+        // private AttachedFile profileImage;
+
         @NotNull(message = "성별을 입력해주세요.")
         @Schema(
                 description = "사용자 성별",
@@ -164,8 +168,6 @@ public class AuthDto {
                     .build();
         }
     }
-
-
 
     @Data
     @AllArgsConstructor
