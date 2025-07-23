@@ -109,6 +109,12 @@ public class AuthService {
         return AuthDto.IdExistResponse.from(exists);
     }
 
+    @Transactional(readOnly = true)
+    public AuthDto.NicknameExistResponse checkNicknameExist(AuthDto.NicknameExistRequest request) {
+        boolean exists = userRepository.existsByNickname(request.getNickname());
+        return AuthDto.NicknameExistResponse.from(exists);
+    }
+
     @Transactional
     public void logout(UserDetails userDetails, HttpServletRequest request) {
         String accessToken = getAccessTokenFromRequest(request);
