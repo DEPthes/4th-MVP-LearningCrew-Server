@@ -51,11 +51,6 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserUpdateRequest {
-        @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
-        @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
-        private String id;
-
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
         @Schema(description = "사용자 닉네임", example = "user nickname")
