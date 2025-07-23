@@ -41,4 +41,12 @@ public class User extends TimeStampedEntity {
     private Role role = Role.USER;
 
     // TODO: AttachedFile Entity 구현 이후 연관관계 매핑 적용
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }
