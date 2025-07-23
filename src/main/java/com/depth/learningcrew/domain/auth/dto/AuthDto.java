@@ -135,6 +135,38 @@ public class AuthDto {
         }
     }
 
+    // 닉네임 중복 인증 확인 요청 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "닉네임 중복 확인 요청 DTO")
+    public static class NicknameExistRequest {
+        @NotBlank(message = "확인할 닉네임 (특수문자를 제외한 2~10자리)을 입력해주세요.")
+        @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
+        @Schema(description = "사용자 닉네임", example = "LearnIt팀1")
+        private String nickname;
+    }
+
+    // 닉네임 중복 인증 확인 응답 DTO
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(description = "닉네임 중복 확인 응답 DTO")
+    public static class NicknameExistResponse {
+        @Schema(description = "닉네임 존재 여부 (true/false)", example = "false")
+        private boolean isExist;
+
+        public static NicknameExistResponse from(boolean exists) {
+            return NicknameExistResponse.builder()
+                    .isExist(exists)
+                    .build();
+        }
+    }
+
+
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
