@@ -11,7 +11,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "cache.specs")
+@ConfigurationProperties(prefix = "cache")
 public class CacheProperties {
 
     private Map<String, Spec> specs = new HashMap<>();

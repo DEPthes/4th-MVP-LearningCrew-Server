@@ -5,6 +5,7 @@ import com.depth.learningcrew.domain.auth.service.AuthService;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
+import com.depth.learningcrew.system.security.utility.validator.ValidatorUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,11 +40,20 @@ public class AuthController {
         return authService.signIn(request);
     }
 
-    @GetMapping("/id-exist")
+    @GetMapping("/email-exist")
     @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
     @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
-    public AuthDto.IdExistResponse checkId(@RequestBody @Valid AuthDto.IdExistRequest request) {
-        return authService.checkIdExist(request);
+    public AuthDto.EmailExistResponse checkEmail(@RequestParam("email") String email) {
+        ValidatorUtil.validateEmail(email);
+        return authService.checkEmailExist(email);
+    }
+
+    @GetMapping("/nickname-exist")
+    @Operation(summary = "닉네임 중복 확인", description = "입력된 닉네임의 사용 가능 여부를 확인합니다.")
+    @ApiResponse(responseCode = "200", description = "닉네임 확인 성공")
+    public AuthDto.NicknameExistResponse checkNickname(@RequestParam("nickname") String nickname) {
+        ValidatorUtil.validateNickname(nickname);
+        return authService.checkNicknameExist(nickname);
     }
 
     @PostMapping("/token/refresh")
@@ -51,16 +61,6 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "토큰 재발행 성공")
     public JwtDto.TokenInfo refreshToken(@RequestBody @Valid AuthDto.RecreateRequest request) {
         return authService.recreateToken(request);
-    }
-
-    @GetMapping("/me")
-    @Operation(summary = "내 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "내 정보 조회 성공")
-    public UserDto.UserResponse whoami(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        return UserDto.UserResponse.from(userDetails.getUser());
     }
 
     @PostMapping("/logout")
