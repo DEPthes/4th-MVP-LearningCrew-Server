@@ -33,7 +33,7 @@ public class SecurityConfig {
                     it.includePath("/api/**");
                     it.excludePath("/api/auth/register");
                     it.excludePath("/api/auth/login");
-                    it.excludePath("/api/auth/id-exist");
+                    it.excludePath("/api/auth/email-exist");
                     it.excludePath("/api/auth/nickname-exist");
                     it.excludePath("/api/auth/token/refresh");
                 })
