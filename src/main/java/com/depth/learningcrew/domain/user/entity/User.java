@@ -44,6 +44,7 @@ public class User extends TimeStampedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable=false, length = 20)
+    @Builder.Default
     private Role role = Role.USER;
 
     // TODO: AttachedFile Entity 구현 이후 연관관계 매핑 적용
