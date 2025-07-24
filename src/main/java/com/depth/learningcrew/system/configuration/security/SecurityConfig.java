@@ -36,6 +36,8 @@ public class SecurityConfig {
                     it.excludePath("/api/auth/email-exist");
                     it.excludePath("/api/auth/nickname-exist");
                     it.excludePath("/api/auth/token/refresh");
+                    it.excludePath("/api/files/images/**");
+                    it.excludePath("/api/files/downloads/**");
                 })
                 .configure(httpSecurity);
 
