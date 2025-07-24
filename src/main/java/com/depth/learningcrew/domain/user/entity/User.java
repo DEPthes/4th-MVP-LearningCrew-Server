@@ -49,11 +49,8 @@ public class User extends TimeStampedEntity {
 
     // TODO: AttachedFile Entity 구현 이후 연관관계 매핑 적용
 
-    public void update(UserDto.UserUpdateRequest request, PasswordEncoder encoder) {
-        if (!this.email.equals(request.getEmail())) {this.email = request.getEmail();}
+    public void changeNickname(String nickname) { this.nickname = nickname; }
+    public void changeEmail(String email) { this.email = email; }
+    public void changePassword(String password, PasswordEncoder encoder) { this.password = encoder.encode(password); }
 
-        if (!this.nickname.equals(request.getNickname())) {this.nickname = request.getNickname();}
-
-        this.password = encoder.encode(request.getPassword());
-    }
 }

@@ -23,13 +23,15 @@ public class UserService {
         User found = userRepository.findById(user.getId())
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-        if (!found.getNickname().equals(request.getNickname())
-                && userRepository.existsByNickname(request.getNickname())) {
+        if (request.getNickname() != null &&
+                !found.getNickname().equals(request.getNickname()) &&
+                userRepository.existsByNickname(request.getNickname())) {
             throw new RestException(ErrorCode.USER_NICKNAME_ALREADY_EXISTS);
         }
 
-        if (!found.getEmail().equals(request.getEmail())
-                && userRepository.existsByEmail(request.getEmail())) {
+        if (request.getEmail() != null &&
+                !found.getEmail().equals(request.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
             throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
         }
 
