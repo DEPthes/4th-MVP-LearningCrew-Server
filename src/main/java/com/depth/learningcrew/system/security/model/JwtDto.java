@@ -47,9 +47,13 @@ public class JwtDto {
     @NoArgsConstructor
     @Builder
     public static class TokenInfo {
+        @Schema(description = "Access Token", example = "accessTokenContent")
         private String accessToken;
+        @Schema(description = "Refresh Token", example = "refreshTokenContent")
         private String refreshToken;
+        @Schema(description = "Access Token 만료 시간", example = "ISO DateTime")
         private LocalDateTime accessTokenExpiresAt;
+        @Schema(description = "Refresh Token 만료 시간", example = "ISO DateTime")
         private LocalDateTime refreshTokenExpiresAt;
 
         public static TokenInfo of(JwtDto.TokenPair tokenPair) {
