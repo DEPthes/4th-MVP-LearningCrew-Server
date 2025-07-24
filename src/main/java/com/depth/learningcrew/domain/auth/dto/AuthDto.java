@@ -19,7 +19,7 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    @Schema(description = "회원가입 요청 DTO")
+    @Schema(description = "회원가입 요청 DTO", requiredProperties = {"email", "nickname", "password", "birthday", "gender"})
     public static class SignUpRequest {
         @NotBlank(message = "이메일 형식으로 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
@@ -70,7 +70,7 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    @Schema(description = "로그인 요청 DTO")
+    @Schema(description = "로그인 요청 DTO", requiredProperties = {"email", "password"})
     public static class SignInRequest {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
@@ -146,10 +146,11 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    @Schema(description = "토큰 재발행 DTO")
+    @Schema(description = "토큰 재발행 DTO", requiredProperties = {"refreshToken"})
     public static class RecreateRequest {
         @NotBlank(message = "Refresh Token을 입력해주세요.")
         @Schema(description = "재발행할 Refresh Token", example = "refreshTokenString")
         private String refreshToken;
     }
 }
+
