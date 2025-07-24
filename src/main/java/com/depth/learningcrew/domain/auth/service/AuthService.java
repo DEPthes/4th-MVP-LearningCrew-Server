@@ -11,6 +11,7 @@ import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
+import com.depth.learningcrew.system.security.model.AuthDetails;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import com.depth.learningcrew.system.security.service.UserLoadService;
@@ -43,19 +44,19 @@ public class AuthService {
         refreshTokenRepository.deleteByUuid(refreshTokenUuid);
         refreshTokenCacheRepository.evictRefreshUuid(refreshTokenUuid);
 
-        var userDetails = userLoadService.loadUserByKey(id)
+        AuthDetails authDetails = userLoadService.loadUserByKey(id)
                 .orElseThrow(() -> new RestException(ErrorCode.AUTH_USER_NOT_FOUND));
-        var tokenPair = jwtTokenProvider.createTokenPair(userDetails);
+        JwtDto.TokenPair tokenPair = jwtTokenProvider.createTokenPair(authDetails);
 
         String newRefreshUuid = tokenPair.getRefreshToken().getTokenString();
         RefreshToken newRefreshToken = RefreshTokenDto.toEntity(
                 newRefreshUuid,
-                userDetails.getKey(),
+                authDetails.getKey(),
                 tokenPair.getRefreshToken().getExpireAt()
         );
 
         refreshTokenRepository.save(newRefreshToken);
-        refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, userDetails.getKey());
+        refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, authDetails.getKey());
 
         return JwtDto.TokenInfo.of(tokenPair);
     }
