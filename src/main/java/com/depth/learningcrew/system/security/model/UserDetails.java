@@ -17,9 +17,7 @@ public class UserDetails extends AuthDetails{
     private final User user;
 
     @Override
-    public String getKey() {
-        return user.getId();
-    }
+    public String getKey() { return String.valueOf(user.getId());}
 
     public static UserDetails from(User user) {
         User unproxied = Hibernate.unproxy(user, User.class);
