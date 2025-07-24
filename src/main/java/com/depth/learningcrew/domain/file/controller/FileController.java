@@ -1,6 +1,8 @@
 package com.depth.learningcrew.domain.file.controller;
 
 import com.depth.learningcrew.domain.file.service.FileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -22,6 +24,8 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping("/images/{file_uuId}")
+    @Operation(summary = "이미지 조회", description = "특정 아이디로 저장된 이미지를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "이미지 조회 성공")
     public ResponseEntity<Resource> getImage(
             @PathVariable String file_uuId
     ) {
@@ -33,6 +37,8 @@ public class FileController {
     }
 
     @GetMapping("/downloads/{file_uuId}")
+    @Operation(summary = "파일 다운로드", description = "특정 아이디로 저장된 파일을 다운로드합니다.")
+    @ApiResponse(responseCode = "200", description = "파일 다운로드 성공")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String file_uuId
     ) throws IOException {
