@@ -20,12 +20,20 @@ public class UserService {
     @Transactional
     public UserDto.UserUpdateResponse update(User user, UserDto.UserUpdateRequest request) {
 
-        if (!user.getNickname().equals(request.getNickname())
+        User found = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+        if (!found.getNickname().equals(request.getNickname())
                 && userRepository.existsByNickname(request.getNickname())) {
             throw new RestException(ErrorCode.USER_NICKNAME_ALREADY_EXISTS);
         }
 
-        request.applyTo(user, passwordEncoder);
-        return UserDto.UserUpdateResponse.from(user);
+        if (!found.getEmail().equals(request.getEmail())
+                && userRepository.existsByEmail(request.getEmail())) {
+            throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
+        }
+
+        request.applyTo(found, passwordEncoder);
+        return UserDto.UserUpdateResponse.from(found);
     }
 }
