@@ -52,23 +52,23 @@ public class UserDto {
     @Getter
     public static class UserUpdateRequest {
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "이메일(아이디) (선택사항, 필수X)", example = "user@email.com")
+        @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
 
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 닉네임 (선택사항, 필수X)", example = "user nickname")
+        @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
 
         @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}", message = "비밀번호 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 비밀번호 (선택사항, 필수X)", example = "password content")
+        @Schema(description = "사용자 비밀번호", example = "password content")
         private String password;
 
         // TODO: ProfileImage는 AttachedFile Entity 구현 이후 추후 다룸
 
         public void applyTo(User user, PasswordEncoder encoder) {
-            if (email != null && !email.equals(user.getEmail())) {user.changeEmail(email);}
-            if (nickname != null && !nickname.equals(user.getNickname())) {user.changeNickname(nickname);}
-            if (password != null) {user.changePassword(password, encoder);}
+            if (email != null && !email.equals(user.getEmail())) {user.setEmail(email);}
+            if (nickname != null && !nickname.equals(user.getNickname())) {user.setNickname(nickname);}
+            if (password != null) {user.setPassword(encoder.encode(password));}
         }
     }
 

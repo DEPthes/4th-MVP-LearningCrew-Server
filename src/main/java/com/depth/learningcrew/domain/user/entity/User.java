@@ -14,15 +14,16 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Table(
     name = "USER_ACCOUNT",
     uniqueConstraints = {
-        @UniqueConstraint(name = "USER_NICKNAME", columnNames = "nickname"),
-        @UniqueConstraint(name = "USER_EMAIL", columnNames = "email")
+            @UniqueConstraint(name = "USER_NICKNAME", columnNames = "nickname"),
+            @UniqueConstraint(name = "USER_EMAIL", columnNames = "email")
     }
 )
 public class User extends TimeStampedEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Setter(AccessLevel.NONE)
     private Integer id;
 
     @Column(nullable=false, length = 50)
@@ -48,9 +49,5 @@ public class User extends TimeStampedEntity {
     private Role role = Role.USER;
 
     // TODO: AttachedFile Entity 구현 이후 연관관계 매핑 적용
-
-    public void changeNickname(String nickname) { this.nickname = nickname; }
-    public void changeEmail(String email) { this.email = email; }
-    public void changePassword(String password, PasswordEncoder encoder) { this.password = encoder.encode(password); }
 
 }
