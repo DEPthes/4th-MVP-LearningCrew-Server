@@ -21,9 +21,9 @@ public class AuthDto {
     @Builder
     @Schema(description = "회원가입 요청 DTO")
     public static class SignUpRequest {
-        @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
+        @NotBlank(message = "이메일 형식으로 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
+        @Schema(description = "이메일 (아이디)", example = "user@email.com")
         private String email;
 
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
@@ -74,7 +74,7 @@ public class AuthDto {
     public static class SignInRequest {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
+        @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
 
         @NotBlank(message = "대소문자 영문자와 숫자를 포함한 8자리 이상의 비밀번호를 입력해주세요.")
@@ -113,9 +113,9 @@ public class AuthDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    @Schema(description = "아이디 중복 확인 응답 DTO")
+    @Schema(description = "이메일(아이디) 중복 확인 응답 DTO")
     public static class EmailExistResponse {
-        @Schema(description = "아이디 존재 여부 (true/false)", example = "false")
+        @Schema(description = "이메일(아이디) 존재 여부 (true/false)", example = "false")
         private boolean isExist;
 
         public static EmailExistResponse from(boolean exists) {

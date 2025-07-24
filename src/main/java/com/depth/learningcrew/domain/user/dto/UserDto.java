@@ -21,7 +21,7 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserResponse {
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
+        @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
@@ -51,9 +51,9 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserUpdateRequest {
-        @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
+        @NotBlank(message = "이메일 형식으로 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
+        @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
 
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
@@ -78,7 +78,7 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserUpdateResponse {
-        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@example.com")
+        @Schema(description = "이메일(아이디)", example = "user@example.com")
         private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
