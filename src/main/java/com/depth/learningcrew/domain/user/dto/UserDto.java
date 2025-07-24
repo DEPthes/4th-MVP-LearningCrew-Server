@@ -22,7 +22,7 @@ public class UserDto {
     @Getter
     public static class UserResponse {
         @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
-        private String id;
+        private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
         @Schema(description = "사용자 역할", example = "USER")
@@ -36,7 +36,7 @@ public class UserDto {
 
         public static UserResponse from(User user) {
             return UserResponse.builder()
-                    .id(user.getId())
+                    .email(user.getEmail())
                     .nickname(user.getNickname())
                     .role(user.getRole())
                     .gender(user.getGender())
@@ -51,6 +51,11 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserUpdateRequest {
+        @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
+        @Email(message = "올바른 이메일 형식이 아닙니다.")
+        @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
+        private String email;
+
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
         @Schema(description = "사용자 닉네임", example = "user nickname")
@@ -64,10 +69,7 @@ public class UserDto {
         // TODO: ProfileImage는 AttachedFile Entity 구현 이후 추후 다룸
 
         public void applyTo(User user, PasswordEncoder encoder) {
-            user.updateNickname(nickname);
-            if (password != null && !password.isBlank()) {
-                user.updatePassword(encoder.encode(password));
-            }
+            user.update(this, encoder);
         }
     }
 
@@ -77,7 +79,7 @@ public class UserDto {
     @Getter
     public static class UserUpdateResponse {
         @Schema(description = "사용자 아이디(이메일 형식)", example = "user@example.com")
-        private String id;
+        private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
         private String nickname;
         @Schema(description = "사용자 역할", example = "USER | ADMIN")
@@ -89,7 +91,7 @@ public class UserDto {
 
         public static UserUpdateResponse from(User user) {
             return UserUpdateResponse.builder()
-                    .id(user.getId())
+                    .email(user.getEmail())
                     .nickname(user.getNickname())
                     .role(user.getRole())
                     .createdAt(user.getCreatedAt())
