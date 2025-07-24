@@ -5,6 +5,7 @@ import com.depth.learningcrew.domain.auth.service.AuthService;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
+import com.depth.learningcrew.system.security.utility.validator.ValidatorUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,18 +40,20 @@ public class AuthController {
         return authService.signIn(request);
     }
 
-    @GetMapping("/id-exist")
+    @GetMapping("/email-exist")
     @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
     @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
-    public AuthDto.IdExistResponse checkId(@RequestBody @Valid AuthDto.IdExistRequest request) {
-        return authService.checkIdExist(request);
+    public AuthDto.EmailExistResponse checkEmail(@RequestParam("email") String email) {
+        ValidatorUtil.validateEmail(email);
+        return authService.checkEmailExist(email);
     }
 
     @GetMapping("/nickname-exist")
     @Operation(summary = "닉네임 중복 확인", description = "입력된 닉네임의 사용 가능 여부를 확인합니다.")
     @ApiResponse(responseCode = "200", description = "닉네임 확인 성공")
-    public AuthDto.NicknameExistResponse checkNickname(@RequestBody @Valid AuthDto.NicknameExistRequest request) {
-        return authService.checkNicknameExist(request);
+    public AuthDto.NicknameExistResponse checkNickname(@RequestParam("nickname") String nickname) {
+        ValidatorUtil.validateNickname(nickname);
+        return authService.checkNicknameExist(nickname);
     }
 
     @PostMapping("/token/refresh")

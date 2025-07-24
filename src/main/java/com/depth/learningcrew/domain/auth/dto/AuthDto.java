@@ -11,7 +11,6 @@ import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class AuthDto {
 
@@ -25,7 +24,7 @@ public class AuthDto {
         @NotBlank(message = "아이디를 이메일 형식으로 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
-        private String id;
+        private String email;
 
         @NotBlank(message = "특수문자를 제외한 2~10자리의 닉네임을 입력해주세요.")
         @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
@@ -56,7 +55,7 @@ public class AuthDto {
 
         public User toEntity(PasswordEncoder encoder) {
             return User.builder()
-                    .id(id)
+                    .email(email)
                     .nickname(nickname)
                     .password(encoder.encode(password))
                     .birthday(birthday)
@@ -76,7 +75,7 @@ public class AuthDto {
         @NotBlank(message = "이메일을 입력해주세요.")
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         @Schema(description = "사용자 아이디(이메일 형식)", example = "user@email.com")
-        private String id;
+        private String email;
 
         @NotBlank(message = "대소문자 영문자와 숫자를 포함한 8자리 이상의 비밀번호를 입력해주세요.")
         @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}", message = "비밀번호 조건에 충족되지 않습니다.")
@@ -109,47 +108,21 @@ public class AuthDto {
         }
     }
 
-    // 아이디 중복 인증 확인 요청 DTO
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    @Schema(description = "아이디 중복 확인 요청 DTO")
-    public static class IdExistRequest {
-        @NotBlank(message = "확인할 아이디(이메일 주소)를 입력해주세요.")
-        @Email(message = "올바른 이메일 형식이 아닙니다.")
-        @Schema(description = "확인할 아이디(이메일 주소)", example = "user@email.com")
-        private String id;
-    }
-
     // 아이디 중복 인증 확인 응답 DTO
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
     @Schema(description = "아이디 중복 확인 응답 DTO")
-    public static class IdExistResponse {
+    public static class EmailExistResponse {
         @Schema(description = "아이디 존재 여부 (true/false)", example = "false")
         private boolean isExist;
 
-        public static IdExistResponse from(boolean exists) {
-            return IdExistResponse.builder()
+        public static EmailExistResponse from(boolean exists) {
+            return EmailExistResponse.builder()
                     .isExist(exists)
                     .build();
         }
-    }
-
-    // 닉네임 중복 인증 확인 요청 DTO
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Builder
-    @Schema(description = "닉네임 중복 확인 요청 DTO")
-    public static class NicknameExistRequest {
-        @NotBlank(message = "확인할 닉네임 (특수문자를 제외한 2~10자리)을 입력해주세요.")
-        @Pattern(regexp = "^[ㄱ-ㅎ가-힣a-zA-Z0-9-_]{2,10}$", message = "닉네임 조건에 충족되지 않습니다.")
-        @Schema(description = "사용자 닉네임", example = "user nickname")
-        private String nickname;
     }
 
     // 닉네임 중복 인증 확인 응답 DTO

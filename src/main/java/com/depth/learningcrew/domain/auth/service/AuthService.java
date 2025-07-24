@@ -11,22 +11,16 @@ import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
-import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
-import com.depth.learningcrew.system.security.utility.jwt.TokenType;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -68,9 +62,9 @@ public class AuthService {
 
     @Transactional
     public UserDto.UserResponse signUp(AuthDto.SignUpRequest request) {
-        boolean isExisting = userRepository.existsById(request.getId());
+        boolean isExisting = userRepository.existsByEmail(request.getEmail());
         if(isExisting)
-            throw new RestException(ErrorCode.USER_ALREADY_ID_EXISTS);
+            throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
 
         User toSave = request.toEntity(passwordEncoder);
         User saved = userRepository.save(toSave);
@@ -80,7 +74,7 @@ public class AuthService {
 
     @Transactional
     public AuthDto.SignInResponse signIn(AuthDto.SignInRequest request) {
-        var found = userRepository.findById(request.getId())
+        var found = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
         if(!passwordEncoder.matches(request.getPassword(), found.getPassword()))
@@ -104,14 +98,14 @@ public class AuthService {
     }
 
     @Transactional(readOnly = true)
-    public AuthDto.IdExistResponse checkIdExist(AuthDto.IdExistRequest request) {
-        boolean exists = userRepository.existsById(request.getId());
-        return AuthDto.IdExistResponse.from(exists);
+    public AuthDto.EmailExistResponse checkEmailExist(String email) {
+        boolean exists = userRepository.existsByEmail(email);
+        return AuthDto.EmailExistResponse.from(exists);
     }
 
     @Transactional(readOnly = true)
-    public AuthDto.NicknameExistResponse checkNicknameExist(AuthDto.NicknameExistRequest request) {
-        boolean exists = userRepository.existsByNickname(request.getNickname());
+    public AuthDto.NicknameExistResponse checkNicknameExist(String nickname) {
+        boolean exists = userRepository.existsByNickname(nickname);
         return AuthDto.NicknameExistResponse.from(exists);
     }
 
