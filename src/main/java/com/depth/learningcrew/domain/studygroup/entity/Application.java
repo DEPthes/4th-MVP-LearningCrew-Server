@@ -15,6 +15,7 @@ public class Application extends TimeStampedEntity {
     @EmbeddedId
     private ApplicationId id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
-    private String state;
+    private State state;
 }
