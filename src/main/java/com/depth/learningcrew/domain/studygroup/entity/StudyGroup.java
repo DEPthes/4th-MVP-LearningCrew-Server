@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -37,6 +38,14 @@ public class StudyGroup extends TimeStampedEntity {
 
     @Column(nullable = false)
     private Integer currentStep;
+
+    @ManyToMany
+    @JoinTable(
+            name = "CATEGORY_GROUP_MAPPING",
+            joinColumns = @JoinColumn(name = "study_group_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_category_id")
+    )
+    private List<GroupCategory> categories;
 
     @Column(nullable = false)
     private LocalDate startDate;
