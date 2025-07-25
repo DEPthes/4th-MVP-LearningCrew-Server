@@ -16,3 +16,6 @@ logging:
 
 server:
   port: 8080
+
+file:
+  save-path: ./upload
