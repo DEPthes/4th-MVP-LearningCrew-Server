@@ -21,4 +21,11 @@ public class StudyStepId implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "study_group_id")
     private StudyGroup studyGroupId;
+
+    public static StudyStepId of(Integer step, StudyGroup studyGroup) {
+        return StudyStepId.builder()
+                .step(step)
+                .studyGroupId(studyGroup)
+                .build();
+    }
 }
