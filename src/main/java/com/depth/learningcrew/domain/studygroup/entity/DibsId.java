@@ -22,4 +22,11 @@ public class DibsId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_group_id", nullable = false)
     private StudyGroup studyGroup;
+
+    public static DibsId of(User user, StudyGroup studyGroup) {
+        return DibsId.builder()
+                .user(user)
+                .studyGroup(studyGroup)
+                .build();
+    }
 }
