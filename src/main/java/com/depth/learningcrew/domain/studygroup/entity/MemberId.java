@@ -22,4 +22,11 @@ public class MemberId implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_group_id", nullable = false)
     private StudyGroup studyGroup;
+
+    public static MemberId of(User user, StudyGroup studyGroup) {
+        return MemberId.builder()
+                .user(user)
+                .studyGroup(studyGroup)
+                .build();
+    }
 }
