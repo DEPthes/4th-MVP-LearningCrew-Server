@@ -19,9 +19,9 @@ public class ApplicationId implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_group_id", nullable = false)
-    private StudyGroup studyGroupId;
+    private StudyGroup studyGroup;
 }
