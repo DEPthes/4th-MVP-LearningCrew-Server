@@ -17,7 +17,7 @@ public class GroupCategoryService {
     private final GroupCategoryRepository groupCategoryRepository;
 
     @Transactional(readOnly = true)
-    public List<GroupCategoryDto.GroupCategoryResponse> getGroupCategory() {
+    public List<GroupCategoryDto.GroupCategoryResponse> getGroupCategories() {
         List<GroupCategory> groupCategories = groupCategoryRepository.findAll();
         return groupCategories.stream()
                 .map(GroupCategoryDto.GroupCategoryResponse::from)
