@@ -1,13 +1,29 @@
 package com.depth.learningcrew.domain.user.entity;
 
-import com.depth.learningcrew.common.auditor.TimeStampedEntity;
-import com.depth.learningcrew.domain.user.dto.UserDto;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.LocalDate;
+
+import com.depth.learningcrew.common.auditor.TimeStampedEntity;
+import com.depth.learningcrew.domain.file.entity.ProfileImage;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @SuperBuilder
@@ -15,39 +31,39 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(
-    name = "USER_ACCOUNT",
-    uniqueConstraints = {
-            @UniqueConstraint(name = "USER_NICKNAME", columnNames = "nickname"),
-            @UniqueConstraint(name = "USER_EMAIL", columnNames = "email")
-    }
-)
+@Table(name = "USER_ACCOUNT", uniqueConstraints = {
+        @UniqueConstraint(name = "USER_NICKNAME", columnNames = "nickname"),
+        @UniqueConstraint(name = "USER_EMAIL", columnNames = "email")
+})
 public class User extends TimeStampedEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Setter(AccessLevel.NONE)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
     private Integer id;
 
-    @Column(nullable=false, length = 50)
+    @Column(nullable = false, length = 50)
     private String email;
 
-    @Column(nullable=false, length = 60)
+    @Column(nullable = false, length = 60)
     private String password;
 
     // 대소문자 구분해서 저장하도록 COLLATE 설정 (단, 이는 MySQL, MariaDB에서 가능)(ex. Hooby <-> hooby)
-    @Column(nullable=false, length = 30, columnDefinition = "VARCHAR(30) COLLATE utf8mb4_bin")
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30) COLLATE utf8mb4_bin")
     private String nickname;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private LocalDate birthday;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false, length = 20)
+    @Column(nullable = false, length = 20)
     private Gender gender;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false, length = 20)
+    @Column(nullable = false, length = 20)
     @Builder.Default
     private Role role = Role.USER;
 
-    // TODO: AttachedFile Entity 구현 이후 연관관계 매핑 적용
-
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    @JoinColumn(name = "profile_image_id")
+    private ProfileImage profileImage;
 }

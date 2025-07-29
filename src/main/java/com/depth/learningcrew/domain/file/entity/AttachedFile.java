@@ -21,4 +21,6 @@ public abstract class AttachedFile extends TimeStampedEntity {
     private HandingType handingType;
 
     private String fileName;
+
+    private Long size;
 }

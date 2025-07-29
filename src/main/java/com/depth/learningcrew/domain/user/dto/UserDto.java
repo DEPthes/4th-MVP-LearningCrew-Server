@@ -1,19 +1,22 @@
 package com.depth.learningcrew.domain.user.dto;
 
+import java.time.LocalDateTime;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.depth.learningcrew.domain.file.dto.FileDto;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalDateTime;
 
 public class UserDto {
     @Builder
@@ -29,6 +32,8 @@ public class UserDto {
         private Role role;
         @Schema(description = "사용자 성별", example = "MALE | FEMAIL | OTHER")
         private Gender gender;
+        @Schema(description = "사용자 프로필 이미지")
+        private FileDto.FileResponse profileImage;
         @Schema(description = "계정 생성 시간", example = "ISO Datetime")
         private LocalDateTime createdAt;
         @Schema(description = "마지막 정보 수정 시간", example = "ISO Datetime")
@@ -40,6 +45,7 @@ public class UserDto {
                     .nickname(user.getNickname())
                     .role(user.getRole())
                     .gender(user.getGender())
+                    .profileImage(FileDto.FileResponse.from(user.getProfileImage()))
                     .createdAt(user.getCreatedAt())
                     .lastModifiedAt(user.getLastModifiedAt())
                     .build();
@@ -63,12 +69,19 @@ public class UserDto {
         @Schema(description = "사용자 비밀번호", example = "password content")
         private String password;
 
-        // TODO: ProfileImage는 AttachedFile Entity 구현 이후 추후 다룸
+        @Schema(description = "사용자 프로필 이미지")
+        private MultipartFile profileImage;
 
         public void applyTo(User user, PasswordEncoder encoder) {
-            if (email != null && !email.equals(user.getEmail())) {user.setEmail(email);}
-            if (nickname != null && !nickname.equals(user.getNickname())) {user.setNickname(nickname);}
-            if (password != null) {user.setPassword(encoder.encode(password));}
+            if (email != null && !email.equals(user.getEmail())) {
+                user.setEmail(email);
+            }
+            if (nickname != null && !nickname.equals(user.getNickname())) {
+                user.setNickname(nickname);
+            }
+            if (password != null) {
+                user.setPassword(encoder.encode(password));
+            }
         }
     }
 
