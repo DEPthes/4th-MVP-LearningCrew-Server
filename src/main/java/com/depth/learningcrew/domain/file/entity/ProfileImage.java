@@ -1,34 +1,36 @@
 package com.depth.learningcrew.domain.file.entity;
 
-import jakarta.persistence.Column;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.depth.learningcrew.domain.user.entity.User;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 @Entity
-@DiscriminatorValue("IMAGE")
+@Getter
+@Setter
 @SuperBuilder
-@AllArgsConstructor
 @NoArgsConstructor
-@Getter @Setter
-public class Image extends AttachedFile {
+@DiscriminatorValue("PROFILE_IMAGE")
+public class ProfileImage extends AttachedFile {
+    @OneToOne(fetch = FetchType.LAZY)
+    private User user;
 
-    @Column(name = "image_id")
-    private Long id;
-
-    public static Image from(MultipartFile file) {
+    public static ProfileImage from(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return null;
         }
 
-        return Image.builder()
+        return ProfileImage.builder()
                 .uuid(UUID.randomUUID().toString())
                 .handingType(HandingType.IMAGE)
                 .fileName(file.getOriginalFilename())

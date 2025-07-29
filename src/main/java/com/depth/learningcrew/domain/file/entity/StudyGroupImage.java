@@ -1,15 +1,20 @@
 package com.depth.learningcrew.domain.file.entity;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.UUID;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
@@ -34,6 +39,7 @@ public class StudyGroupImage extends AttachedFile {
                 .fileName(file.getOriginalFilename())
                 .handingType(HandingType.IMAGE)
                 .studyGroup(studyGroup)
+                .size(file.getSize())
                 .build();
 
     }
@@ -42,12 +48,12 @@ public class StudyGroupImage extends AttachedFile {
         String fileName = file.getOriginalFilename();
         String[] splitted = fileName.split("\\.");
 
-        if(splitted.length < 1) {
+        if (splitted.length < 1) {
             throw new RestException(ErrorCode.FILE_NOT_IMAGE);
         }
 
         String extension = splitted[splitted.length - 1];
-        if(!List.of("JPG").contains(extension.toUpperCase())) {
+        if (!List.of("JPG").contains(extension.toUpperCase())) {
             throw new RestException(ErrorCode.FILE_NOT_IMAGE);
         }
     }

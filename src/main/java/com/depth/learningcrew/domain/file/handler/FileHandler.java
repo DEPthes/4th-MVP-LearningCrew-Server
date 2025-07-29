@@ -1,19 +1,21 @@
 package com.depth.learningcrew.domain.file.handler;
 
-import com.depth.learningcrew.domain.file.entity.AttachedFile;
-import com.depth.learningcrew.system.exception.model.ErrorCode;
-import com.depth.learningcrew.system.exception.model.RestException;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Paths;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Paths;
+import com.depth.learningcrew.domain.file.entity.AttachedFile;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class FileHandler {
 
         File targetFile = Paths.get(savePath, attachedFile.getUuid()).toFile();
 
-        if(targetFile.exists()){
+        if (targetFile.exists()) {
             throw new RestException(ErrorCode.FILE_ALREADY_EXISTS);
         }
 
@@ -42,7 +44,7 @@ public class FileHandler {
 
     private void createDirIfNotExist(String path) {
         File targetDir = Paths.get(path).toFile();
-        if(!targetDir.exists()) {
+        if (!targetDir.exists()) {
             targetDir.mkdirs();
         }
     }
@@ -51,10 +53,23 @@ public class FileHandler {
     public Resource loadFileAsResource(AttachedFile attachedFile) {
         File targetFile = Paths.get(savePath, attachedFile.getUuid()).toFile();
 
-        if(!targetFile.exists()){
+        if (!targetFile.exists()) {
             throw new RestException(ErrorCode.FILE_NOT_FOUND);
         }
 
         return new FileSystemResource(targetFile);
+    }
+
+    @SneakyThrows
+    public void deleteFile(AttachedFile attachedFile) {
+        File targetFile = Paths.get(savePath, attachedFile.getUuid()).toFile();
+
+        if (!targetFile.exists()) {
+            throw new RestException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        if (!targetFile.delete()) {
+            throw new RestException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }
