@@ -41,3 +41,5 @@ out/
 .db
 .env.prod
 
+### Cursor ###
+.cursor/
