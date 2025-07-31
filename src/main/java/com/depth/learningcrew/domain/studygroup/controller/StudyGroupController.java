@@ -13,11 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,4 +38,11 @@ public class StudyGroupController {
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.paginateMyOwnedStudyGroups(searchConditions, userDetails, pageable);
   }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StudyGroupDto.StudyGroupDetailResponse> getStudyGroup(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UserDetails userDetails){
+        return ResponseEntity.ok(studyGroupService.getStudyGroupDetail(id, userDetails));
+      }
 }
