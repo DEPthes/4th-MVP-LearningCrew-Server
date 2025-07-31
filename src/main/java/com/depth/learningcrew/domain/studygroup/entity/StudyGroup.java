@@ -63,4 +63,8 @@ public class StudyGroup extends TimeStampedEntity {
 
     @OneToMany(mappedBy = "id.studyGroupId")
     private List<StudyStep> steps = new ArrayList<>();
+
+    @OneToMany(mappedBy = "id.studyGroup")
+    private List<Dibs> dibsList = new ArrayList<>();
+
 }
