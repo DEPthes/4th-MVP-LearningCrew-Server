@@ -43,3 +43,4 @@ out/
 
 ### Cursor ###
 .cursor/
+/upload/

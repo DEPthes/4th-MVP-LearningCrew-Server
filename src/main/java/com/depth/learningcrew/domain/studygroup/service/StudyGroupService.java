@@ -1,13 +1,25 @@
 package com.depth.learningcrew.domain.studygroup.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
+import com.depth.learningcrew.domain.file.repository.StudyGroupImageRepository;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
+import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
+import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 
 import lombok.RequiredArgsConstructor;
@@ -17,15 +29,56 @@ import lombok.RequiredArgsConstructor;
 public class StudyGroupService {
 
   private final StudyGroupQueryRepository studyGroupQueryRepository;
+  private final StudyGroupRepository studyGroupRepository;
+  private final StudyGroupImageRepository studyGroupImageRepository;
+  private final GroupCategoryService groupCategoryService;
+  private final FileHandler fileHandler;
+  private final DibsRepository dibsRepository;
 
   @Transactional(readOnly = true)
-  public PagedModel<StudyGroupDto.StudyGroupPaginationResponse> paginateMyOwnedStudyGroups(
+  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,
       UserDetails user,
       Pageable pageable) {
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, user, pageable);
 
     return new PagedModel<>(result);
+  }
+
+  @Transactional
+  public StudyGroupDto.StudyGroupResponse updateStudyGroup(
+      Integer groupId,
+      StudyGroupDto.StudyGroupUpdateRequest request,
+      MultipartFile groupImage,
+      UserDetails userDetails) {
+    StudyGroup group = studyGroupRepository.findById(groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    if (!group.getOwner().getId().equals(userDetails.getUser().getId())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
+
+    // 카테고리 처리
+    List<GroupCategory> categories = null;
+    if (request.getCategories() != null) {
+      categories = groupCategoryService.findByNames(request.getCategories());
+    }
+
+    request.applyTo(group, categories);
+
+    // 이미지 파일 처리
+    if (groupImage != null && !groupImage.isEmpty()) {
+      if (group.getStudyGroupImage() != null) {
+        fileHandler.deleteFile(group.getStudyGroupImage());
+      }
+
+      StudyGroupImage newImage = StudyGroupImage.from(groupImage, group);
+      fileHandler.saveFile(groupImage, newImage);
+      group.setStudyGroupImage(newImage);
+    }
+
+    boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), group);
+    return StudyGroupDto.StudyGroupResponse.from(group, dibs);
   }
 }
