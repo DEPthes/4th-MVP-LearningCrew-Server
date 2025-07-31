@@ -1,13 +1,28 @@
 package com.depth.learningcrew.domain.studygroup.entity;
 
-import com.depth.learningcrew.common.auditor.TimeStampedEntity;
-import com.depth.learningcrew.domain.user.entity.User;
-import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-
 import java.time.LocalDate;
 import java.util.List;
+
+import com.depth.learningcrew.common.auditor.TimeStampedEntity;
+import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.user.entity.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
@@ -40,11 +55,7 @@ public class StudyGroup extends TimeStampedEntity {
     private Integer currentStep;
 
     @ManyToMany
-    @JoinTable(
-            name = "CATEGORY_GROUP_MAPPING",
-            joinColumns = @JoinColumn(name = "study_group_id"),
-            inverseJoinColumns = @JoinColumn(name = "group_category_id")
-    )
+    @JoinTable(name = "CATEGORY_GROUP_MAPPING", joinColumns = @JoinColumn(name = "study_group_id"), inverseJoinColumns = @JoinColumn(name = "group_category_id"))
     private List<GroupCategory> categories;
 
     @Column(nullable = false)
@@ -56,4 +67,7 @@ public class StudyGroup extends TimeStampedEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "owner_id")
     private User owner;
+
+    @OneToOne(mappedBy = "studyGroup")
+    private StudyGroupImage studyGroupImage;
 }
