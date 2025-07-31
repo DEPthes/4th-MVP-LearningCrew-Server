@@ -1,6 +1,7 @@
 package com.depth.learningcrew.domain.studygroup.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
@@ -25,6 +26,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -64,7 +66,8 @@ public class StudyGroup extends TimeStampedEntity {
 
     @ManyToMany
     @JoinTable(name = "CATEGORY_GROUP_MAPPING", joinColumns = @JoinColumn(name = "study_group_id"), inverseJoinColumns = @JoinColumn(name = "group_category_id"))
-    private List<GroupCategory> categories;
+    @Builder.Default
+    private List<GroupCategory> categories = new ArrayList<>();
 
     @Column(nullable = false)
     private LocalDate startDate;
