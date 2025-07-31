@@ -1,5 +1,9 @@
 package com.depth.learningcrew.domain.studygroup.service;
 
+import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -17,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class StudyGroupService {
 
   private final StudyGroupQueryRepository studyGroupQueryRepository;
+  private final DibsRepository dibsRepository;
 
   @Transactional(readOnly = true)
   public PagedModel<StudyGroupDto.StudyGroupPaginationResponse> paginateMyOwnedStudyGroups(
@@ -28,4 +33,16 @@ public class StudyGroupService {
 
     return new PagedModel<>(result);
   }
+
+    @Transactional(readOnly = true)
+    public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
+            Integer groupId,
+            UserDetails user) {
+        StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+      boolean dibs = dibsRepository.existsByIdUserAndIdStudyGroup(user.getUser(), studyGroup);
+
+      return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
+    }
 }
