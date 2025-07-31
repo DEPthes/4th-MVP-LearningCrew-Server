@@ -119,11 +119,10 @@ public class StudyGroupDto {
         private LocalDate startDate;
         private LocalDate endDate;
         private UserDto.UserResponse owner;
-        private List<StepDto.StepResponse> steps;
         private LocalDateTime createdAt;
         private LocalDateTime lastModifiedAt;
         private String content;
-        private StepDto.StepResponse step;
+        private List<StepDto.StepResponse> steps;
         private Integer currentStep;
 
         public static StudyGroupDetailResponse from(StudyGroup studyGroup, Boolean dibs) {
