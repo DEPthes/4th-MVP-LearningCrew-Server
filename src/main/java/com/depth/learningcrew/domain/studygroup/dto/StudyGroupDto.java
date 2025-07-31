@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.depth.learningcrew.domain.file.dto.FileDto;
 import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
@@ -123,6 +125,9 @@ public class StudyGroupDto {
 
         @Schema(description = "시작 날짜", example = "2024-01-01")
         private LocalDate startDate;
+
+        @Schema(description = "그룹 이미지 파일")
+        private MultipartFile groupImage;
 
         public void applyTo(StudyGroup studyGroup, List<GroupCategory> categories) {
             if (name != null) {

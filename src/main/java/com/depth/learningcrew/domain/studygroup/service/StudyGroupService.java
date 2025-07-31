@@ -7,7 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
@@ -50,7 +49,6 @@ public class StudyGroupService {
   public StudyGroupDto.StudyGroupResponse updateStudyGroup(
       Integer groupId,
       StudyGroupDto.StudyGroupUpdateRequest request,
-      MultipartFile groupImage,
       UserDetails userDetails) {
     StudyGroup group = studyGroupRepository.findById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
@@ -68,13 +66,13 @@ public class StudyGroupService {
     request.applyTo(group, categories);
 
     // 이미지 파일 처리
-    if (groupImage != null && !groupImage.isEmpty()) {
+    if (request.getGroupImage() != null && !request.getGroupImage().isEmpty()) {
       if (group.getStudyGroupImage() != null) {
         fileHandler.deleteFile(group.getStudyGroupImage());
       }
 
-      StudyGroupImage newImage = StudyGroupImage.from(groupImage, group);
-      fileHandler.saveFile(groupImage, newImage);
+      StudyGroupImage newImage = StudyGroupImage.from(request.getGroupImage(), group);
+      fileHandler.saveFile(request.getGroupImage(), newImage);
       group.setStudyGroupImage(newImage);
     }
 
