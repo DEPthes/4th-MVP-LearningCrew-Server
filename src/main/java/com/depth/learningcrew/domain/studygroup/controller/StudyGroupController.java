@@ -4,7 +4,6 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -33,8 +32,8 @@ public class StudyGroupController {
   @GetMapping("/my/owned")
   @Operation(summary = "내 주최 그룹 목록 조회", description = "로그인한 사용자가 주최한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
   public PagedModel<StudyGroupDto.StudyGroupResponse> getMyOwnedStudyGroups(
-      @ModelAttribute StudyGroupDto.SearchConditions searchConditions,
-      @PageableDefault Pageable pageable,
+      @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
+      @PageableDefault @ParameterObject Pageable pageable,
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.paginateMyOwnedStudyGroups(searchConditions, userDetails, pageable);
   }

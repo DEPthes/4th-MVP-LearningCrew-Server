@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
-import com.depth.learningcrew.domain.file.repository.StudyGroupImageRepository;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
 import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
@@ -29,7 +28,6 @@ public class StudyGroupService {
 
   private final StudyGroupQueryRepository studyGroupQueryRepository;
   private final StudyGroupRepository studyGroupRepository;
-  private final StudyGroupImageRepository studyGroupImageRepository;
   private final GroupCategoryService groupCategoryService;
   private final FileHandler fileHandler;
   private final DibsRepository dibsRepository;
@@ -53,9 +51,7 @@ public class StudyGroupService {
     StudyGroup group = studyGroupRepository.findById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-    if (!group.getOwner().getId().equals(userDetails.getUser().getId())) {
-      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
-    }
+    group.canUpdateBy(userDetails);
 
     // 카테고리 처리
     List<GroupCategory> categories = null;

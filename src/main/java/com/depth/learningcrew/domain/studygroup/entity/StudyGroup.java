@@ -5,7 +5,11 @@ import java.util.List;
 
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
+import com.depth.learningcrew.system.security.model.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -74,4 +78,17 @@ public class StudyGroup extends TimeStampedEntity {
 
     @OneToOne(mappedBy = "studyGroup")
     private StudyGroupImage studyGroupImage;
+
+    public void canUpdateBy(UserDetails user) {
+        if (user.getUser().getRole().equals(Role.ADMIN)) {
+            return;
+        }
+
+        if (this.owner.getId().equals(user.getUser().getId())) {
+            return;
+        }
+
+        throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+
+    }
 }
