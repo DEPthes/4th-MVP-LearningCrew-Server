@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.depth.learningcrew.domain.studygroup.repository: DEBUG
+
+jwt:
+  secret: bGVhcm5pdHNlcnZlcnRlYW1pc2Jlc3R2ZXJ5ZXJ5amFuZ2phbmdtYW4=
+  access-token-expiration-minutes: 30
+  refresh-token-expiration-weeks: 2
+
+cache:
+  specs:
+    refresh-token-uuid:
+      expiration-week: 2
+      maximum-size: 10000

@@ -47,8 +47,7 @@ public class User extends TimeStampedEntity {
     @Column(nullable = false, length = 60)
     private String password;
 
-    // 대소문자 구분해서 저장하도록 COLLATE 설정 (단, 이는 MySQL, MariaDB에서 가능)(ex. Hooby <-> hooby)
-    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30) COLLATE utf8mb4_bin")
+    @Column(nullable = false, length = 30)
     private String nickname;
 
     @Column(nullable = false)

@@ -1,0 +1,340 @@
+package com.depth.learningcrew.domain.studygroup.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
+
+import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
+import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
+import com.depth.learningcrew.domain.user.entity.Gender;
+import com.depth.learningcrew.domain.user.entity.Role;
+import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.security.model.UserDetails;
+
+@ExtendWith(MockitoExtension.class)
+class StudyGroupServiceTest {
+
+  @Mock
+  private StudyGroupQueryRepository studyGroupQueryRepository;
+
+  @InjectMocks
+  private StudyGroupService studyGroupService;
+
+  private User testUser;
+  private UserDetails testUserDetails;
+  private StudyGroupDto.SearchConditions searchConditions;
+  private Pageable pageable;
+  private StudyGroup testStudyGroup;
+  private StudyGroupDto.StudyGroupPaginationResponse testResponse;
+
+  @BeforeEach
+  void setUp() {
+    // 테스트 사용자 설정
+    testUser = User.builder()
+        .id(1)
+        .email("test@example.com")
+        .password("password")
+        .nickname("testUser")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(Gender.MALE)
+        .role(Role.USER)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
+    testUserDetails = UserDetails.builder()
+        .user(testUser)
+        .build();
+
+    // 테스트 스터디 그룹 설정
+    testStudyGroup = StudyGroup.builder()
+        .id(1)
+        .name("테스트 스터디 그룹")
+        .summary("테스트 스터디 그룹입니다.")
+        .maxMembers(10)
+        .startDate(LocalDate.now())
+        .endDate(LocalDate.now().plusMonths(3))
+        .owner(testUser)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
+    // 테스트 응답 DTO 설정
+    testResponse = StudyGroupDto.StudyGroupPaginationResponse.builder()
+        .id(testStudyGroup.getId())
+        .name(testStudyGroup.getName())
+        .summary(testStudyGroup.getSummary())
+        .maxMembers(testStudyGroup.getMaxMembers())
+        .startDate(testStudyGroup.getStartDate())
+        .endDate(testStudyGroup.getEndDate())
+        .owner(null) // UserDto.UserResponse.from() 호출 시점에 설정
+        .createdAt(testStudyGroup.getCreatedAt())
+        .lastModifiedAt(testStudyGroup.getLastModifiedAt())
+        .memberCount(3)
+        .dibs(false)
+        .build();
+
+    // 검색 조건 설정
+    searchConditions = StudyGroupDto.SearchConditions.builder()
+        .sort("created_at")
+        .order("desc")
+        .categoryId(null)
+        .searchKeyword(null)
+        .build();
+
+    // 페이징 설정
+    pageable = PageRequest.of(0, 10);
+  }
+
+  @Test
+  @DisplayName("내가 주최한 스터디 그룹 목록을 페이징하여 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_ShouldReturnPagedResults() {
+    // given
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), pageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditions), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditions), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).getId()).isEqualTo(testStudyGroup.getId());
+    assertThat(result.getContent().get(0).getName()).isEqualTo(testStudyGroup.getName());
+    assertThat(result.getContent().get(0).getSummary()).isEqualTo(testStudyGroup.getSummary());
+    assertThat(result.getContent().get(0).getMaxMembers()).isEqualTo(testStudyGroup.getMaxMembers());
+  }
+
+  @Test
+  @DisplayName("빈 검색 결과가 있을 때도 정상적으로 PagedModel을 반환한다")
+  void paginateMyOwnedStudyGroups_WithEmptyResults_ShouldReturnEmptyPagedModel() {
+    // given
+    Page<StudyGroupDto.StudyGroupPaginationResponse> emptyPage = new PageImpl<>(
+        List.of(), pageable, 0L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditions), eq(testUserDetails), eq(pageable)))
+        .thenReturn(emptyPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditions), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("다양한 검색 조건으로 스터디 그룹을 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_WithDifferentSearchConditions_ShouldWorkCorrectly() {
+    // given
+    StudyGroupDto.SearchConditions customSearchConditions = StudyGroupDto.SearchConditions.builder()
+        .sort("alphabet")
+        .order("asc")
+        .categoryId(1)
+        .build();
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), pageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(customSearchConditions), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(customSearchConditions, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(customSearchConditions), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("다양한 페이징 설정으로 스터디 그룹을 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_WithDifferentPageable_ShouldWorkCorrectly() {
+    // given
+    Pageable customPageable = PageRequest.of(1, 5); // 두 번째 페이지, 5개씩
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), customPageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditions), eq(testUserDetails), eq(customPageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, customPageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditions), eq(testUserDetails), eq(customPageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("여러 개의 스터디 그룹이 있을 때 모든 결과를 반환한다")
+  void paginateMyOwnedStudyGroups_WithMultipleResults_ShouldReturnAllResults() {
+    // given
+    StudyGroupDto.StudyGroupPaginationResponse secondResponse = StudyGroupDto.StudyGroupPaginationResponse.builder()
+        .id(2)
+        .name("두 번째 스터디 그룹")
+        .summary("두 번째 스터디 그룹입니다.")
+        .maxMembers(5)
+        .startDate(LocalDate.now())
+        .endDate(LocalDate.now().plusMonths(2))
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .memberCount(2)
+        .dibs(true)
+        .build();
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse, secondResponse), pageable, 2L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditions), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditions), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(2);
+    assertThat(result.getContent().get(0).getId()).isEqualTo(1);
+    assertThat(result.getContent().get(1).getId()).isEqualTo(2);
+    assertThat(result.getContent().get(0).getDibs()).isFalse();
+    assertThat(result.getContent().get(1).getDibs()).isTrue();
+  }
+
+  @Test
+  @DisplayName("검색어가 포함된 검색 조건으로 스터디 그룹을 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_WithSearchKeyword_ShouldWorkCorrectly() {
+    // given
+    StudyGroupDto.SearchConditions searchConditionsWithKeyword = StudyGroupDto.SearchConditions.builder()
+        .sort("created_at")
+        .order("desc")
+        .searchKeyword("테스트")
+        .build();
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), pageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditionsWithKeyword), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditionsWithKeyword, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditionsWithKeyword), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("relative 정렬과 검색어가 포함된 검색 조건으로 스터디 그룹을 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_WithRelativeSortAndSearchKeyword_ShouldWorkCorrectly() {
+    // given
+    StudyGroupDto.SearchConditions searchConditionsWithRelativeSort = StudyGroupDto.SearchConditions.builder()
+        .sort("relative")
+        .order("desc")
+        .searchKeyword("스터디")
+        .build();
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), pageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(searchConditionsWithRelativeSort), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(searchConditionsWithRelativeSort, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(searchConditionsWithRelativeSort), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("검색어, 카테고리, 정렬 조건이 모두 포함된 검색 조건으로 스터디 그룹을 조회할 수 있다")
+  void paginateMyOwnedStudyGroups_WithAllSearchConditions_ShouldWorkCorrectly() {
+    // given
+    StudyGroupDto.SearchConditions allSearchConditions = StudyGroupDto.SearchConditions.builder()
+        .sort("alphabet")
+        .order("asc")
+        .categoryId(1)
+        .searchKeyword("테스트")
+        .build();
+
+    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+        List.of(testResponse), pageable, 1L);
+
+    when(studyGroupQueryRepository.paginateMyOwnedGroups(
+        eq(allSearchConditions), eq(testUserDetails), eq(pageable)))
+        .thenReturn(mockPage);
+
+    // when
+    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+        .paginateMyOwnedStudyGroups(allSearchConditions, testUserDetails, pageable);
+
+    // then
+    verify(studyGroupQueryRepository, times(1))
+        .paginateMyOwnedGroups(eq(allSearchConditions), eq(testUserDetails), eq(pageable));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+}
