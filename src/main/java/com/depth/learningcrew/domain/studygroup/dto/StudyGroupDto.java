@@ -102,4 +102,55 @@ public class StudyGroupDto {
                     .build();
         }
     }
+    
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class StudyGroupDetailResponse {
+        private Integer id;
+        private String name;
+        private String summary;
+        private Integer maxMembers;
+        private FileDto.FileResponse groupImage;
+        private List<GroupCategoryDto.GroupCategoryResponse> categories;
+        private Integer memberCount;
+        private Boolean dibs;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        private UserDto.UserResponse owner;
+        private List<StepDto.StepResponse> steps;
+        private LocalDateTime createdAt;
+        private LocalDateTime lastModifiedAt;
+        private String content;
+        private StepDto.StepResponse step;
+        private Integer currentStep;
+
+        public static StudyGroupDetailResponse from(StudyGroup studyGroup, Boolean dibs) {
+            return StudyGroupDetailResponse.builder()
+                    .id(studyGroup.getId())
+                    .name(studyGroup.getName())
+                    .summary(studyGroup.getSummary())
+                    .maxMembers(studyGroup.getMaxMembers())
+                    .groupImage(FileDto.FileResponse.from(studyGroup.getStudyGroupImage()))
+                    .categories(studyGroup.getCategories().stream()
+                            .map(GroupCategoryDto.GroupCategoryResponse::from)
+                            .collect(Collectors.toList()))
+                    .memberCount(studyGroup.getMemberCount())
+                    .dibs(dibs)
+                    .startDate(studyGroup.getStartDate())
+                    .endDate(studyGroup.getEndDate())
+                    .owner(UserDto.UserResponse.from(studyGroup.getOwner()))
+                    .createdAt(studyGroup.getCreatedAt())
+                    .lastModifiedAt(studyGroup.getLastModifiedAt())
+                    .content(studyGroup.getContent())
+                    .steps(
+                            studyGroup.getSteps().stream()
+                                    .map(StepDto.StepResponse::from)
+                                    .collect(Collectors.toList())
+                    )
+                    .currentStep(studyGroup.getCurrentStep())
+                    .build();
+        }
+        }
 }
