@@ -40,6 +40,12 @@ public class StudyGroupController {
   }
 
     @GetMapping("/{id}")
+    @Operation(summary = "스터디 그룹 상세 조회", description = "스터디 그룹 ID를 통해 스터디 그룹의 상세 정보를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "스터디 그룹 상세 조회 성공", content = @Content(schema = @Schema(implementation = StudyGroupDto.StudyGroupDetailResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "404", description = "스터디 그룹을 찾을 수 없음")
+    })
     public ResponseEntity<StudyGroupDto.StudyGroupDetailResponse> getStudyGroup(
             @PathVariable Integer id,
             @AuthenticationPrincipal UserDetails userDetails){

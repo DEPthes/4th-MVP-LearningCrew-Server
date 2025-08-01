@@ -358,7 +358,7 @@ class StudyGroupServiceTest {
               .id(1)
               .name("스터디 그룹")
               .summary("스터디그룹 소개")
-              .content("스터디그룹 설명")
+              .content("스터디 내용")
               .maxMembers(10)
               .memberCount(3)
               .currentStep(1)
