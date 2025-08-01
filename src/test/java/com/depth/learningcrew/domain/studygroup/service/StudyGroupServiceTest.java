@@ -8,8 +8,11 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import com.depth.learningcrew.domain.studygroup.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,18 +27,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
-import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.security.model.UserDetails;
+import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
 
 @ExtendWith(MockitoExtension.class)
 class StudyGroupServiceTest {
 
   @Mock
   private StudyGroupQueryRepository studyGroupQueryRepository;
+
+  @Mock
+  private DibsRepository dibsRepository;
 
   @InjectMocks
   private StudyGroupService studyGroupService;
@@ -337,4 +343,62 @@ class StudyGroupServiceTest {
     assertThat(result).isNotNull();
     assertThat(result.getContent()).hasSize(1);
   }
+
+    @Test
+    @DisplayName("스터디 그룹 상세 정보를 조회할 수 있다")
+    void getStudyGroupDetail_ShouldReturnDetailResponse() throws Exception{
+
+      // given
+      GroupCategory category = GroupCategory.builder()
+              .id(1)
+              .name("테스트 카테고리")
+              .build();
+
+      StudyGroup studyGroup = StudyGroup.builder()
+              .id(1)
+              .name("스터디 그룹")
+              .summary("스터디그룹 소개")
+              .content("스터디그룹 설명")
+              .maxMembers(10)
+              .memberCount(3)
+              .currentStep(1)
+              .owner(testUser)
+              .startDate(LocalDate.now())
+              .endDate(LocalDate.now().plusMonths(1))
+              .categories(new ArrayList<>())
+              .steps(new ArrayList<>())
+              .build();
+
+      StudyStep step1 = StudyStep.builder()
+              .id(StudyStepId.of(1, studyGroup))
+              .endDate(LocalDate.now().plusWeeks(1))
+              .build();
+
+      StudyStep step2 = StudyStep.builder()
+              .id(StudyStepId.of(2, studyGroup))
+              .endDate(LocalDate.now().plusWeeks(2))
+              .build();
+
+      Dibs dibs = Dibs.builder()
+              .id(DibsId.of(testUser, studyGroup))
+              .build();
+
+      studyGroup.getSteps().addAll(List.of(step1, step2));
+      studyGroup.getCategories().add(category);
+
+
+      when(studyGroupQueryRepository.findDetailById(1)).thenReturn(Optional.of(studyGroup));
+      when(dibsRepository.existsByIdUserAndIdStudyGroup(testUser, studyGroup)).thenReturn(true);
+
+      // when
+      StudyGroupDto.StudyGroupDetailResponse result = studyGroupService.getStudyGroupDetail(1, testUserDetails);
+
+      // then
+      assertThat(result.getId()).isEqualTo(studyGroup.getId());
+      assertThat(result.getName()).isEqualTo("스터디 그룹");
+      assertThat(result.getDibs()).isTrue();
+      assertThat(result.getSteps()).hasSize(2);
+      assertThat(result.getCategories().get(0).getName()).isEqualTo("테스트 카테고리");
+
+    }
 }
