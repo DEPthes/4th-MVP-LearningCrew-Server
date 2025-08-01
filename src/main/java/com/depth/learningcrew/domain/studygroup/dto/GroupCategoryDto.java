@@ -13,6 +13,7 @@ public class GroupCategoryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
+    @Schema(description = "카테고리 목록 응답")
     public static class GroupCategoryResponse {
         @Schema(description = "그룹 카테고리 ID", example = "1")
         private Integer id;
