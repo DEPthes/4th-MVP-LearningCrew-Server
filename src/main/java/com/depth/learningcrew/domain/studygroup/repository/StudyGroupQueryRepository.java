@@ -43,7 +43,7 @@ public class StudyGroupQueryRepository {
      * @param pageable         페이지 정보
      * @return 페이지네이션된 스터디 그룹 목록
      */
-    public Page<StudyGroupDto.StudyGroupPaginationResponse> paginateMyOwnedGroups(
+    public Page<StudyGroupDto.StudyGroupResponse> paginateMyOwnedGroups(
             StudyGroupDto.SearchConditions searchConditions,
             UserDetails user,
             Pageable pageable) {
@@ -101,12 +101,12 @@ public class StudyGroupQueryRepository {
 
         Long totalCount = countQuery.fetchOne();
 
-        List<StudyGroupDto.StudyGroupPaginationResponse> content = results.stream()
+        List<StudyGroupDto.StudyGroupResponse> content = results.stream()
                 .map(tuple -> {
                     StudyGroup studyGroupEntity = tuple.get(studyGroup);
                     Boolean dibsValue = tuple.get(1, Boolean.class);
 
-                    return StudyGroupDto.StudyGroupPaginationResponse.of(
+                    return StudyGroupDto.StudyGroupResponse.from(
                             Objects.requireNonNull(studyGroupEntity),
                             dibsValue);
                 })

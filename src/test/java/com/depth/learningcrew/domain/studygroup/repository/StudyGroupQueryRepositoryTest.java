@@ -162,7 +162,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -207,7 +207,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, newUserDetails, pageable);
 
     // then
@@ -227,7 +227,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -268,7 +268,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 2); // 페이지당 2개씩
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -292,7 +292,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -316,7 +316,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -337,7 +337,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -358,7 +358,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -413,7 +413,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -438,7 +438,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -463,7 +463,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -484,7 +484,7 @@ class StudyGroupQueryRepositoryTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     // when
-    Page<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupQueryRepository
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, testUserDetails, pageable);
 
     // then

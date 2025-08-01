@@ -51,8 +51,12 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(404, "댓글을 찾을 수 없습니다"),
     COMMENT_NOT_USER_TYPE(403, "사용자 댓글만 수정/삭제할 수 있습니다."),
 
+    // Study Group
+    STUDY_GROUP_ALREADY_MEMBER(400, "이미 스터디 그룹의 멤버입니다."),
+    STUDY_GROUP_ALREADY_APPLIED(400, "이미 가입 신청한 스터디 그룹입니다."),
+
     // Other
-    INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."), ;
+    INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."),;
 
     private final int statusCode;
     private final String message;

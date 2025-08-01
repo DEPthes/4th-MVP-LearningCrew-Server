@@ -51,7 +51,7 @@ class StudyGroupServiceTest {
   private StudyGroupDto.SearchConditions searchConditions;
   private Pageable pageable;
   private StudyGroup testStudyGroup;
-  private StudyGroupDto.StudyGroupPaginationResponse testResponse;
+  private StudyGroupDto.StudyGroupResponse testResponse;
 
   @BeforeEach
   void setUp() {
@@ -86,7 +86,7 @@ class StudyGroupServiceTest {
         .build();
 
     // 테스트 응답 DTO 설정
-    testResponse = StudyGroupDto.StudyGroupPaginationResponse.builder()
+    testResponse = StudyGroupDto.StudyGroupResponse.builder()
         .id(testStudyGroup.getId())
         .name(testStudyGroup.getName())
         .summary(testStudyGroup.getSummary())
@@ -116,7 +116,7 @@ class StudyGroupServiceTest {
   @DisplayName("내가 주최한 스터디 그룹 목록을 페이징하여 조회할 수 있다")
   void paginateMyOwnedStudyGroups_ShouldReturnPagedResults() {
     // given
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), pageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -124,7 +124,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -143,7 +143,7 @@ class StudyGroupServiceTest {
   @DisplayName("빈 검색 결과가 있을 때도 정상적으로 PagedModel을 반환한다")
   void paginateMyOwnedStudyGroups_WithEmptyResults_ShouldReturnEmptyPagedModel() {
     // given
-    Page<StudyGroupDto.StudyGroupPaginationResponse> emptyPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> emptyPage = new PageImpl<>(
         List.of(), pageable, 0L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -151,7 +151,7 @@ class StudyGroupServiceTest {
         .thenReturn(emptyPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -172,7 +172,7 @@ class StudyGroupServiceTest {
         .categoryId(1)
         .build();
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), pageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -180,7 +180,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(customSearchConditions, testUserDetails, pageable);
 
     // then
@@ -197,7 +197,7 @@ class StudyGroupServiceTest {
     // given
     Pageable customPageable = PageRequest.of(1, 5); // 두 번째 페이지, 5개씩
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), customPageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -205,7 +205,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, customPageable);
 
     // then
@@ -220,7 +220,7 @@ class StudyGroupServiceTest {
   @DisplayName("여러 개의 스터디 그룹이 있을 때 모든 결과를 반환한다")
   void paginateMyOwnedStudyGroups_WithMultipleResults_ShouldReturnAllResults() {
     // given
-    StudyGroupDto.StudyGroupPaginationResponse secondResponse = StudyGroupDto.StudyGroupPaginationResponse.builder()
+    StudyGroupDto.StudyGroupResponse secondResponse = StudyGroupDto.StudyGroupResponse.builder()
         .id(2)
         .name("두 번째 스터디 그룹")
         .summary("두 번째 스터디 그룹입니다.")
@@ -233,7 +233,7 @@ class StudyGroupServiceTest {
         .dibs(true)
         .build();
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse, secondResponse), pageable, 2L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -241,7 +241,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -266,7 +266,7 @@ class StudyGroupServiceTest {
         .searchKeyword("테스트")
         .build();
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), pageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -274,7 +274,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditionsWithKeyword, testUserDetails, pageable);
 
     // then
@@ -295,7 +295,7 @@ class StudyGroupServiceTest {
         .searchKeyword("스터디")
         .build();
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), pageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -303,7 +303,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditionsWithRelativeSort, testUserDetails, pageable);
 
     // then
@@ -325,7 +325,7 @@ class StudyGroupServiceTest {
         .searchKeyword("테스트")
         .build();
 
-    Page<StudyGroupDto.StudyGroupPaginationResponse> mockPage = new PageImpl<>(
+    Page<StudyGroupDto.StudyGroupResponse> mockPage = new PageImpl<>(
         List.of(testResponse), pageable, 1L);
 
     when(studyGroupQueryRepository.paginateMyOwnedGroups(
@@ -333,7 +333,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupPaginationResponse> result = studyGroupService
+    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(allSearchConditions, testUserDetails, pageable);
 
     // then
