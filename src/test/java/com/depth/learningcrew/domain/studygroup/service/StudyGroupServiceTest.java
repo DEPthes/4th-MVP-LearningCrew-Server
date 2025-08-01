@@ -365,8 +365,6 @@ class StudyGroupServiceTest {
               .owner(testUser)
               .startDate(LocalDate.now())
               .endDate(LocalDate.now().plusMonths(1))
-              .categories(new ArrayList<>())
-              .steps(new ArrayList<>())
               .build();
 
       StudyStep step1 = StudyStep.builder()
@@ -388,7 +386,7 @@ class StudyGroupServiceTest {
 
 
       when(studyGroupQueryRepository.findDetailById(1)).thenReturn(Optional.of(studyGroup));
-      when(dibsRepository.existsByIdUserAndIdStudyGroup(testUser, studyGroup)).thenReturn(true);
+      when(dibsRepository.existsById_UserAndId_StudyGroup(testUser, studyGroup)).thenReturn(true);
 
       // when
       StudyGroupDto.StudyGroupDetailResponse result = studyGroupService.getStudyGroupDetail(1, testUserDetails);

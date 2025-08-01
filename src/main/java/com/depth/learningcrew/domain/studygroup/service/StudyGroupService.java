@@ -84,7 +84,6 @@ public class StudyGroupService {
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
       boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
-
       return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
     }
 }

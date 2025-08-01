@@ -12,18 +12,7 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -83,9 +72,11 @@ public class StudyGroup extends TimeStampedEntity {
     private StudyGroupImage studyGroupImage;
 
     @OneToMany(mappedBy = "id.studyGroupId")
+    @Builder.Default
     private List<StudyStep> steps = new ArrayList<>();
 
     @OneToMany(mappedBy = "id.studyGroup")
+    @Builder.Default
     private List<Dibs> dibsList = new ArrayList<>();
 
 
