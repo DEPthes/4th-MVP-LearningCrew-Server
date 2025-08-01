@@ -186,7 +186,6 @@ public class StudyGroupQueryRepository {
                 .leftJoin(studyGroup.owner, user).fetchJoin()
                 .leftJoin(studyGroup.categories, groupCategory).fetchJoin()
                 .leftJoin(studyGroup.steps, studyStep).fetchJoin()
-                .leftJoin(studyGroup.dibsList, dibs).fetchJoin()
                 .leftJoin(studyGroup.studyGroupImage, studyGroupImage).fetchJoin()
                 .where(studyGroup.id.eq(groupId))
                 .distinct()
