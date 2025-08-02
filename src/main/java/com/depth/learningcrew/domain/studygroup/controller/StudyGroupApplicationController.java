@@ -33,4 +33,15 @@ public class StudyGroupApplicationController {
     ApplicationDto.ApplicationResponse response = studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
+
+  @PostMapping("/{groupId}/applications/{userId}/approve")
+  @Operation(summary = "스터디 그룹 가입 신청 수락", description = "스터디 그룹의 owner가 가입 신청을 수락합니다.")
+  public ResponseEntity<ApplicationDto.ApplicationResponse> approveApplication(
+      @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
+      @Parameter(description = "신청자 ID") @PathVariable Integer userId,
+      @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(groupId, userId,
+        userDetails);
+    return ResponseEntity.ok(response);
+  }
 }

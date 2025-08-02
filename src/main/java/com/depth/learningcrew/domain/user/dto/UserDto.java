@@ -24,6 +24,8 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserResponse {
+        @Schema(description = "사용자 ID", example = "1")
+        private Integer id;
         @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
@@ -41,6 +43,7 @@ public class UserDto {
 
         public static UserResponse from(User user) {
             return UserResponse.builder()
+                    .id(user.getId())
                     .email(user.getEmail())
                     .nickname(user.getNickname())
                     .role(user.getRole())

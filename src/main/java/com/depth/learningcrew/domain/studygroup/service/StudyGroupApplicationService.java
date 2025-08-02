@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.depth.learningcrew.domain.studygroup.dto.ApplicationDto;
 import com.depth.learningcrew.domain.studygroup.entity.Application;
 import com.depth.learningcrew.domain.studygroup.entity.ApplicationId;
+import com.depth.learningcrew.domain.studygroup.entity.Member;
+import com.depth.learningcrew.domain.studygroup.entity.MemberId;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
@@ -41,6 +43,37 @@ public class StudyGroupApplicationService {
 
     Application savedApplication = applicationRepository.save(application);
     return ApplicationDto.ApplicationResponse.from(savedApplication);
+  }
+
+  @Transactional
+  public ApplicationDto.ApplicationResponse approveApplication(Integer groupId, Integer userId,
+      UserDetails ownerDetails) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    Application application = applicationRepository.findById_User_IdAndId_StudyGroup_Id(userId, groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    application.canApprovedBy(ownerDetails);
+    application.canApproveNow();
+    application.approve();
+
+    boolean isAlreadyMember = memberRepository.existsById_UserAndId_StudyGroup(application.getId().getUser(),
+        studyGroup);
+
+    if (isAlreadyMember) {
+      return ApplicationDto.ApplicationResponse.from(application);
+    }
+
+    MemberId memberId = MemberId.of(application.getId().getUser(), studyGroup);
+    Member member = new Member(memberId);
+    memberRepository.save(member);
+
+    // 스터디 그룹 멤버 수 증가
+    studyGroup.setMemberCount(studyGroup.getMemberCount() + 1);
+    studyGroupRepository.save(studyGroup);
+
+    return ApplicationDto.ApplicationResponse.from(application);
   }
 
   private void cannotApplicateIfAlreadyMember(UserDetails userDetails, StudyGroup studyGroup) {
