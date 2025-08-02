@@ -32,6 +32,9 @@ public class ApplicationDto {
     @Schema(description = "마지막 수정 시간", example = "2024-01-01T00:00:00")
     private LocalDateTime lastModifiedAt;
 
+    @Schema(description = "수락 시간", example = "2024-01-01T00:00:00")
+    private LocalDateTime approvedAt;
+
     @Schema(description = "신청 상태", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
     private State state;
 
@@ -41,6 +44,7 @@ public class ApplicationDto {
           .studyGroup(StudyGroupDto.StudyGroupResponse.from(application.getId().getStudyGroup(), false))
           .createdAt(application.getCreatedAt())
           .lastModifiedAt(application.getLastModifiedAt())
+          .approvedAt(application.getApprovedAt())
           .state(application.getState())
           .build();
     }

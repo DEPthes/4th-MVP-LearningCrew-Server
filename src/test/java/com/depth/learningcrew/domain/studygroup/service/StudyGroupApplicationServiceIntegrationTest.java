@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,13 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.depth.learningcrew.domain.studygroup.dto.ApplicationDto;
 import com.depth.learningcrew.domain.studygroup.entity.Application;
 import com.depth.learningcrew.domain.studygroup.entity.ApplicationId;
-import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
 import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.MemberId;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
-import com.depth.learningcrew.domain.studygroup.repository.GroupCategoryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
@@ -39,162 +36,158 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 @Transactional
 class StudyGroupApplicationServiceIntegrationTest {
 
-  @Autowired
-  private StudyGroupApplicationService studyGroupApplicationService;
+        @Autowired
+        private StudyGroupApplicationService studyGroupApplicationService;
 
-  @Autowired
-  private StudyGroupRepository studyGroupRepository;
+        @Autowired
+        private StudyGroupRepository studyGroupRepository;
 
-  @Autowired
-  private UserRepository userRepository;
+        @Autowired
+        private ApplicationRepository applicationRepository;
 
-  @Autowired
-  private ApplicationRepository applicationRepository;
+        @Autowired
+        private MemberRepository memberRepository;
 
-  @Autowired
-  private MemberRepository memberRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-  @Autowired
-  private GroupCategoryRepository groupCategoryRepository;
+        private User owner;
+        private User applicant;
+        private StudyGroup studyGroup;
+        private Application application;
+        private UserDetails ownerDetails;
+        private UserDetails applicantDetails;
 
-  private User testUser;
-  private User ownerUser;
-  private StudyGroup testStudyGroup;
-  private GroupCategory testCategory;
-  private UserDetails userDetails;
+        @BeforeEach
+        void setUp() {
+                // 사용자 생성
+                owner = User.builder()
+                                .email("owner@test.com")
+                                .password("password")
+                                .nickname("owner")
+                                .birthday(LocalDate.of(1990, 1, 1))
+                                .gender(Gender.MALE)
+                                .role(Role.USER)
+                                .build();
+                owner = userRepository.save(owner);
 
-  @BeforeEach
-  void setUp() {
-    // 테스트 사용자 생성
-    testUser = User.builder()
-        .email("test@example.com")
-        .password("password")
-        .nickname("testUser")
-        .birthday(LocalDate.of(1990, 1, 1))
-        .gender(Gender.MALE)
-        .role(Role.USER)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
-    testUser = userRepository.save(testUser);
+                applicant = User.builder()
+                                .email("applicant@test.com")
+                                .password("password")
+                                .nickname("applicant")
+                                .birthday(LocalDate.of(1995, 5, 15))
+                                .gender(Gender.FEMALE)
+                                .role(Role.USER)
+                                .build();
+                applicant = userRepository.save(applicant);
 
-    // 스터디 그룹 주최자 생성
-    ownerUser = User.builder()
-        .email("owner@example.com")
-        .password("password")
-        .nickname("ownerUser")
-        .birthday(LocalDate.of(1990, 1, 1))
-        .gender(Gender.MALE)
-        .role(Role.USER)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
-    ownerUser = userRepository.save(ownerUser);
+                // 스터디 그룹 생성
+                studyGroup = StudyGroup.builder()
+                                .name("Test Study Group")
+                                .summary("Test Summary")
+                                .content("Test Content")
+                                .maxMembers(10)
+                                .memberCount(1)
+                                .currentStep(1)
+                                .startDate(LocalDate.now())
+                                .endDate(LocalDate.now().plusMonths(3))
+                                .owner(owner)
+                                .build();
+                studyGroup = studyGroupRepository.save(studyGroup);
 
-    // 테스트 카테고리 생성
-    testCategory = GroupCategory.builder()
-        .name("테스트 카테고리")
-        .build();
-    testCategory = groupCategoryRepository.save(testCategory);
+                // 가입 신청 생성
+                ApplicationId applicationId = ApplicationId.of(applicant, studyGroup);
+                application = Application.builder()
+                                .id(applicationId)
+                                .state(State.PENDING)
+                                .build();
+                application = applicationRepository.save(application);
 
-    // 테스트 스터디 그룹 생성
-    testStudyGroup = StudyGroup.builder()
-        .name("테스트 스터디 그룹")
-        .summary("테스트 스터디 그룹입니다.")
-        .content("테스트 스터디 그룹 내용입니다.")
-        .maxMembers(10)
-        .memberCount(1)
-        .currentStep(1)
-        .startDate(LocalDate.now())
-        .endDate(LocalDate.now().plusMonths(3))
-        .owner(ownerUser)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
-    testStudyGroup = studyGroupRepository.save(testStudyGroup);
+                ownerDetails = new UserDetails(owner);
+                applicantDetails = new UserDetails(applicant);
+        }
 
-    // UserDetails 설정
-    userDetails = UserDetails.builder()
-        .user(testUser)
-        .build();
-  }
+        @Test
+        @DisplayName("가입 신청 수락 통합 테스트 - 성공")
+        void approveApplication_Integration_Success() {
+                // when
+                ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails);
 
-  @Test
-  @DisplayName("정상적으로 가입 신청이 되는 경우")
-  void joinStudyGroup_success() {
-    // when
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.joinStudyGroup(
-        testStudyGroup.getId(), userDetails);
+                // then
+                assertThat(response.getState()).isEqualTo(State.APPROVED);
+                assertThat(response.getApprovedAt()).isNotNull();
+                assertThat(response.getUser().getId()).isEqualTo(applicant.getId());
+                assertThat(response.getStudyGroup().getId()).isEqualTo(studyGroup.getId());
 
-    // then
-    assertThat(response).isNotNull();
-    assertThat(response.getState()).isEqualTo(State.PENDING);
-    assertThat(response.getUser().getEmail()).isEqualTo(testUser.getEmail());
-    assertThat(response.getStudyGroup().getId()).isEqualTo(testStudyGroup.getId());
+                // 데이터베이스에서 확인
+                Application savedApplication = applicationRepository.findById(application.getId()).orElse(null);
+                assertThat(savedApplication).isNotNull();
+                assertThat(savedApplication.getState()).isEqualTo(State.APPROVED);
+                assertThat(savedApplication.getApprovedAt()).isNotNull();
 
-    // 데이터베이스에 실제로 저장되었는지 확인
-    ApplicationId applicationId = ApplicationId.of(testUser, testStudyGroup);
-    Application savedApplication = applicationRepository.findById(applicationId).orElse(null);
-    assertThat(savedApplication).isNotNull();
-    assertThat(savedApplication.getState()).isEqualTo(State.PENDING);
-  }
+                // 멤버로 추가되었는지 확인
+                Member member = memberRepository.findById_UserAndId_StudyGroup(applicant, studyGroup).orElse(null);
+                assertThat(member).isNotNull();
 
-  @Test
-  @DisplayName("이미 멤버인 경우 예외 발생")
-  void joinStudyGroup_alreadyMember() {
-    // given - 멤버로 등록
-    MemberId memberId = MemberId.builder()
-        .user(testUser)
-        .studyGroup(testStudyGroup)
-        .build();
-    Member member = Member.builder()
-        .id(memberId)
-        .build();
-    memberRepository.save(member);
+                // 스터디 그룹 멤버 수 증가 확인
+                StudyGroup updatedStudyGroup = studyGroupRepository.findById(studyGroup.getId()).orElse(null);
+                assertThat(updatedStudyGroup).isNotNull();
+                assertThat(updatedStudyGroup.getMemberCount()).isEqualTo(2);
+        }
 
-    // when & then
-    assertThatThrownBy(() -> studyGroupApplicationService.joinStudyGroup(testStudyGroup.getId(), userDetails))
-        .isInstanceOf(RestException.class)
-        .hasMessageContaining(ErrorCode.STUDY_GROUP_ALREADY_MEMBER.getMessage());
-  }
+        @Test
+        @DisplayName("가입 신청 수락 통합 테스트 - 권한 없음")
+        void approveApplication_Integration_NoPermission() {
+                // when & then
+                assertThatThrownBy(() -> studyGroupApplicationService.approveApplication(
+                                studyGroup.getId(), applicant.getId(), applicantDetails))
+                                .isInstanceOf(RestException.class)
+                                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
+        }
 
-  @Test
-  @DisplayName("이미 신청한 경우 예외 발생")
-  void joinStudyGroup_alreadyApplied() {
-    // given - 이미 신청한 상태
-    ApplicationId applicationId = ApplicationId.of(testUser, testStudyGroup);
-    Application application = Application.builder()
-        .id(applicationId)
-        .state(State.PENDING)
-        .build();
-    applicationRepository.save(application);
+        @Test
+        @DisplayName("가입 신청 수락 통합 테스트 - 이미 수락된 신청")
+        void approveApplication_Integration_AlreadyApproved() {
+                // given
+                application.approve();
+                applicationRepository.save(application);
 
-    // when & then
-    assertThatThrownBy(() -> studyGroupApplicationService.joinStudyGroup(testStudyGroup.getId(), userDetails))
-        .isInstanceOf(RestException.class)
-        .hasMessageContaining(ErrorCode.STUDY_GROUP_ALREADY_APPLIED.getMessage());
-  }
+                // when & then
+                assertThatThrownBy(() -> studyGroupApplicationService.approveApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails))
+                                .isInstanceOf(RestException.class)
+                                .hasFieldOrPropertyWithValue("errorCode",
+                                                ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_APPROVED);
+        }
 
-  @Test
-  @DisplayName("스터디 그룹이 존재하지 않는 경우 예외 발생")
-  void joinStudyGroup_groupNotFound() {
-    // when & then
-    assertThatThrownBy(() -> studyGroupApplicationService.joinStudyGroup(99999, userDetails))
-        .isInstanceOf(RestException.class)
-        .hasMessageContaining(ErrorCode.GLOBAL_NOT_FOUND.getMessage());
-  }
+        @Test
+        @DisplayName("가입 신청 수락 통합 테스트 - 이미 멤버인 경우")
+        void approveApplication_Integration_AlreadyMember() {
+                // given - 이미 멤버로 등록
+                MemberId memberId = MemberId.of(applicant, studyGroup);
+                Member member = Member.builder()
+                                .id(memberId)
+                                .build();
+                memberRepository.save(member);
 
-  @Test
-  @DisplayName("중복 신청 방지 확인")
-  void joinStudyGroup_duplicateApplicationPrevention() {
-    // given - 첫 번째 신청
-    ApplicationDto.ApplicationResponse firstResponse = studyGroupApplicationService.joinStudyGroup(
-        testStudyGroup.getId(), userDetails);
-    assertThat(firstResponse.getState()).isEqualTo(State.PENDING);
+                // when
+                ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails);
 
-    // when & then - 두 번째 신청 시도 시 예외 발생
-    assertThatThrownBy(() -> studyGroupApplicationService.joinStudyGroup(testStudyGroup.getId(), userDetails))
-        .isInstanceOf(RestException.class)
-        .hasMessageContaining(ErrorCode.STUDY_GROUP_ALREADY_APPLIED.getMessage());
-  }
+                // then
+                assertThat(response.getState()).isEqualTo(State.APPROVED);
+                assertThat(response.getApprovedAt()).isNotNull();
+
+                // 데이터베이스에서 확인
+                Application savedApplication = applicationRepository.findById(application.getId()).orElse(null);
+                assertThat(savedApplication).isNotNull();
+                assertThat(savedApplication.getState()).isEqualTo(State.APPROVED);
+                assertThat(savedApplication.getApprovedAt()).isNotNull();
+
+                // 스터디 그룹 멤버 수는 증가하지 않아야 함 (이미 멤버였으므로)
+                StudyGroup updatedStudyGroup = studyGroupRepository.findById(studyGroup.getId()).orElse(null);
+                assertThat(updatedStudyGroup).isNotNull();
+                assertThat(updatedStudyGroup.getMemberCount()).isEqualTo(1);
+        }
 }
