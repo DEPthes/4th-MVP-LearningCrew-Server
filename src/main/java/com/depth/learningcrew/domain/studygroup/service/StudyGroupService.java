@@ -75,4 +75,15 @@ public class StudyGroupService {
     boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), group);
     return StudyGroupDto.StudyGroupResponse.from(group, dibs);
   }
+
+    @Transactional(readOnly = true)
+    public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
+            Integer groupId,
+            UserDetails user) {
+        StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+      boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
+      return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
+    }
 }

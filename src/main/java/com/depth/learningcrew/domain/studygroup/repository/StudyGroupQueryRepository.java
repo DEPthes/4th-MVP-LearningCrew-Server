@@ -1,11 +1,15 @@
 package com.depth.learningcrew.domain.studygroup.repository;
 
+import static com.depth.learningcrew.domain.file.entity.QStudyGroupImage.studyGroupImage;
 import static com.depth.learningcrew.domain.studygroup.entity.QDibs.dibs;
 import static com.depth.learningcrew.domain.studygroup.entity.QGroupCategory.groupCategory;
 import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyGroup;
+import static com.depth.learningcrew.domain.studygroup.entity.QStudyStep.studyStep;
+import static com.depth.learningcrew.domain.user.entity.QUser.user;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -174,5 +178,19 @@ public class StudyGroupQueryRepository {
                         .when(studyGroup.categories.any().name.containsIgnoreCase(keyword))
                         .then(2)
                         .otherwise(0));
+    }
+
+    public Optional<StudyGroup> findDetailById(Integer groupId) {
+
+        return Optional.ofNullable(queryFactory.selectFrom(studyGroup)
+                .leftJoin(studyGroup.owner, user).fetchJoin()
+                .leftJoin(studyGroup.categories, groupCategory).fetchJoin()
+                .leftJoin(studyGroup.steps, studyStep).fetchJoin()
+                .leftJoin(studyGroup.studyGroupImage, studyGroupImage).fetchJoin()
+                .where(studyGroup.id.eq(groupId))
+                .distinct()
+                .fetchOne()
+        );
+
     }
 }
