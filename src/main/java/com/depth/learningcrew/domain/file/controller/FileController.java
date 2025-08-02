@@ -1,10 +1,7 @@
 package com.depth.learningcrew.domain.file.controller;
 
-import com.depth.learningcrew.domain.file.service.FileService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import com.depth.learningcrew.domain.file.service.FileService;
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,32 +24,32 @@ import java.io.IOException;
 @Tag(name = "File", description = "파일 다운로드/조회 API")
 public class FileController {
 
-    private final FileService fileService;
+        private final FileService fileService;
 
-    @GetMapping("/images/{file_uuId}")
-    @Operation(summary = "이미지 조회", description = "특정 아이디로 저장된 이미지를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "이미지 조회 성공")
-    public ResponseEntity<Resource> getImage(
-            @PathVariable String file_uuId
-    ) {
-        Resource resource = fileService.getResourceById(file_uuId);
+        @NoJwtAuth("이미지 조회는 공개 리소스로 인증이 필요하지 않음")
+        @GetMapping("/images/{file_uuId}")
+        @Operation(summary = "이미지 조회", description = "특정 아이디로 저장된 이미지를 조회합니다.")
+        @ApiResponse(responseCode = "200", description = "이미지 조회 성공")
+        public ResponseEntity<Resource> getImage(
+                        @PathVariable String file_uuId) {
+                Resource resource = fileService.getResourceById(file_uuId);
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .header("Content-Type", "image/jpeg")
-                .body(resource);
-    }
+                return ResponseEntity.status(HttpStatus.OK)
+                                .header("Content-Type", "image/jpeg")
+                                .body(resource);
+        }
 
-    @GetMapping("/downloads/{file_uuId}")
-    @Operation(summary = "파일 다운로드", description = "특정 아이디로 저장된 파일을 다운로드합니다.")
-    @ApiResponse(responseCode = "200", description = "파일 다운로드 성공")
-    public ResponseEntity<Resource> downloadFile(
-            @PathVariable String file_uuId
-    ) throws IOException {
-        Resource resource = fileService.getResourceById(file_uuId);
+        @NoJwtAuth("파일 다운로드는 공개 리소스로 인증이 필요하지 않음")
+        @GetMapping("/downloads/{file_uuId}")
+        @Operation(summary = "파일 다운로드", description = "특정 아이디로 저장된 파일을 다운로드합니다.")
+        @ApiResponse(responseCode = "200", description = "파일 다운로드 성공")
+        public ResponseEntity<Resource> downloadFile(
+                        @PathVariable String file_uuId) throws IOException {
+                Resource resource = fileService.getResourceById(file_uuId);
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .header("Content-Disposition", "attachment; filename=\"" + file_uuId + "\"")
-                .header("Content-Type", "application/octet-stream")
-                .body(resource);
-    }
+                return ResponseEntity.status(HttpStatus.OK)
+                                .header("Content-Disposition", "attachment; filename=\"" + file_uuId + "\"")
+                                .header("Content-Type", "application/octet-stream")
+                                .body(resource);
+        }
 }

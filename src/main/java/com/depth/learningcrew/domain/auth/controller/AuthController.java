@@ -1,11 +1,22 @@
 package com.depth.learningcrew.domain.auth.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.service.AuthService;
 import com.depth.learningcrew.domain.user.dto.UserDto;
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
 import com.depth.learningcrew.system.security.model.JwtDto;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import com.depth.learningcrew.system.security.utility.validator.ValidatorUtil;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,9 +26,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
 
+    @NoJwtAuth("회원가입은 인증이 필요하지 않음")
     @PostMapping("/register")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponse(responseCode = "200", description = "회원가입 성공")
@@ -33,6 +42,7 @@ public class AuthController {
         return authService.signUp(request);
     }
 
+    @NoJwtAuth("로그인은 인증이 필요하지 않음")
     @PostMapping("/login")
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.")
     @ApiResponse(responseCode = "200", description = "로그인 성공")
@@ -40,6 +50,7 @@ public class AuthController {
         return authService.signIn(request);
     }
 
+    @NoJwtAuth("이메일 중복 확인은 회원가입 전 단계로 인증이 필요하지 않음")
     @GetMapping("/email-exist")
     @Operation(summary = "아이디 중복 확인", description = "입력된 아이디의 사용 가능 여부를 확인합니다.")
     @ApiResponse(responseCode = "200", description = "아이디 확인 성공")
@@ -48,6 +59,7 @@ public class AuthController {
         return authService.checkEmailExist(email);
     }
 
+    @NoJwtAuth("닉네임 중복 확인은 회원가입 전 단계로 인증이 필요하지 않음")
     @GetMapping("/nickname-exist")
     @Operation(summary = "닉네임 중복 확인", description = "입력된 닉네임의 사용 가능 여부를 확인합니다.")
     @ApiResponse(responseCode = "200", description = "닉네임 확인 성공")
@@ -56,6 +68,7 @@ public class AuthController {
         return authService.checkNicknameExist(nickname);
     }
 
+    @NoJwtAuth("토큰 갱신은 만료된 토큰으로 새 토큰을 발급받는 과정이므로 JWT 인증이 필요하지 않음")
     @PostMapping("/token/refresh")
     @Operation(summary = "토큰 재발행", description = "새로운 Access/Refresh Token을 재발급받습니다.")
     @ApiResponse(responseCode = "200", description = "토큰 재발행 성공")
@@ -65,19 +78,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "현재 사용자의 Refresh Token을 삭제하며 로그아웃 처리합니다.")
-    @ApiResponse(
-            responseCode = "200",
-            description = "로그아웃 성공",
-            content = @Content(
-                    mediaType = "text/plain",
-                    examples = @ExampleObject(value = "Logout Successful")
-            )
-    )
+    @ApiResponse(responseCode = "200", description = "로그아웃 성공", content = @Content(mediaType = "text/plain", examples = @ExampleObject(value = "Logout Successful")))
     public ResponseEntity<String> logout(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal UserDetails userDetails,
-            HttpServletRequest request
-    ) {
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails,
+            HttpServletRequest request) {
         authService.logout(userDetails, request);
         return ResponseEntity.ok("Logout Successful");
     }
