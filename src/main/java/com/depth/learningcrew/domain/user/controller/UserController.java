@@ -36,7 +36,7 @@ public class UserController {
     public UserDto.UserUpdateResponse update(
             @Parameter(hidden = true)
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UserDto.UserUpdateRequest request
+            @Valid @ModelAttribute UserDto.UserUpdateRequest request
     ) {
         return userService.update(userDetails.getUser(), request);
     }
