@@ -3,6 +3,7 @@ package com.depth.learningcrew.system.security.filter;
 import java.io.IOException;
 import java.util.List;
 
+import com.depth.learningcrew.system.security.initializer.JwtAuthPathInitializer;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserLoadService userLoadService;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RefreshTokenValidator refreshTokenValidator;
+    private final JwtAuthPathInitializer jwtAuthPathInitializer;
 
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -88,6 +90,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean isIgnored = ignorePatterns.stream()
                 .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
 
-        return isAllowed && !isIgnored;
+        // 어노테이션을 통해 제외된 경로 확인
+        boolean isExcluded = jwtAuthPathInitializer.getExcludePaths().stream()
+                .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
+
+        return isAllowed && !isIgnored && !isExcluded;
     }
 }

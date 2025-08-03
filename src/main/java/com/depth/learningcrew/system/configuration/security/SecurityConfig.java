@@ -35,9 +35,6 @@ public class SecurityConfig {
                 .pathConfigure((it) -> {
                     // 기본 포함 경로 설정
                     it.includePath("/api/**");
-
-                    // @NoJwtAuth 어노테이션으로 자동 수집된 경로들 추가
-                    it.excludePaths(jwtAuthPathInitializer.getExcludePaths());
                 })
                 .configure(httpSecurity);
 
