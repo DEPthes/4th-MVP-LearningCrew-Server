@@ -1,5 +1,8 @@
 package com.depth.learningcrew.domain.studygroup.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +13,7 @@ import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.MemberId;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.ApplicationQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
@@ -25,7 +29,29 @@ public class StudyGroupApplicationService {
 
   private final StudyGroupRepository studyGroupRepository;
   private final ApplicationRepository applicationRepository;
+  private final ApplicationQueryRepository applicationQueryRepository;
   private final MemberRepository memberRepository;
+
+  @Transactional(readOnly = true)
+  public PagedModel<ApplicationDto.ApplicationResponse> getApplicationsByGroupId(
+      Integer groupId,
+      ApplicationDto.SearchConditions searchConditions,
+      UserDetails userDetails,
+      Pageable pageable) {
+
+    // 스터디 그룹이 존재하고 요청자가 owner인지 확인
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    if (!studyGroup.getOwner().getId().equals(userDetails.getUser().getId())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
+
+    Page<ApplicationDto.ApplicationResponse> result = applicationQueryRepository.paginateApplicationsByGroupId(
+        groupId, searchConditions, userDetails, pageable);
+
+    return new PagedModel<>(result);
+  }
 
   @Transactional
   public ApplicationDto.ApplicationResponse joinStudyGroup(Integer groupId, UserDetails userDetails) {

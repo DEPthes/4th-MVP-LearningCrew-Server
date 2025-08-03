@@ -49,4 +49,25 @@ public class ApplicationDto {
           .build();
     }
   }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Getter
+  @Schema(description = "스터디 그룹 가입 신청 검색 조건")
+  public static class SearchConditions {
+    @Schema(description = "신청자 이름 검색", example = "홍길동")
+    private String name;
+
+    @Schema(description = "신청 상태 필터", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
+    private State state;
+
+    @Schema(description = "정렬 기준", example = "created_at", allowableValues = { "created_at", "alphabet" })
+    @Builder.Default
+    private String sort = "created_at";
+
+    @Schema(description = "정렬 순서", example = "desc", allowableValues = { "asc", "desc" })
+    @Builder.Default
+    private String order = "desc";
+  }
 }
