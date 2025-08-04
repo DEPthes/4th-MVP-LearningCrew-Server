@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.depth.learningcrew.domain.studygroup.dto.ApplicationDto;
 import com.depth.learningcrew.domain.studygroup.entity.Application;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -25,6 +26,56 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ApplicationQueryRepository {
   private final JPAQueryFactory queryFactory;
+
+  /**
+   * 사용자의 가입 신청 목록을 페이지네이션하여 조회합니다.
+   *
+   * @param user             사용자
+   * @param searchConditions 검색 조건
+   * @param pageable         페이지 정보
+   * @return 페이지네이션된 가입 신청 목록
+   */
+  public Page<ApplicationDto.ApplicationResponse> paginateApplicationsByUserId(
+      User user,
+      ApplicationDto.SearchConditions searchConditions,
+      Pageable pageable) {
+
+    var query = queryFactory
+        .select(application)
+        .from(application)
+        .join(application.id.studyGroup).fetchJoin()
+        .join(application.id.user).fetchJoin()
+        .where(application.id.user.id.eq(user.getId()));
+
+    var searchCondition = buildSearchConditionForGroupSearch(searchConditions);
+    if (searchCondition != null) {
+      query = query.where(searchCondition);
+    }
+
+    applySorting(query, searchConditions);
+
+    List<Application> results = query
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
+
+    var countQuery = queryFactory
+        .select(application.count())
+        .from(application)
+        .where(application.id.user.id.eq(user.getId()));
+
+    if (searchCondition != null) {
+      countQuery = countQuery.where(searchCondition);
+    }
+
+    Long totalCount = countQuery.fetchOne();
+
+    List<ApplicationDto.ApplicationResponse> content = results.stream()
+        .map(ApplicationDto.ApplicationResponse::from)
+        .toList();
+
+    return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
+  }
 
   /**
    * 스터디 그룹의 가입 신청 목록을 페이지네이션하여 조회합니다.
@@ -50,7 +101,7 @@ public class ApplicationQueryRepository {
             studyGroup.owner.id.eq(userDetails.getUser().getId()));
 
     // 검색 조건 적용
-    var searchCondition = buildSearchCondition(searchConditions);
+    var searchCondition = buildSearchConditionForNameSearch(searchConditions);
     if (searchCondition != null) {
       query = query.where(searchCondition);
     }
@@ -84,7 +135,7 @@ public class ApplicationQueryRepository {
     return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
   }
 
-  private BooleanExpression buildSearchCondition(ApplicationDto.SearchConditions searchConditions) {
+  private BooleanExpression buildSearchConditionForNameSearch(ApplicationDto.SearchConditions searchConditions) {
     BooleanExpression predicate = null;
 
     // 상태 필터링
@@ -93,12 +144,33 @@ public class ApplicationQueryRepository {
     }
 
     // 이름 검색
-    if (StringUtils.hasText(searchConditions.getName())) {
-      BooleanExpression namePredicate = user.nickname.containsIgnoreCase(searchConditions.getName());
+    if (StringUtils.hasText(searchConditions.getKeyword())) {
+      BooleanExpression namePredicate = user.nickname.containsIgnoreCase(searchConditions.getKeyword());
       if (predicate != null) {
         predicate = predicate.and(namePredicate);
       } else {
         predicate = namePredicate;
+      }
+    }
+
+    return predicate;
+  }
+
+  private BooleanExpression buildSearchConditionForGroupSearch(ApplicationDto.SearchConditions searchConditions) {
+    BooleanExpression predicate = null;
+
+    // 상태 필터링
+    if (searchConditions.getState() != null) {
+      predicate = application.state.eq(searchConditions.getState());
+    }
+
+    // 그룹 이름 검색
+    if (StringUtils.hasText(searchConditions.getKeyword())) {
+      BooleanExpression groupNamePredicate = studyGroup.name.containsIgnoreCase(searchConditions.getKeyword());
+      if (predicate != null) {
+        predicate = predicate.and(groupNamePredicate);
+      } else {
+        predicate = groupNamePredicate;
       }
     }
 
@@ -123,4 +195,5 @@ public class ApplicationQueryRepository {
       }
     }
   }
+
 }

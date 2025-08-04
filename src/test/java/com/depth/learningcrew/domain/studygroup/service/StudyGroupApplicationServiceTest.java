@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 
 import com.depth.learningcrew.domain.studygroup.dto.ApplicationDto;
 import com.depth.learningcrew.domain.studygroup.entity.Application;
@@ -22,6 +28,7 @@ import com.depth.learningcrew.domain.studygroup.entity.ApplicationId;
 import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.ApplicationQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
@@ -43,6 +50,9 @@ class StudyGroupApplicationServiceTest {
 
   @Mock
   private MemberRepository memberRepository;
+
+  @Mock
+  private ApplicationQueryRepository applicationQueryRepository;
 
   @InjectMocks
   private StudyGroupApplicationService studyGroupApplicationService;
@@ -189,7 +199,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 성공")
   void rejectApplication_Success() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when
@@ -204,7 +214,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 권한 없음")
   void rejectApplication_Fail_NoPermission() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -218,7 +228,7 @@ class StudyGroupApplicationServiceTest {
   void rejectApplication_Fail_AlreadyRejected() {
     // given
     application.setState(State.REJECTED);
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -232,7 +242,7 @@ class StudyGroupApplicationServiceTest {
   void rejectApplication_Fail_AlreadyApproved() {
     // given
     application.setState(State.APPROVED);
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -245,7 +255,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 스터디 그룹 없음")
   void rejectApplication_Fail_StudyGroupNotFound() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.empty());
+    when(studyGroupRepository.existsById(1)).thenReturn(false);
 
     // when & then
     assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
@@ -257,12 +267,190 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 신청서 없음")
   void rejectApplication_Fail_ApplicationNotFound() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.empty());
 
     // when & then
     assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GLOBAL_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("내 가입 신청 목록 조회 성공 - 기본 조회")
+  void getMyApplications_Success_DefaultSearch() {
+    // given
+    Pageable pageable = PageRequest.of(0, 10);
+    ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+    List<ApplicationDto.ApplicationResponse> applicationResponses = List.of(
+        ApplicationDto.ApplicationResponse.builder()
+            .user(com.depth.learningcrew.domain.user.dto.UserDto.UserResponse.builder()
+                .id(applicant.getId())
+                .email(applicant.getEmail())
+                .nickname(applicant.getNickname())
+                .build())
+            .studyGroup(com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto.StudyGroupResponse.builder()
+                .id(studyGroup.getId())
+                .name(studyGroup.getName())
+                .summary(studyGroup.getSummary())
+                .build())
+            .state(State.PENDING)
+            .createdAt(LocalDate.now().atStartOfDay())
+            .build());
+
+    Page<ApplicationDto.ApplicationResponse> page = new PageImpl<>(applicationResponses, pageable, 1);
+
+    when(applicationQueryRepository.paginateApplicationsByUserId(applicant, searchConditions, pageable))
+        .thenReturn(page);
+
+    // when
+    PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+        .getMyApplications(searchConditions, pageable, applicantDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).getState()).isEqualTo(State.PENDING);
+    assertThat(result.getContent().get(0).getUser().getId()).isEqualTo(applicant.getId());
+    assertThat(result.getContent().get(0).getStudyGroup().getId()).isEqualTo(studyGroup.getId());
+  }
+
+  @Test
+  @DisplayName("내 가입 신청 목록 조회 성공 - 상태 필터링")
+  void getMyApplications_Success_StateFilter() {
+    // given
+    Pageable pageable = PageRequest.of(0, 10);
+    ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
+        .state(State.APPROVED)
+        .build();
+
+    List<ApplicationDto.ApplicationResponse> applicationResponses = List.of(
+        ApplicationDto.ApplicationResponse.builder()
+            .user(com.depth.learningcrew.domain.user.dto.UserDto.UserResponse.builder()
+                .id(applicant.getId())
+                .email(applicant.getEmail())
+                .nickname(applicant.getNickname())
+                .build())
+            .studyGroup(com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto.StudyGroupResponse.builder()
+                .id(studyGroup.getId())
+                .name(studyGroup.getName())
+                .summary(studyGroup.getSummary())
+                .build())
+            .state(State.APPROVED)
+            .createdAt(LocalDate.now().atStartOfDay())
+            .build());
+
+    Page<ApplicationDto.ApplicationResponse> page = new PageImpl<>(applicationResponses, pageable, 1);
+
+    when(applicationQueryRepository.paginateApplicationsByUserId(applicant, searchConditions, pageable))
+        .thenReturn(page);
+
+    // when
+    PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+        .getMyApplications(searchConditions, pageable, applicantDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+    assertThat(result.getContent().get(0).getState()).isEqualTo(State.APPROVED);
+  }
+
+  @Test
+  @DisplayName("내 가입 신청 목록 조회 성공 - 빈 결과")
+  void getMyApplications_Success_EmptyResult() {
+    // given
+    Pageable pageable = PageRequest.of(0, 10);
+    ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+    Page<ApplicationDto.ApplicationResponse> page = new PageImpl<>(List.of(), pageable, 0);
+
+    when(applicationQueryRepository.paginateApplicationsByUserId(applicant, searchConditions, pageable))
+        .thenReturn(page);
+
+    // when
+    PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+        .getMyApplications(searchConditions, pageable, applicantDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("내 가입 신청 목록 조회 성공 - 페이지네이션")
+  void getMyApplications_Success_Pagination() {
+    // given
+    Pageable pageable = PageRequest.of(1, 5); // 두 번째 페이지, 5개씩
+    ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+    List<ApplicationDto.ApplicationResponse> applicationResponses = List.of(
+        ApplicationDto.ApplicationResponse.builder()
+            .user(com.depth.learningcrew.domain.user.dto.UserDto.UserResponse.builder()
+                .id(applicant.getId())
+                .email(applicant.getEmail())
+                .nickname(applicant.getNickname())
+                .build())
+            .studyGroup(com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto.StudyGroupResponse.builder()
+                .id(studyGroup.getId())
+                .name(studyGroup.getName())
+                .summary(studyGroup.getSummary())
+                .build())
+            .state(State.PENDING)
+            .createdAt(LocalDate.now().atStartOfDay())
+            .build());
+
+    Page<ApplicationDto.ApplicationResponse> page = new PageImpl<>(applicationResponses, pageable, 10);
+
+    when(applicationQueryRepository.paginateApplicationsByUserId(applicant, searchConditions, pageable))
+        .thenReturn(page);
+
+    // when
+    PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+        .getMyApplications(searchConditions, pageable, applicantDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("내 가입 신청 목록 조회 성공 - 정렬 조건")
+  void getMyApplications_Success_SortConditions() {
+    // given
+    Pageable pageable = PageRequest.of(0, 10);
+    ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
+        .sort("alphabet")
+        .order("asc")
+        .build();
+
+    List<ApplicationDto.ApplicationResponse> applicationResponses = List.of(
+        ApplicationDto.ApplicationResponse.builder()
+            .user(com.depth.learningcrew.domain.user.dto.UserDto.UserResponse.builder()
+                .id(applicant.getId())
+                .email(applicant.getEmail())
+                .nickname(applicant.getNickname())
+                .build())
+            .studyGroup(com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto.StudyGroupResponse.builder()
+                .id(studyGroup.getId())
+                .name(studyGroup.getName())
+                .summary(studyGroup.getSummary())
+                .build())
+            .state(State.PENDING)
+            .createdAt(LocalDate.now().atStartOfDay())
+            .build());
+
+    Page<ApplicationDto.ApplicationResponse> page = new PageImpl<>(applicationResponses, pageable, 1);
+
+    when(applicationQueryRepository.paginateApplicationsByUserId(applicant, searchConditions, pageable))
+        .thenReturn(page);
+
+    // when
+    PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+        .getMyApplications(searchConditions, pageable, applicantDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).hasSize(1);
   }
 }

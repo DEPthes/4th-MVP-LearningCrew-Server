@@ -130,4 +130,15 @@ public class StudyGroupApplicationService {
       throw new RestException(ErrorCode.STUDY_GROUP_ALREADY_APPLIED);
     }
   }
+
+  @Transactional(readOnly = true)
+  public PagedModel<ApplicationDto.ApplicationResponse> getMyApplications(
+      ApplicationDto.SearchConditions searchConditions,
+      Pageable pageable,
+      UserDetails userDetails) {
+    Page<ApplicationDto.ApplicationResponse> result = applicationQueryRepository.paginateApplicationsByUserId(
+        userDetails.getUser(), searchConditions, pageable);
+
+    return new PagedModel<>(result);
+  }
 }
