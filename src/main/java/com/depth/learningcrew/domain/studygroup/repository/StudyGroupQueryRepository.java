@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,84 +37,101 @@ import lombok.RequiredArgsConstructor;
 public class StudyGroupQueryRepository {
     private final JPAQueryFactory queryFactory;
 
-    /**
-     * 로그인한 사용자가 주최한 스터디 그룹 목록을 페이지네이션하여 조회합니다.
-     *
-     * @param searchConditions 검색 조건
-     * @param user             로그인 사용자 정보
-     * @param pageable         페이지 정보
-     * @return 페이지네이션된 스터디 그룹 목록
-     */
-    public Page<StudyGroupDto.StudyGroupResponse> paginateMyOwnedGroups(
+    public Page<StudyGroupDto.StudyGroupResponse> paginateByType(
             StudyGroupDto.SearchConditions searchConditions,
             UserDetails user,
-            Pageable pageable) {
+            Pageable pageable,
+            StudyGroupFilterType filterType
+    ) {
+        var contentQuery = buildBaseQuery(searchConditions, user, filterType);
+        applySorting(contentQuery, searchConditions);
 
-        var query = queryFactory
-                .select(
-                        studyGroup,
-                        JPAExpressions
-                                .selectOne()
-                                .from(dibs)
-                                .where(
-                                        dibs.id.studyGroup.eq(studyGroup),
-                                        dibs.id.user.id.eq(
-                                                user.getUser().getId()))
-                                .exists())
-                .from(studyGroup)
-                .where(studyGroup.owner.id.eq(user.getUser().getId()));
-
-        // 검색 조건 적용
-        var searchCondition = buildSearchCondition(searchConditions);
-        if (searchCondition != null) {
-            query = query.where(searchCondition);
-        }
-
-        // 카테고리 필터링
-        if (searchConditions.getCategoryId() != null) {
-            query = query
-                    .join(studyGroup.categories, groupCategory)
-                    .where(groupCategory.id.eq(searchConditions.getCategoryId()));
-        }
-
-        // 정렬 조건 적용
-        applySorting(query, searchConditions);
-
-        List<Tuple> results = query
+        List<Tuple> results = contentQuery
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 총 개수 조회 (검색 조건 및 카테고리 필터링 적용)
-        var countQuery = queryFactory
-                .select(studyGroup.count())
-                .from(studyGroup)
-                .where(studyGroup.owner.id.eq(user.getUser().getId()));
-
-        if (searchCondition != null) {
-            countQuery = countQuery.where(searchCondition);
-        }
-
-        if (searchConditions.getCategoryId() != null) {
-            countQuery = countQuery
-                    .join(studyGroup.categories, groupCategory)
-                    .where(groupCategory.id.eq(searchConditions.getCategoryId()));
-        }
-
-        Long totalCount = countQuery.fetchOne();
+        Long totalCount = buildCountQuery(searchConditions, user, filterType)
+                .fetchOne();
 
         List<StudyGroupDto.StudyGroupResponse> content = results.stream()
-                .map(tuple -> {
-                    StudyGroup studyGroupEntity = tuple.get(studyGroup);
-                    Boolean dibsValue = tuple.get(1, Boolean.class);
-
-                    return StudyGroupDto.StudyGroupResponse.from(
-                            Objects.requireNonNull(studyGroupEntity),
-                            dibsValue);
-                })
+                .map(this::mapToDto)
                 .toList();
 
         return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
+    }
+
+    private JPAQuery<Tuple> buildBaseQuery(
+            StudyGroupDto.SearchConditions searchConditions,
+            UserDetails user,
+            StudyGroupFilterType filterType
+    ) {
+        JPAQuery<Tuple> query = queryFactory
+                .select(
+                        studyGroup,
+                        JPAExpressions.selectOne()
+                                .from(dibs)
+                                .where(
+                                        dibs.id.studyGroup.eq(studyGroup),
+                                        dibs.id.user.id.eq(user.getUser().getId())
+                                )
+                                .exists()
+                )
+                .from(studyGroup);
+
+        applyFilterTypeCondition(query, user, filterType);
+        applySearchCondition(query, searchConditions);
+        applyCategoryCondition(query, searchConditions);
+
+        return query;
+    }
+
+    private JPAQuery<Long> buildCountQuery(
+            StudyGroupDto.SearchConditions searchConditions,
+            UserDetails user,
+            StudyGroupFilterType filterType
+    ) {
+        JPAQuery<Long> query = queryFactory
+                .select(studyGroup.count())
+                .from(studyGroup);
+
+        applyFilterTypeCondition(query, user, filterType);
+        applySearchCondition(query, searchConditions);
+        applyCategoryCondition(query, searchConditions);
+
+        return query;
+    }
+
+    private void applyFilterTypeCondition(JPAQuery<?> query, UserDetails user, StudyGroupFilterType filterType) {
+        if (user == null || user.getUser() == null){
+            throw new RestException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (filterType == StudyGroupFilterType.OWNED) {
+            query.where(studyGroup.owner.id.eq(user.getUser().getId()));
+        }
+
+        // TODO: 다른 필터 타입이 필요할 경우 여기에 추가 로직을 작성
+    }
+
+    private void applySearchCondition(
+            JPAQuery<?> query,
+            StudyGroupDto.SearchConditions searchConditions) {
+
+        Predicate searchCondition = buildSearchCondition(searchConditions);
+        if (searchCondition != null) {
+            query.where(searchCondition);
+        }
+    }
+
+    private void applyCategoryCondition(
+            JPAQuery<?> query,
+            StudyGroupDto.SearchConditions searchConditions) {
+
+        if (searchConditions.getCategoryId() != null) {
+            query.join(studyGroup.categories, groupCategory)
+                    .where(groupCategory.id.eq(searchConditions.getCategoryId()));
+        }
     }
 
     private Predicate buildSearchCondition(
@@ -164,20 +183,52 @@ public class StudyGroupQueryRepository {
         }
     }
 
-    /**
-     * 검색어에 대한 관련성 점수를 계산합니다.
-     * 3점: 이름에 포함
-     * 2점: 카테고리 이름에 포함
-     * 0점: 포함되지 않음
-     */
     private NumberExpression<Integer> calculateRelevanceScore(String keyword) {
         return new CaseBuilder()
                 .when(studyGroup.name.containsIgnoreCase(keyword)).then(3)
                 .otherwise(0)
                 .add(new CaseBuilder()
-                        .when(studyGroup.categories.any().name.containsIgnoreCase(keyword))
-                        .then(2)
+                        .when(studyGroup.categories.any().name.containsIgnoreCase(keyword)).then(2)
                         .otherwise(0));
+    }
+
+    private StudyGroupDto.StudyGroupResponse mapToDto(Tuple tuple) {
+        StudyGroup entity = tuple.get(studyGroup);
+        Boolean dibsValue = tuple.get(1, Boolean.class);
+        return StudyGroupDto.StudyGroupResponse.from(
+                Objects.requireNonNull(entity),
+                dibsValue != null && dibsValue
+        );
+    }
+
+    /**
+     * 로그인한 사용자가 주최한 스터디 그룹 목록을 페이지네이션하여 조회합니다.
+     *
+     * @param searchConditions 검색 조건
+     * @param user             로그인 사용자 정보
+     * @param pageable         페이지 정보
+     * @return 페이지네이션된 스터디 그룹 목록
+     */
+    public Page<StudyGroupDto.StudyGroupResponse> paginateMyOwnedGroups(
+            StudyGroupDto.SearchConditions searchConditions,
+            UserDetails user,
+            Pageable pageable) {
+        return paginateByType(searchConditions, user, pageable, StudyGroupFilterType.OWNED);
+    }
+
+    /**
+     * 로그인한 모든 유저는 조건 별 모든 스터디 그룹 목록을 페이지네이션하여 조회합니다.
+     *
+     * @param searchConditions 검색 조건
+     * @param user             로그인 사용자 정보
+     * @param pageable         페이지 정보
+     * @return 페이지네이션된 스터디 그룹 목록
+     */
+    public Page<StudyGroupDto.StudyGroupResponse> paginateAllGroups(
+            StudyGroupDto.SearchConditions searchConditions,
+            UserDetails user,
+            Pageable pageable) {
+        return paginateByType(searchConditions, user, pageable, StudyGroupFilterType.ALL);
     }
 
     public Optional<StudyGroup> findDetailById(Integer groupId) {
