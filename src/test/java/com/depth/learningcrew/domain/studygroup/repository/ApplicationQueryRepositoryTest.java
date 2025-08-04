@@ -191,7 +191,7 @@ class ApplicationQueryRepositoryTest {
         // given
         UserDetails userDetails = new UserDetails(owner);
         ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
-                .name("김신청")
+                .keyword("김신청")
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
 

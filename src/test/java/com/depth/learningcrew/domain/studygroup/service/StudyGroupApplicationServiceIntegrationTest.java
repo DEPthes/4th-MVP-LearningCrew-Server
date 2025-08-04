@@ -4,12 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -258,5 +262,204 @@ class StudyGroupApplicationServiceIntegrationTest {
                                 .isInstanceOf(RestException.class)
                                 .hasFieldOrPropertyWithValue("errorCode",
                                                 ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_APPROVED);
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 기본 조회")
+        void getMyApplications_Integration_DefaultSearch() {
+                // given
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(1);
+                assertThat(result.getContent().get(0).getState()).isEqualTo(State.PENDING);
+                assertThat(result.getContent().get(0).getUser().getId()).isEqualTo(applicant.getId());
+                assertThat(result.getContent().get(0).getStudyGroup().getId()).isEqualTo(studyGroup.getId());
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 상태 필터링")
+        void getMyApplications_Integration_StateFilter() {
+                // given
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
+                                .state(State.PENDING)
+                                .build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(1);
+                assertThat(result.getContent().get(0).getState()).isEqualTo(State.PENDING);
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 빈 결과")
+        void getMyApplications_Integration_EmptyResult() {
+                // given
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
+                                .state(State.APPROVED)
+                                .build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 여러 신청이 있는 경우")
+        void getMyApplications_Integration_MultipleApplications() {
+                // given - 추가 스터디 그룹과 신청 생성
+                StudyGroup secondStudyGroup = StudyGroup.builder()
+                                .name("Second Study Group")
+                                .summary("Second Summary")
+                                .content("Second Content")
+                                .maxMembers(5)
+                                .memberCount(1)
+                                .currentStep(1)
+                                .startDate(LocalDate.now())
+                                .endDate(LocalDate.now().plusMonths(2))
+                                .owner(owner)
+                                .build();
+                secondStudyGroup = studyGroupRepository.save(secondStudyGroup);
+
+                ApplicationId secondApplicationId = ApplicationId.of(applicant, secondStudyGroup);
+                Application secondApplication = Application.builder()
+                                .id(secondApplicationId)
+                                .state(State.APPROVED)
+                                .build();
+                applicationRepository.save(secondApplication);
+
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(2);
+
+                // 신청 상태 확인
+                List<State> states = result.getContent().stream()
+                                .map(ApplicationDto.ApplicationResponse::getState)
+                                .toList();
+                assertThat(states).contains(State.PENDING, State.APPROVED);
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 페이지네이션")
+        void getMyApplications_Integration_Pagination() {
+                // given - 여러 스터디 그룹과 신청 생성
+                for (int i = 1; i <= 3; i++) {
+                        StudyGroup newStudyGroup = StudyGroup.builder()
+                                        .name("Study Group " + i)
+                                        .summary("Summary " + i)
+                                        .content("Content " + i)
+                                        .maxMembers(5)
+                                        .memberCount(1)
+                                        .currentStep(1)
+                                        .startDate(LocalDate.now())
+                                        .endDate(LocalDate.now().plusMonths(2))
+                                        .owner(owner)
+                                        .build();
+                        newStudyGroup = studyGroupRepository.save(newStudyGroup);
+
+                        ApplicationId newApplicationId = ApplicationId.of(applicant, newStudyGroup);
+                        Application newApplication = Application.builder()
+                                        .id(newApplicationId)
+                                        .state(State.PENDING)
+                                        .build();
+                        applicationRepository.save(newApplication);
+                }
+
+                // 첫 번째 페이지 (2개씩)
+                Pageable firstPage = PageRequest.of(0, 2);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> firstResult = studyGroupApplicationService
+                                .getMyApplications(searchConditions, firstPage, applicantDetails);
+
+                // then
+                assertThat(firstResult).isNotNull();
+                assertThat(firstResult.getContent()).hasSize(2);
+
+                // 두 번째 페이지
+                Pageable secondPage = PageRequest.of(1, 2);
+                PagedModel<ApplicationDto.ApplicationResponse> secondResult = studyGroupApplicationService
+                                .getMyApplications(searchConditions, secondPage, applicantDetails);
+
+                assertThat(secondResult).isNotNull();
+                assertThat(secondResult.getContent()).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 정렬 조건")
+        void getMyApplications_Integration_SortConditions() {
+                // given
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder()
+                                .sort("alphabet")
+                                .order("asc")
+                                .build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("내 가입 신청 목록 조회 통합 테스트 - 다른 사용자의 신청은 조회되지 않음")
+        void getMyApplications_Integration_OtherUserApplicationsNotIncluded() {
+                // given - 다른 사용자 생성
+                User otherUser = User.builder()
+                                .email("other@test.com")
+                                .password("password")
+                                .nickname("other")
+                                .birthday(LocalDate.of(1992, 3, 15))
+                                .gender(Gender.MALE)
+                                .role(Role.USER)
+                                .build();
+                otherUser = userRepository.save(otherUser);
+
+                // 다른 사용자의 신청 생성
+                ApplicationId otherApplicationId = ApplicationId.of(otherUser, studyGroup);
+                Application otherApplication = Application.builder()
+                                .id(otherApplicationId)
+                                .state(State.PENDING)
+                                .build();
+                applicationRepository.save(otherApplication);
+
+                Pageable pageable = PageRequest.of(0, 10);
+                ApplicationDto.SearchConditions searchConditions = ApplicationDto.SearchConditions.builder().build();
+
+                // when
+                PagedModel<ApplicationDto.ApplicationResponse> result = studyGroupApplicationService
+                                .getMyApplications(searchConditions, pageable, applicantDetails);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).hasSize(1);
+                assertThat(result.getContent().get(0).getUser().getId()).isEqualTo(applicant.getId());
         }
 }

@@ -47,7 +47,7 @@ public class ApplicationQueryRepository {
         .join(application.id.user).fetchJoin()
         .where(application.id.user.id.eq(user.getId()));
 
-    var searchCondition = buildSearchCondition(searchConditions);
+    var searchCondition = buildSearchConditionForGroupSearch(searchConditions);
     if (searchCondition != null) {
       query = query.where(searchCondition);
     }
@@ -62,8 +62,6 @@ public class ApplicationQueryRepository {
     var countQuery = queryFactory
         .select(application.count())
         .from(application)
-        .join(application.id.studyGroup).fetchJoin()
-        .join(application.id.user).fetchJoin()
         .where(application.id.user.id.eq(user.getId()));
 
     if (searchCondition != null) {
@@ -103,7 +101,7 @@ public class ApplicationQueryRepository {
             studyGroup.owner.id.eq(userDetails.getUser().getId()));
 
     // 검색 조건 적용
-    var searchCondition = buildSearchCondition(searchConditions);
+    var searchCondition = buildSearchConditionForNameSearch(searchConditions);
     if (searchCondition != null) {
       query = query.where(searchCondition);
     }
@@ -137,7 +135,7 @@ public class ApplicationQueryRepository {
     return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
   }
 
-  private BooleanExpression buildSearchCondition(ApplicationDto.SearchConditions searchConditions) {
+  private BooleanExpression buildSearchConditionForNameSearch(ApplicationDto.SearchConditions searchConditions) {
     BooleanExpression predicate = null;
 
     // 상태 필터링
@@ -146,12 +144,33 @@ public class ApplicationQueryRepository {
     }
 
     // 이름 검색
-    if (StringUtils.hasText(searchConditions.getName())) {
-      BooleanExpression namePredicate = user.nickname.containsIgnoreCase(searchConditions.getName());
+    if (StringUtils.hasText(searchConditions.getKeyword())) {
+      BooleanExpression namePredicate = user.nickname.containsIgnoreCase(searchConditions.getKeyword());
       if (predicate != null) {
         predicate = predicate.and(namePredicate);
       } else {
         predicate = namePredicate;
+      }
+    }
+
+    return predicate;
+  }
+
+  private BooleanExpression buildSearchConditionForGroupSearch(ApplicationDto.SearchConditions searchConditions) {
+    BooleanExpression predicate = null;
+
+    // 상태 필터링
+    if (searchConditions.getState() != null) {
+      predicate = application.state.eq(searchConditions.getState());
+    }
+
+    // 그룹 이름 검색
+    if (StringUtils.hasText(searchConditions.getKeyword())) {
+      BooleanExpression groupNamePredicate = studyGroup.name.containsIgnoreCase(searchConditions.getKeyword());
+      if (predicate != null) {
+        predicate = predicate.and(groupNamePredicate);
+      } else {
+        predicate = groupNamePredicate;
       }
     }
 

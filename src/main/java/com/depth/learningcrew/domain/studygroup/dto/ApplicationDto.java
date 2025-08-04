@@ -56,8 +56,8 @@ public class ApplicationDto {
   @Getter
   @Schema(description = "스터디 그룹 가입 신청 검색 조건")
   public static class SearchConditions {
-    @Schema(description = "신청자 이름 검색", example = "홍길동")
-    private String name;
+    @Schema(description = "검색 키워드 (신청자 이름 | 스터디 그룹 이름)", example = "홍길동 | 스터디 그룹 이름")
+    private String keyword;
 
     @Schema(description = "신청 상태 필터", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
     private State state;
