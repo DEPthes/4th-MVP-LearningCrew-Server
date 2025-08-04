@@ -2,6 +2,7 @@ package com.depth.learningcrew.domain.studygroup.service;
 
 import java.util.List;
 
+import com.depth.learningcrew.common.response.PaginationResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -33,14 +34,14 @@ public class StudyGroupService {
   private final DibsRepository dibsRepository;
 
   @Transactional(readOnly = true)
-  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,
       UserDetails user,
       Pageable pageable) {
     Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, user, pageable);
 
-    return new PagedModel<>(result);
+    return PaginationResponse.from(result);
   }
 
   @Transactional
@@ -86,4 +87,14 @@ public class StudyGroupService {
       boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
       return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
     }
+
+  @Transactional(readOnly = true)
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateAllStudyGroups(
+          StudyGroupDto.SearchConditions searchConditions,
+          UserDetails user,
+          Pageable pageable) {
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository.paginateAllGroups(
+            searchConditions, user, pageable);
+    return PaginationResponse.from(result);
+  }
 }
