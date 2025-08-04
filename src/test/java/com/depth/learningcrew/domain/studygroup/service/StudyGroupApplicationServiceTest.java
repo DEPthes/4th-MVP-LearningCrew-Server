@@ -189,7 +189,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 성공")
   void rejectApplication_Success() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when
@@ -204,7 +204,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 권한 없음")
   void rejectApplication_Fail_NoPermission() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -218,7 +218,7 @@ class StudyGroupApplicationServiceTest {
   void rejectApplication_Fail_AlreadyRejected() {
     // given
     application.setState(State.REJECTED);
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -232,7 +232,7 @@ class StudyGroupApplicationServiceTest {
   void rejectApplication_Fail_AlreadyApproved() {
     // given
     application.setState(State.APPROVED);
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
 
     // when & then
@@ -245,7 +245,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 스터디 그룹 없음")
   void rejectApplication_Fail_StudyGroupNotFound() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.empty());
+    when(studyGroupRepository.existsById(1)).thenReturn(false);
 
     // when & then
     assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
@@ -257,7 +257,7 @@ class StudyGroupApplicationServiceTest {
   @DisplayName("가입 신청 거절 실패 - 신청서 없음")
   void rejectApplication_Fail_ApplicationNotFound() {
     // given
-    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(studyGroupRepository.existsById(1)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.empty());
 
     // when & then
