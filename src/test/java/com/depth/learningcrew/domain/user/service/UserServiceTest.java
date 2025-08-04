@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.depth.learningcrew.domain.file.entity.HandlingType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -106,7 +107,7 @@ class UserServiceTest {
     ProfileImage existingProfileImage = ProfileImage.builder()
         .uuid("existing-uuid")
         .fileName("existing-image.jpg")
-        .handingType(com.depth.learningcrew.domain.file.entity.HandingType.IMAGE)
+        .handlingType(HandlingType.IMAGE)
         .size(1024L)
         .user(testUser)
         .build();

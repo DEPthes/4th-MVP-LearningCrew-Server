@@ -1,5 +1,5 @@
 package com.depth.learningcrew.domain.file.entity;
 
-public enum HandingType {
+public enum HandlingType {
     DOWNLOADABLE, IMAGE
 }

@@ -32,7 +32,7 @@ public class ProfileImage extends AttachedFile {
 
         return ProfileImage.builder()
                 .uuid(UUID.randomUUID().toString())
-                .handingType(HandingType.IMAGE)
+                .handlingType(HandlingType.IMAGE)
                 .fileName(file.getOriginalFilename())
                 .size(file.getSize())
                 .build();

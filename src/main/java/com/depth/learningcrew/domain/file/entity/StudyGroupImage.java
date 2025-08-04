@@ -37,7 +37,7 @@ public class StudyGroupImage extends AttachedFile {
         return StudyGroupImage.builder()
                 .uuid(UUID.randomUUID().toString())
                 .fileName(file.getOriginalFilename())
-                .handingType(HandingType.IMAGE)
+                .handlingType(HandlingType.IMAGE)
                 .studyGroup(studyGroup)
                 .size(file.getSize())
                 .build();
