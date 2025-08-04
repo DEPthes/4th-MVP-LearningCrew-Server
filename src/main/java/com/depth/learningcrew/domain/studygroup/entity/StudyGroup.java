@@ -12,6 +12,8 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,7 +43,7 @@ public class StudyGroup extends TimeStampedEntity {
     private String summary;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private String content;
 
     @Column(nullable = false)
@@ -68,7 +70,7 @@ public class StudyGroup extends TimeStampedEntity {
     @JoinColumn(nullable = false, name = "owner_id")
     private User owner;
 
-    @OneToOne(mappedBy = "studyGroup")
+    @OneToOne(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private StudyGroupImage studyGroupImage;
 
     @OneToMany(mappedBy = "id.studyGroupId")
@@ -91,5 +93,12 @@ public class StudyGroup extends TimeStampedEntity {
 
         throw new RestException(ErrorCode.AUTH_FORBIDDEN);
 
+    }
+
+    public void addCategory(GroupCategory category) {
+        if (!this.categories.contains(category)) {
+            this.categories.add(category);
+            category.getStudyGroups().add(this);
+        }
     }
 }
