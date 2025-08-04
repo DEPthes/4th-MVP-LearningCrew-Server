@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.depth.learningcrew.common.response.PaginationResponse;
 import com.depth.learningcrew.domain.studygroup.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -124,7 +125,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -151,7 +152,7 @@ class StudyGroupServiceTest {
         .thenReturn(emptyPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -180,7 +181,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(customSearchConditions, testUserDetails, pageable);
 
     // then
@@ -205,7 +206,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, customPageable);
 
     // then
@@ -241,7 +242,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditions, testUserDetails, pageable);
 
     // then
@@ -274,7 +275,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditionsWithKeyword, testUserDetails, pageable);
 
     // then
@@ -303,7 +304,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(searchConditionsWithRelativeSort, testUserDetails, pageable);
 
     // then
@@ -333,7 +334,7 @@ class StudyGroupServiceTest {
         .thenReturn(mockPage);
 
     // when
-    PagedModel<StudyGroupDto.StudyGroupResponse> result = studyGroupService
+    PaginationResponse<StudyGroupDto.StudyGroupResponse> result = studyGroupService
         .paginateMyOwnedStudyGroups(allSearchConditions, testUserDetails, pageable);
 
     // then
