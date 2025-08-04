@@ -1,7 +1,12 @@
 package com.depth.learningcrew.domain.studygroup.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
+import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
+import com.depth.learningcrew.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -31,6 +36,7 @@ public class StudyGroupService {
   private final GroupCategoryService groupCategoryService;
   private final FileHandler fileHandler;
   private final DibsRepository dibsRepository;
+  private final StudyStepRepository studyStepRepository;
 
   @Transactional(readOnly = true)
   public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
@@ -83,7 +89,63 @@ public class StudyGroupService {
         StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-      boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
-      return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
+    boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
+    return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
+  }
+
+  @Transactional
+  public StudyGroupDto.StudyGroupDetailResponse createStudyGroup(
+          StudyGroupDto.StudyGroupCreateRequest request,
+          UserDetails user) {
+
+    User owner = user.getUser();
+
+    StudyGroup studyGroup = StudyGroup.builder()
+            .name(request.getName())
+            .summary(request.getSummary())
+            .maxMembers(request.getMaxMembers())
+            .memberCount(1)
+            .currentStep(1)
+            .startDate(request.getStartDate())
+            .endDate(request.getEndDate())
+            .owner(owner)
+            .build();
+
+    // 카테고리 처리
+    if (request.getCategories() != null) {
+      List<GroupCategory> categories = groupCategoryService.findOrCreateByNames(request.getCategories());
+      for (GroupCategory category : categories) {
+        studyGroup.addCategory(category);
+      }
     }
+
+    // 이미지 파일 처리
+    if (request.getGroupImage() != null && !request.getGroupImage().isEmpty()) {
+      StudyGroupImage image = StudyGroupImage.from(request.getGroupImage(), studyGroup);
+      fileHandler.saveFile(request.getGroupImage(), image);
+      studyGroup.setStudyGroupImage(image);
+    }
+
+    StudyGroup savedGroup = studyGroupRepository.save(studyGroup);
+
+    // Step 저장
+    if (request.getSteps() != null) {
+      int stepNumber = 1;
+      for (LocalDate endDate : request.getSteps()) {
+        StudyStepId stepId = StudyStepId.builder()
+                .step(stepNumber++)
+                .studyGroupId(savedGroup)
+                .build();
+
+        StudyStep step = StudyStep.builder()
+                .id(stepId)
+                .endDate(endDate)
+                .build();
+        savedGroup.getSteps().add(step);
+        studyStepRepository.save(step);
+      }
+    }
+
+    return StudyGroupDto.StudyGroupDetailResponse.from(savedGroup, false);
+  }
 }
