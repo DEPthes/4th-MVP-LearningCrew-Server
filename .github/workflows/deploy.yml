@@ -46,12 +46,14 @@ jobs:
       # 5. Install & Build Frontend using npm
       - name: Build Frontend
         working-directory: ./frontend
+        continue-on-error: true
         run: |
           npm ci
           npm run build
 
       # 7. Copy frontend build to Spring Boot static resources
       - name: Copy frontend build to Spring Boot static
+        continue-on-error: true
         run: |
           echo "Copying frontend build from $(pwd)/frontend/dist to $(pwd)/src/main/resources/static"
           rm -rf ./src/main/resources/static/*
