@@ -40,9 +40,8 @@ public class StudyGroupApplicationController {
       @PageableDefault @ParameterObject Pageable pageable,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    PagedModel<ApplicationDto.ApplicationResponse> response = studyGroupApplicationService
-        .getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
-    return response;
+      return studyGroupApplicationService
+              .getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
   }
 
   @PostMapping("/{groupId}/join")
@@ -52,8 +51,7 @@ public class StudyGroupApplicationController {
       @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
-    return response;
+      return studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
   }
 
   @PostMapping("/{groupId}/applications/{userId}/approve")
@@ -63,20 +61,16 @@ public class StudyGroupApplicationController {
       @Parameter(description = "신청자 ID") @PathVariable Integer userId,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(groupId, userId,
-        userDetails);
-    return response;
+      return studyGroupApplicationService.approveApplication(groupId, userId, userDetails);
   }
 
-  @DeleteMapping("/{groupId}/applications/{userId}")
+  @PostMapping("/{groupId}/applications/{userId}/reject")
   @Operation(summary = "스터디 그룹 가입 신청 거절", description = "스터디 그룹의 owner가 가입 신청을 거절합니다.")
   public ApplicationDto.ApplicationResponse rejectApplication(
       @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
       @Parameter(description = "신청자 ID") @PathVariable Integer userId,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.rejectApplication(groupId, userId,
-        userDetails);
-    return response;
+      return studyGroupApplicationService.rejectApplication(groupId, userId, userDetails);
   }
 }
