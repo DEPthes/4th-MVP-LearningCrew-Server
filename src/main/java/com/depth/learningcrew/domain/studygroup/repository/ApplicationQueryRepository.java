@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.depth.learningcrew.domain.studygroup.dto.ApplicationDto;
 import com.depth.learningcrew.domain.studygroup.entity.Application;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -25,6 +26,58 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ApplicationQueryRepository {
   private final JPAQueryFactory queryFactory;
+
+  /**
+   * 사용자의 가입 신청 목록을 페이지네이션하여 조회합니다.
+   *
+   * @param user             사용자
+   * @param searchConditions 검색 조건
+   * @param pageable         페이지 정보
+   * @return 페이지네이션된 가입 신청 목록
+   */
+  public Page<ApplicationDto.ApplicationResponse> paginateApplicationsByUserId(
+      User user,
+      ApplicationDto.SearchConditions searchConditions,
+      Pageable pageable) {
+
+    var query = queryFactory
+        .select(application)
+        .from(application)
+        .join(application.id.studyGroup).fetchJoin()
+        .join(application.id.user).fetchJoin()
+        .where(application.id.user.id.eq(user.getId()));
+
+    var searchCondition = buildSearchCondition(searchConditions);
+    if (searchCondition != null) {
+      query = query.where(searchCondition);
+    }
+
+    applySorting(query, searchConditions);
+
+    List<Application> results = query
+        .offset(pageable.getOffset())
+        .limit(pageable.getPageSize())
+        .fetch();
+
+    var countQuery = queryFactory
+        .select(application.count())
+        .from(application)
+        .join(application.id.studyGroup).fetchJoin()
+        .join(application.id.user).fetchJoin()
+        .where(application.id.user.id.eq(user.getId()));
+
+    if (searchCondition != null) {
+      countQuery = countQuery.where(searchCondition);
+    }
+
+    Long totalCount = countQuery.fetchOne();
+
+    List<ApplicationDto.ApplicationResponse> content = results.stream()
+        .map(ApplicationDto.ApplicationResponse::from)
+        .toList();
+
+    return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
+  }
 
   /**
    * 스터디 그룹의 가입 신청 목록을 페이지네이션하여 조회합니다.
@@ -123,4 +176,5 @@ public class ApplicationQueryRepository {
       }
     }
   }
+
 }
