@@ -1,7 +1,6 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -48,12 +47,21 @@ public class StudyGroupController {
     return studyGroupService.updateStudyGroup(groupId, request, userDetails);
   }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "스터디 그룹 상세 조회", description = "스터디 그룹 ID를 통해 스터디 그룹의 상세 정보를 조회합니다.")
-    @ApiResponse(responseCode = "200", description = "스터디 그룹 조회 성공")
-    public StudyGroupDto.StudyGroupDetailResponse getStudyGroup(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails){
-        return studyGroupService.getStudyGroupDetail(id, userDetails);
-      }
+  @GetMapping("/{id}")
+  @Operation(summary = "스터디 그룹 상세 조회", description = "스터디 그룹 ID를 통해 스터디 그룹의 상세 정보를 조회합니다.")
+  @ApiResponse(responseCode = "200", description = "스터디 그룹 조회 성공")
+  public StudyGroupDto.StudyGroupDetailResponse getStudyGroup(
+          @PathVariable Long id,
+          @AuthenticationPrincipal UserDetails userDetails) {
+    return studyGroupService.getStudyGroupDetail(id, userDetails);
+  }
+
+  @PostMapping
+  @Operation(summary = "스터디 그룹 생성", description = "새로운 스터디 그룹을 생성합니다.")
+  @ApiResponse(responseCode = "201", description = "스터디 그룹 생성 성공")
+  public StudyGroupDto.StudyGroupDetailResponse createStudyGroup(
+          @ModelAttribute StudyGroupDto.StudyGroupCreateRequest request,
+          @AuthenticationPrincipal UserDetails userDetails) {
+    return studyGroupService.createStudyGroup(request, userDetails);
+  }
 }
