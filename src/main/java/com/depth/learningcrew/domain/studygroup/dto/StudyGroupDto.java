@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.depth.learningcrew.domain.file.dto.FileDto;
@@ -13,17 +14,13 @@ import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 public class StudyGroupDto {
 
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Getter
+    @Data
     @Schema(description = "내 주최 그룹 목록 조회 검색 조건")
     public static class SearchConditions {
         @Builder.Default
