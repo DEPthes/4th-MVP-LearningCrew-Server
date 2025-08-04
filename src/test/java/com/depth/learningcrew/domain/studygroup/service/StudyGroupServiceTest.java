@@ -57,7 +57,7 @@ class StudyGroupServiceTest {
   void setUp() {
     // 테스트 사용자 설정
     testUser = User.builder()
-        .id(1)
+        .id(1L)
         .email("test@example.com")
         .password("password")
         .nickname("testUser")
@@ -74,7 +74,7 @@ class StudyGroupServiceTest {
 
     // 테스트 스터디 그룹 설정
     testStudyGroup = StudyGroup.builder()
-        .id(1)
+        .id(1L)
         .name("테스트 스터디 그룹")
         .summary("테스트 스터디 그룹입니다.")
         .maxMembers(10)
@@ -221,7 +221,7 @@ class StudyGroupServiceTest {
   void paginateMyOwnedStudyGroups_WithMultipleResults_ShouldReturnAllResults() {
     // given
     StudyGroupDto.StudyGroupResponse secondResponse = StudyGroupDto.StudyGroupResponse.builder()
-        .id(2)
+        .id(2L)
         .name("두 번째 스터디 그룹")
         .summary("두 번째 스터디 그룹입니다.")
         .maxMembers(5)
@@ -355,7 +355,7 @@ class StudyGroupServiceTest {
               .build();
 
       StudyGroup studyGroup = StudyGroup.builder()
-              .id(1)
+              .id(1L)
               .name("스터디 그룹")
               .summary("스터디그룹 소개")
               .content("스터디 내용")
@@ -385,11 +385,11 @@ class StudyGroupServiceTest {
       studyGroup.getCategories().add(category);
 
 
-      when(studyGroupQueryRepository.findDetailById(1)).thenReturn(Optional.of(studyGroup));
+      when(studyGroupQueryRepository.findDetailById(1L)).thenReturn(Optional.of(studyGroup));
       when(dibsRepository.existsById_UserAndId_StudyGroup(testUser, studyGroup)).thenReturn(true);
 
       // when
-      StudyGroupDto.StudyGroupDetailResponse result = studyGroupService.getStudyGroupDetail(1, testUserDetails);
+      StudyGroupDto.StudyGroupDetailResponse result = studyGroupService.getStudyGroupDetail(1L, testUserDetails);
 
       // then
       assertThat(result.getId()).isEqualTo(studyGroup.getId());

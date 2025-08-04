@@ -53,7 +53,7 @@ class DibsServiceTest {
   void setUp() {
     // 테스트 사용자 설정
     testUser = User.builder()
-        .id(1)
+        .id(1L)
         .email("test@example.com")
         .password("password")
         .nickname("testUser")
@@ -179,7 +179,7 @@ class DibsServiceTest {
   void toggleDibs_WithDifferentUserAndGroup_ShouldWorkCorrectly() {
     // given
     User otherUser = User.builder()
-        .id(2)
+        .id(2L)
         .email("other@example.com")
         .password("password")
         .nickname("otherUser")
