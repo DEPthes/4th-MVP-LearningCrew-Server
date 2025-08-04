@@ -190,4 +190,73 @@ class StudyGroupApplicationServiceIntegrationTest {
                 assertThat(updatedStudyGroup).isNotNull();
                 assertThat(updatedStudyGroup.getMemberCount()).isEqualTo(1);
         }
+
+        @Test
+        @DisplayName("가입 신청 거절 통합 테스트 - 성공")
+        void rejectApplication_Integration_Success() {
+                // when
+                ApplicationDto.ApplicationResponse response = studyGroupApplicationService.rejectApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails);
+
+                // then
+                assertThat(response.getState()).isEqualTo(State.REJECTED);
+                assertThat(response.getApprovedAt()).isNotNull();
+                assertThat(response.getUser().getId()).isEqualTo(applicant.getId());
+                assertThat(response.getStudyGroup().getId()).isEqualTo(studyGroup.getId());
+
+                // 데이터베이스에서 확인
+                Application savedApplication = applicationRepository.findById(application.getId()).orElse(null);
+                assertThat(savedApplication).isNotNull();
+                assertThat(savedApplication.getState()).isEqualTo(State.REJECTED);
+                assertThat(savedApplication.getApprovedAt()).isNotNull();
+
+                // 멤버로 추가되지 않았는지 확인
+                Member member = memberRepository.findById_UserAndId_StudyGroup(applicant, studyGroup).orElse(null);
+                assertThat(member).isNull();
+
+                // 스터디 그룹 멤버 수는 변경되지 않아야 함
+                StudyGroup updatedStudyGroup = studyGroupRepository.findById(studyGroup.getId()).orElse(null);
+                assertThat(updatedStudyGroup).isNotNull();
+                assertThat(updatedStudyGroup.getMemberCount()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("가입 신청 거절 통합 테스트 - 권한 없음")
+        void rejectApplication_Integration_NoPermission() {
+                // when & then
+                assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(
+                                studyGroup.getId(), applicant.getId(), applicantDetails))
+                                .isInstanceOf(RestException.class)
+                                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
+        }
+
+        @Test
+        @DisplayName("가입 신청 거절 통합 테스트 - 이미 거절된 신청")
+        void rejectApplication_Integration_AlreadyRejected() {
+                // given
+                application.reject();
+                applicationRepository.save(application);
+
+                // when & then
+                assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails))
+                                .isInstanceOf(RestException.class)
+                                .hasFieldOrPropertyWithValue("errorCode",
+                                                ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_REJECTED);
+        }
+
+        @Test
+        @DisplayName("가입 신청 거절 통합 테스트 - 이미 승인된 신청")
+        void rejectApplication_Integration_AlreadyApproved() {
+                // given
+                application.approve();
+                applicationRepository.save(application);
+
+                // when & then
+                assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(
+                                studyGroup.getId(), applicant.getId(), ownerDetails))
+                                .isInstanceOf(RestException.class)
+                                .hasFieldOrPropertyWithValue("errorCode",
+                                                ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_APPROVED);
+        }
 }

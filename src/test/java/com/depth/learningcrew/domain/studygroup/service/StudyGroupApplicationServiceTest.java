@@ -170,7 +170,7 @@ class StudyGroupApplicationServiceTest {
   }
 
   @Test
-  @DisplayName("가입 신청 수락 성공 - 이미 멤버인 경우")
+  @DisplayName("가입 신청 성공 - 이미 멤버인 경우")
   void approveApplication_Success_AlreadyMember() {
     // given
     when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
@@ -183,5 +183,86 @@ class StudyGroupApplicationServiceTest {
     // then
     assertThat(response.getState()).isEqualTo(State.APPROVED);
     assertThat(response.getApprovedAt()).isNotNull();
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 성공")
+  void rejectApplication_Success() {
+    // given
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
+
+    // when
+    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.rejectApplication(1, 2, ownerDetails);
+
+    // then
+    assertThat(response.getState()).isEqualTo(State.REJECTED);
+    assertThat(response.getApprovedAt()).isNotNull();
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 실패 - 권한 없음")
+  void rejectApplication_Fail_NoPermission() {
+    // given
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
+
+    // when & then
+    assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, applicantDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 실패 - 이미 거절된 신청")
+  void rejectApplication_Fail_AlreadyRejected() {
+    // given
+    application.setState(State.REJECTED);
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
+
+    // when & then
+    assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_REJECTED);
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 실패 - 이미 승인된 신청")
+  void rejectApplication_Fail_AlreadyApproved() {
+    // given
+    application.setState(State.APPROVED);
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.of(application));
+
+    // when & then
+    assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_APPLICATION_ALREADY_APPROVED);
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 실패 - 스터디 그룹 없음")
+  void rejectApplication_Fail_StudyGroupNotFound() {
+    // given
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GLOBAL_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("가입 신청 거절 실패 - 신청서 없음")
+  void rejectApplication_Fail_ApplicationNotFound() {
+    // given
+    when(studyGroupRepository.findById(1)).thenReturn(Optional.of(studyGroup));
+    when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2, 1)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> studyGroupApplicationService.rejectApplication(1, 2, ownerDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GLOBAL_NOT_FOUND);
   }
 }

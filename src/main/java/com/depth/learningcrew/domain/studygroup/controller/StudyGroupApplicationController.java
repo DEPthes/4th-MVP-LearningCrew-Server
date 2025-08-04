@@ -6,6 +6,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,7 +40,8 @@ public class StudyGroupApplicationController {
       @PageableDefault @ParameterObject Pageable pageable,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    PagedModel<ApplicationDto.ApplicationResponse> response = studyGroupApplicationService.getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
+    PagedModel<ApplicationDto.ApplicationResponse> response = studyGroupApplicationService
+        .getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
     return response;
   }
 
@@ -61,7 +63,20 @@ public class StudyGroupApplicationController {
       @Parameter(description = "신청자 ID") @PathVariable Integer userId,
       @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(groupId, userId, userDetails);
+    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(groupId, userId,
+        userDetails);
+    return response;
+  }
+
+  @DeleteMapping("/{groupId}/applications/{userId}")
+  @Operation(summary = "스터디 그룹 가입 신청 거절", description = "스터디 그룹의 owner가 가입 신청을 거절합니다.")
+  public ApplicationDto.ApplicationResponse rejectApplication(
+      @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
+      @Parameter(description = "신청자 ID") @PathVariable Integer userId,
+      @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.rejectApplication(groupId, userId,
+        userDetails);
     return response;
   }
 }
