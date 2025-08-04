@@ -32,7 +32,7 @@ public class StudyGroup extends TimeStampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, length = 30)
     private String name;

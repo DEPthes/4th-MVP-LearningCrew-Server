@@ -49,7 +49,7 @@ public class StudyGroupDto {
     @Schema(description = "내 주최 그룹 목록 응답")
     public static class StudyGroupResponse {
         @Schema(description = "스터디 그룹 ID", example = "123")
-        private Integer id;
+        private Long id;
 
         @Schema(description = "스터디 그룹 이름", example = "group name")
         private String name;
@@ -152,7 +152,7 @@ public class StudyGroupDto {
     @Schema(description = "스터디 그룹 정보 수정 응답")
     public static class StudyGroupUpdateResponse {
         @Schema(description = "스터디 그룹 ID", example = "123")
-        private Integer id;
+        private Long id;
 
         @Schema(description = "스터디 그룹 이름", example = "group name")
         private String name;
@@ -214,7 +214,7 @@ public class StudyGroupDto {
     @Schema(description = "스터디 그룹 상세 조회 응답")
     public static class StudyGroupDetailResponse {
         @Schema(description = "스터디 그룹 ID", example = "123")
-        private Integer id;
+        private Long id;
 
         @Schema(description = "스터디 그룹 이름", example = "group name")
         private String name;

@@ -54,7 +54,7 @@ class UserServiceTest {
   @BeforeEach
   void setUp() {
     testUser = User.builder()
-        .id(1)
+        .id(1L)
         .email("test@example.com")
         .password("encodedPassword")
         .nickname("testUser")

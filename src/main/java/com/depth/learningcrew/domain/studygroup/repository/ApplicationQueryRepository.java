@@ -87,7 +87,7 @@ public class ApplicationQueryRepository {
    * @return 페이지네이션된 가입 신청 목록
    */
   public Page<ApplicationDto.ApplicationResponse> paginateApplicationsByGroupId(
-      Integer groupId,
+      Long groupId,
       ApplicationDto.SearchConditions searchConditions,
       UserDetails userDetails,
       Pageable pageable) {

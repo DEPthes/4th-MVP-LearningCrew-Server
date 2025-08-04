@@ -16,7 +16,7 @@ public class UserLoadServiceImpl implements UserLoadService {
 
     @Override
     public Optional<UserDetails> loadUserByKey(String key) {
-        return userRepository.findById(Integer.parseInt(key))
+        return userRepository.findById(Long.parseLong(key))
                 .map(UserDetails::from);
     }
 }

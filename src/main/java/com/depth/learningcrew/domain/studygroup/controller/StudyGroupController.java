@@ -42,7 +42,7 @@ public class StudyGroupController {
   @PatchMapping(value = "/{groupId}")
   @Operation(summary = "스터디 그룹 정보 수정", description = "owner만 스터디 그룹의 정보를 수정할 수 있습니다. 모든 정보를 하나의 요청으로 전송합니다.")
   public StudyGroupDto.StudyGroupResponse updateStudyGroup(
-      @PathVariable Integer groupId,
+      @PathVariable Long groupId,
       @Valid @ModelAttribute @ParameterObject StudyGroupDto.StudyGroupUpdateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.updateStudyGroup(groupId, request, userDetails);
@@ -52,7 +52,7 @@ public class StudyGroupController {
     @Operation(summary = "스터디 그룹 상세 조회", description = "스터디 그룹 ID를 통해 스터디 그룹의 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "스터디 그룹 조회 성공")
     public StudyGroupDto.StudyGroupDetailResponse getStudyGroup(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails){
         return studyGroupService.getStudyGroupDetail(id, userDetails);
       }
