@@ -232,7 +232,6 @@ public class StudyGroupQueryRepository {
     }
 
     public Optional<StudyGroup> findDetailById(Integer groupId) {
-
         return Optional.ofNullable(queryFactory.selectFrom(studyGroup)
                 .leftJoin(studyGroup.owner, user).fetchJoin()
                 .leftJoin(studyGroup.categories, groupCategory).fetchJoin()

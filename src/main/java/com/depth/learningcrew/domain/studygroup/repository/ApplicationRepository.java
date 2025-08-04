@@ -15,5 +15,5 @@ public interface ApplicationRepository extends JpaRepository<Application, Applic
 
   boolean existsById_UserAndId_StudyGroup(User user, StudyGroup studyGroup);
 
-  Optional<Application> findById_User_IdAndId_StudyGroup_Id(Integer userId, Integer groupId);
+  Optional<Application> findById_User_IdAndId_StudyGroup_Id(Long userId, Long groupId);
 }

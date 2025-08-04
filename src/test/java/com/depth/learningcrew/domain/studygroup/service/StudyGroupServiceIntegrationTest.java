@@ -147,7 +147,7 @@ class StudyGroupServiceIntegrationTest {
 
     // when & then
     assertThatThrownBy(() -> studyGroupService.updateStudyGroup(
-        999, request, ownerDetails))
+        999L, request, ownerDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GLOBAL_NOT_FOUND);
   }

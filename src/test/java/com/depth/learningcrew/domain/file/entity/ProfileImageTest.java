@@ -24,7 +24,7 @@ class ProfileImageTest {
     // then
     assertThat(profileImage).isNotNull();
     assertThat(profileImage.getFileName()).isEqualTo("test-image.jpg");
-    assertThat(profileImage.getHandingType()).isEqualTo(HandingType.IMAGE);
+    assertThat(profileImage.getHandlingType()).isEqualTo(HandlingType.IMAGE);
     assertThat(profileImage.getSize()).isEqualTo("test image content".getBytes().length);
     assertThat(profileImage.getUuid()).isNotNull();
     assertThat(profileImage.getUuid()).isNotEmpty();
@@ -78,7 +78,7 @@ class ProfileImageTest {
     assertThat(profileImage).isNotNull();
     assertThat(profileImage.getFileName()).isEqualTo("large-image.jpg");
     assertThat(profileImage.getSize()).isEqualTo(1024 * 1024);
-    assertThat(profileImage.getHandingType()).isEqualTo(HandingType.IMAGE);
+    assertThat(profileImage.getHandlingType()).isEqualTo(HandlingType.IMAGE);
   }
 
   @Test
@@ -100,7 +100,7 @@ class ProfileImageTest {
       // then
       assertThat(profileImage).isNotNull();
       assertThat(profileImage.getFileName()).isEqualTo("test-image." + extension);
-      assertThat(profileImage.getHandingType()).isEqualTo(HandingType.IMAGE);
+      assertThat(profileImage.getHandlingType()).isEqualTo(HandlingType.IMAGE);
     }
   }
 
@@ -120,7 +120,7 @@ class ProfileImageTest {
     // then
     assertThat(profileImage).isNotNull();
     assertThat(profileImage.getFileName()).isEqualTo("");
-    assertThat(profileImage.getHandingType()).isEqualTo(HandingType.IMAGE);
+    assertThat(profileImage.getHandlingType()).isEqualTo(HandlingType.IMAGE);
     assertThat(profileImage.getSize()).isEqualTo("test content".getBytes().length);
     assertThat(profileImage.getUuid()).isNotNull();
     assertThat(profileImage.getUuid()).isNotEmpty();

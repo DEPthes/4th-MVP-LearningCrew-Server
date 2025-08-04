@@ -30,7 +30,7 @@ public class Image extends AttachedFile {
 
         return Image.builder()
                 .uuid(UUID.randomUUID().toString())
-                .handingType(HandingType.IMAGE)
+                .handlingType(HandlingType.IMAGE)
                 .fileName(file.getOriginalFilename())
                 .size(file.getSize())
                 .build();

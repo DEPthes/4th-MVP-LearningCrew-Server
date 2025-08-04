@@ -34,7 +34,7 @@ public class StudyGroupApplicationService {
 
   @Transactional(readOnly = true)
   public PagedModel<ApplicationDto.ApplicationResponse> getApplicationsByGroupId(
-      Integer groupId,
+      Long groupId,
       ApplicationDto.SearchConditions searchConditions,
       UserDetails userDetails,
       Pageable pageable) {
@@ -54,7 +54,7 @@ public class StudyGroupApplicationService {
   }
 
   @Transactional
-  public ApplicationDto.ApplicationResponse joinStudyGroup(Integer groupId, UserDetails userDetails) {
+  public ApplicationDto.ApplicationResponse joinStudyGroup(Long groupId, UserDetails userDetails) {
     StudyGroup studyGroup = studyGroupRepository.findById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
@@ -72,7 +72,7 @@ public class StudyGroupApplicationService {
   }
 
   @Transactional
-  public ApplicationDto.ApplicationResponse approveApplication(Integer groupId, Integer userId,
+  public ApplicationDto.ApplicationResponse approveApplication(Long groupId, Long userId,
       UserDetails ownerDetails) {
     StudyGroup studyGroup = studyGroupRepository.findById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
@@ -102,6 +102,22 @@ public class StudyGroupApplicationService {
     return ApplicationDto.ApplicationResponse.from(application);
   }
 
+  @Transactional
+  public ApplicationDto.ApplicationResponse rejectApplication(Long groupId, Long userId, UserDetails ownerDetails) {
+    if (!studyGroupRepository.existsById(groupId)) {
+      throw new RestException(ErrorCode.GLOBAL_NOT_FOUND);
+    }
+
+    Application application = applicationRepository.findById_User_IdAndId_StudyGroup_Id(userId, groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    application.canRejectBy(ownerDetails);
+    application.canRejectNow();
+    application.reject();
+
+    return ApplicationDto.ApplicationResponse.from(application);
+  }
+
   private void cannotApplicateIfAlreadyMember(UserDetails userDetails, StudyGroup studyGroup) {
     if (memberRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), studyGroup)) {
       throw new RestException(ErrorCode.STUDY_GROUP_ALREADY_MEMBER);
@@ -112,5 +128,16 @@ public class StudyGroupApplicationService {
     if (applicationRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), studyGroup)) {
       throw new RestException(ErrorCode.STUDY_GROUP_ALREADY_APPLIED);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public PagedModel<ApplicationDto.ApplicationResponse> getMyApplications(
+      ApplicationDto.SearchConditions searchConditions,
+      Pageable pageable,
+      UserDetails userDetails) {
+    Page<ApplicationDto.ApplicationResponse> result = applicationQueryRepository.paginateApplicationsByUserId(
+        userDetails.getUser(), searchConditions, pageable);
+
+    return new PagedModel<>(result);
   }
 }

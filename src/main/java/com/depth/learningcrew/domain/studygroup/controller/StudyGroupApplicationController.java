@@ -29,39 +29,57 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Study Group Application", description = "스터디 그룹 가입 신청 API")
 public class StudyGroupApplicationController {
 
-  private final StudyGroupApplicationService studyGroupApplicationService;
+    private final StudyGroupApplicationService studyGroupApplicationService;
 
-  @GetMapping("/{groupId}/applications")
-  @Operation(summary = "스터디 그룹 가입 신청 목록 조회", description = "스터디 그룹의 owner가 가입 신청 목록을 페이지네이션으로 조회합니다.")
-  public PagedModel<ApplicationDto.ApplicationResponse> getApplicationsByGroupId(
-      @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
-      @ModelAttribute @ParameterObject ApplicationDto.SearchConditions searchConditions,
-      @PageableDefault @ParameterObject Pageable pageable,
-      @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    @GetMapping("/{groupId}/applications")
+    @Operation(summary = "스터디 그룹 가입 신청 목록 조회", description = "스터디 그룹의 owner가 가입 신청 목록을 페이지네이션으로 조회합니다.")
+    public PagedModel<ApplicationDto.ApplicationResponse> getApplicationsByGroupId(
+            @Parameter(description = "스터디 그룹 ID") @PathVariable Long groupId,
+            @ModelAttribute @ParameterObject ApplicationDto.SearchConditions searchConditions,
+            @PageableDefault @ParameterObject Pageable pageable,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    PagedModel<ApplicationDto.ApplicationResponse> response = studyGroupApplicationService.getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
-    return response;
-  }
+        return studyGroupApplicationService
+                .getApplicationsByGroupId(groupId, searchConditions, userDetails, pageable);
+    }
 
-  @PostMapping("/{groupId}/join")
-  @Operation(summary = "스터디 그룹 가입 신청", description = "로그인한 사용자가 특정 스터디 그룹에 가입 신청을 합니다.")
-  @ResponseStatus(HttpStatus.CREATED)
-  public ApplicationDto.ApplicationResponse joinStudyGroup(
-      @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
-      @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    @PostMapping("/{groupId}/join")
+    @Operation(summary = "스터디 그룹 가입 신청", description = "로그인한 사용자가 특정 스터디 그룹에 가입 신청을 합니다.")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApplicationDto.ApplicationResponse joinStudyGroup(
+            @Parameter(description = "스터디 그룹 ID") @PathVariable Long groupId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
-    return response;
-  }
+        return studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
+    }
 
-  @PostMapping("/{groupId}/applications/{userId}/approve")
-  @Operation(summary = "스터디 그룹 가입 신청 수락", description = "스터디 그룹의 owner가 가입 신청을 수락합니다.")
-  public ApplicationDto.ApplicationResponse approveApplication(
-      @Parameter(description = "스터디 그룹 ID") @PathVariable Integer groupId,
-      @Parameter(description = "신청자 ID") @PathVariable Integer userId,
-      @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+    @PostMapping("/{groupId}/applications/{userId}/approve")
+    @Operation(summary = "스터디 그룹 가입 신청 수락", description = "스터디 그룹의 owner가 가입 신청을 수락합니다.")
+    public ApplicationDto.ApplicationResponse approveApplication(
+            @Parameter(description = "스터디 그룹 ID") @PathVariable Long groupId,
+            @Parameter(description = "신청자 ID") @PathVariable Long userId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
-    ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(groupId, userId, userDetails);
-    return response;
-  }
+        return studyGroupApplicationService.approveApplication(groupId, userId, userDetails);
+    }
+
+    @PostMapping("/{groupId}/applications/{userId}/reject")
+    @Operation(summary = "스터디 그룹 가입 신청 거절", description = "스터디 그룹의 owner가 가입 신청을 거절합니다.")
+    public ApplicationDto.ApplicationResponse rejectApplication(
+            @Parameter(description = "스터디 그룹 ID") @PathVariable Long groupId,
+            @Parameter(description = "신청자 ID") @PathVariable Long userId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        return studyGroupApplicationService.rejectApplication(groupId, userId, userDetails);
+    }
+
+    @GetMapping("/my/applications")
+    @Operation(summary = "내 가입 신청 목록 조회", description = "로그인한 사용자가 자신의 가입 신청 목록을 페이지네이션으로 조회합니다.")
+    public PagedModel<ApplicationDto.ApplicationResponse> getMyApplications(
+            @ModelAttribute @ParameterObject ApplicationDto.SearchConditions searchConditions,
+            @PageableDefault @ParameterObject Pageable pageable,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+
+        return studyGroupApplicationService.getMyApplications(searchConditions, pageable, userDetails);
+    }
 }
