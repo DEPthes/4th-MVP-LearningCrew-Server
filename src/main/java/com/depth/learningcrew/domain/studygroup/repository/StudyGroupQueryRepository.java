@@ -180,7 +180,7 @@ public class StudyGroupQueryRepository {
                         .otherwise(0));
     }
 
-    public Optional<StudyGroup> findDetailById(Integer groupId) {
+    public Optional<StudyGroup> findDetailById(Long groupId) {
 
         return Optional.ofNullable(queryFactory.selectFrom(studyGroup)
                 .leftJoin(studyGroup.owner, user).fetchJoin()

@@ -45,7 +45,7 @@ public class StudyGroupService {
 
   @Transactional
   public StudyGroupDto.StudyGroupResponse updateStudyGroup(
-      Integer groupId,
+      Long groupId,
       StudyGroupDto.StudyGroupUpdateRequest request,
       UserDetails userDetails) {
     StudyGroup group = studyGroupRepository.findById(groupId)
@@ -78,7 +78,7 @@ public class StudyGroupService {
 
     @Transactional(readOnly = true)
     public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
-            Integer groupId,
+            Long groupId,
             UserDetails user) {
         StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));

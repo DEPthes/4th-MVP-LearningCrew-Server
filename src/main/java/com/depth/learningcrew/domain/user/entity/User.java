@@ -39,7 +39,7 @@ public class User extends TimeStampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, length = 50)
     private String email;
