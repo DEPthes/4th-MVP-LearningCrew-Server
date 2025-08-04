@@ -102,6 +102,23 @@ public class StudyGroupApplicationService {
     return ApplicationDto.ApplicationResponse.from(application);
   }
 
+  @Transactional
+  public ApplicationDto.ApplicationResponse rejectApplication(Integer groupId, Integer userId,
+      UserDetails ownerDetails) {
+    if (!studyGroupRepository.existsById(groupId)) {
+      throw new RestException(ErrorCode.GLOBAL_NOT_FOUND);
+    }
+
+    Application application = applicationRepository.findById_User_IdAndId_StudyGroup_Id(userId, groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    application.canRejectBy(ownerDetails);
+    application.canRejectNow();
+    application.reject();
+
+    return ApplicationDto.ApplicationResponse.from(application);
+  }
+
   private void cannotApplicateIfAlreadyMember(UserDetails userDetails, StudyGroup studyGroup) {
     if (memberRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), studyGroup)) {
       throw new RestException(ErrorCode.STUDY_GROUP_ALREADY_MEMBER);
