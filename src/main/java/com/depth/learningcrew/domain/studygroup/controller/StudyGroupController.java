@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
+import com.depth.learningcrew.common.response.PaginationResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springdoc.core.annotations.ParameterObject;
@@ -32,7 +33,7 @@ public class StudyGroupController {
 
   @GetMapping("/my/owned")
   @Operation(summary = "내 주최 그룹 목록 조회", description = "로그인한 사용자가 주최한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
-  public PagedModel<StudyGroupDto.StudyGroupResponse> getMyOwnedStudyGroups(
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> getMyOwnedStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
       @PageableDefault @ParameterObject Pageable pageable,
       @AuthenticationPrincipal UserDetails userDetails) {
@@ -56,4 +57,14 @@ public class StudyGroupController {
             @AuthenticationPrincipal UserDetails userDetails){
         return studyGroupService.getStudyGroupDetail(id, userDetails);
       }
+
+  @GetMapping
+  @Operation(summary = "전체 스터디 그룹 목록 조회", description = "조건에 맞는 모든 스터디 그룹을 페이지네이션하여 조회합니다.")
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> getAllStudyGroups(
+          @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
+          @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+          @AuthenticationPrincipal UserDetails userDetails // nullable
+  ) {
+    return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
+  }
 }
