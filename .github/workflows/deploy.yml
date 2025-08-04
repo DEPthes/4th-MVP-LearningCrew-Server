@@ -23,7 +23,7 @@ jobs:
         with:
           repository: DEPthes/4th-MVP-LearningCrew-Web
           path: frontend
-          ref: main
+          ref: develop
 
       # 3. Setup Node.js
       - name: Setup Node.js
