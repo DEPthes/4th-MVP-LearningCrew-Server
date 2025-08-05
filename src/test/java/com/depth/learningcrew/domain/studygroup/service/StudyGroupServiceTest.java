@@ -392,7 +392,7 @@ class StudyGroupServiceTest {
                 studyGroup.getSteps().addAll(List.of(step1, step2));
                 studyGroup.getCategories().add(category);
 
-                when(studyGroupQueryRepository.findDetailById(1)).thenReturn(Optional.of(studyGroup));
+                when(studyGroupQueryRepository.findDetailById(1L)).thenReturn(Optional.of(studyGroup));
                 when(dibsRepository.existsById_UserAndId_StudyGroup(testUser, studyGroup)).thenReturn(true);
 
                 // when
