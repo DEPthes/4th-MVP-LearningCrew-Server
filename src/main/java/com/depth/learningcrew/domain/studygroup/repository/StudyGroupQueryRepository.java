@@ -255,7 +255,7 @@ public class StudyGroupQueryRepository {
         return Optional.ofNullable(queryFactory.selectFrom(studyGroup)
                 .leftJoin(studyGroup.owner, user).fetchJoin()
                 .leftJoin(studyGroup.categories, groupCategory).fetchJoin()
-                .leftJoin(studyGroup.steps, studyStep).fetchJoin()
+                .leftJoin(studyGroup.steps, studyStep)
                 .leftJoin(studyGroup.studyGroupImage, studyGroupImage).fetchJoin()
                 .where(studyGroup.id.eq(groupId))
                 .distinct()
