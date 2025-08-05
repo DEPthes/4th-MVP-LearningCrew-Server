@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
-import com.depth.learningcrew.domain.studygroup.repository.GroupCategoryRepository;
+import com.depth.learningcrew.domain.studygroup.entity.*;
+import com.depth.learningcrew.domain.studygroup.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,10 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
-import com.depth.learningcrew.domain.studygroup.entity.Dibs;
-import com.depth.learningcrew.domain.studygroup.entity.DibsId;
-import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
-import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
@@ -47,6 +44,22 @@ class StudyGroupServiceIntegrationTest {
 
   @Autowired
   private GroupCategoryRepository groupCategoryRepository;
+
+  @Autowired
+  private StudyGroupRepository studyGroupRepository;
+
+  @Autowired
+  private StudyStepRepository studyStepRepository;
+
+  @Autowired
+  private DibsRepository dibsRepository;
+
+  @Autowired
+  private MemberRepository memberRepository;
+
+  @Autowired
+  private ApplicationRepository applicationRepository;
+
 
   private User owner;
   private User otherUser;
@@ -355,5 +368,54 @@ class StudyGroupServiceIntegrationTest {
     GroupCategory savedCategory1 = groupCategoryRepository.findByName(newCategory1).orElse(null);
     assertThat(savedCategory1).isNotNull();
     assertThat(savedCategory1.getStudyGroups()).anyMatch(g -> g.getId().equals(savedGroup.getId()));
+  }
+
+  @Test
+  @DisplayName("스터디 그룹 삭제 시 연관된 step, dibs, member, application도 함께 삭제된다")
+  void deleteStudyGroup_ShouldCascadeDeleteRelations() {
+    // given
+    // 찜
+    Dibs dibs = Dibs.builder()
+            .id(DibsId.of(owner, studyGroup))
+            .build();
+    entityManager.persist(dibs);
+
+    // 멤버
+    Member member = Member.builder()
+            .id(MemberId.of(owner, studyGroup))
+            .build();
+    entityManager.persist(member);
+
+    // 스텝
+    StudyStep step1 = StudyStep.builder()
+            .id(StudyStepId.of(1, studyGroup))
+            .endDate(LocalDate.now().plusDays(1))
+            .build();
+    entityManager.persist(step1);
+
+    // 신청
+    Application application = Application.builder()
+            .id(ApplicationId.of(otherUser, studyGroup))
+            .state(State.APPROVED)
+            .build();
+    entityManager.persist(application);
+
+    Member member2 = Member.builder()
+            .id(MemberId.of(otherUser, studyGroup))
+            .build();
+    entityManager.persist(member2);
+
+    entityManager.flush();
+    entityManager.clear();
+
+    // when
+    studyGroupService.deleteStudyGroup(studyGroup.getId(), ownerDetails);
+
+    // then
+    assertThat(studyGroupRepository.findById(studyGroup.getId())).isEmpty();
+    assertThat(studyStepRepository.findAll()).isEmpty();
+    assertThat(dibsRepository.findAll()).isEmpty();
+    assertThat(memberRepository.findAll()).isEmpty();
+    assertThat(applicationRepository.findAll()).isEmpty();
   }
 }
