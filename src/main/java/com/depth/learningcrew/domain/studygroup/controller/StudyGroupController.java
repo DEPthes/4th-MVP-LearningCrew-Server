@@ -63,7 +63,7 @@ public class StudyGroupController {
   public PagedModel<StudyGroupDto.StudyGroupResponse> getAllStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
       @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
-      @AuthenticationPrincipal UserDetails userDetails // nullable
+      @AuthenticationPrincipal UserDetails userDetails
   ) {
     return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
   }
@@ -75,5 +75,14 @@ public class StudyGroupController {
       @ModelAttribute StudyGroupDto.StudyGroupCreateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.createStudyGroup(request, userDetails);
+  }
+
+  @GetMapping("my/membered")
+  @Operation(summary = "내가 가입한 스터디 그룹 목록 조회", description = "가입한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
+  public PagedModel<StudyGroupDto.StudyGroupResponse> getMyMemberedStudyGroups(
+          @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
+          @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+          @AuthenticationPrincipal UserDetails userDetails) {
+    return studyGroupService.paginateMyMemberedStudyGroups(searchConditions, userDetails, pageable);
   }
 }

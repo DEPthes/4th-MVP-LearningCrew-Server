@@ -3,6 +3,7 @@ package com.depth.learningcrew.domain.studygroup.repository;
 import static com.depth.learningcrew.domain.file.entity.QStudyGroupImage.studyGroupImage;
 import static com.depth.learningcrew.domain.studygroup.entity.QDibs.dibs;
 import static com.depth.learningcrew.domain.studygroup.entity.QGroupCategory.groupCategory;
+import static com.depth.learningcrew.domain.studygroup.entity.QMember.member;
 import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyGroup;
 import static com.depth.learningcrew.domain.studygroup.entity.QStudyStep.studyStep;
 import static com.depth.learningcrew.domain.user.entity.QUser.user;
@@ -111,7 +112,11 @@ public class StudyGroupQueryRepository {
             query.where(studyGroup.owner.id.eq(user.getUser().getId()));
         }
 
-        // TODO: 다른 필터 타입이 필요할 경우 여기에 추가 로직을 작성
+        if (filterType == StudyGroupFilterType.MEMBERED) {
+            query
+                    .join(member).on(member.id.studyGroup.eq(studyGroup))
+                    .where(member.id.user.id.eq(user.getUser().getId()));
+        }
     }
 
     private void applySearchCondition(
@@ -229,6 +234,21 @@ public class StudyGroupQueryRepository {
             UserDetails user,
             Pageable pageable) {
         return paginateByType(searchConditions, user, pageable, StudyGroupFilterType.ALL);
+    }
+
+    /**
+     * 로그인한 사용자가 가입한 스터디 그룹 목록을 페이지네이션하여 조회합니다.
+     *
+     * @param searchConditions 검색 조건
+     * @param user             로그인 사용자 정보
+     * @param pageable         페이지 정보
+     * @return 페이지네이션된 스터디 그룹 목록
+     */
+    public Page<StudyGroupDto.StudyGroupResponse> paginateMyMemberedGroups(
+            StudyGroupDto.SearchConditions searchConditions,
+            UserDetails user,
+            Pageable pageable) {
+        return paginateByType(searchConditions, user, pageable, StudyGroupFilterType.MEMBERED);
     }
 
     public Optional<StudyGroup> findDetailById(Long groupId) {

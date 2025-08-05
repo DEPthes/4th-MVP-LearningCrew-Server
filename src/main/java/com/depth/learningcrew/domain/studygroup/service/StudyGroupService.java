@@ -160,4 +160,14 @@ public class StudyGroupService {
 
     return StudyGroupDto.StudyGroupDetailResponse.from(savedGroup, false);
   }
+
+  @Transactional(readOnly = true)
+  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyMemberedStudyGroups(
+          StudyGroupDto.SearchConditions searchConditions,
+          UserDetails user,
+          Pageable pageable) {
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository.paginateMyMemberedGroups(
+            searchConditions, user, pageable);
+    return new PagedModel<>(result);
+  }
 }

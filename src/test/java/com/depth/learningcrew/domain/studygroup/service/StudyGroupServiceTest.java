@@ -37,6 +37,7 @@ import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.security.model.UserDetails;
+import org.springframework.data.web.PagedModel;
 
 @ExtendWith(MockitoExtension.class)
 class StudyGroupServiceTest {
