@@ -4,11 +4,14 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.depth.learningcrew.domain.studygroup.dto.MemberDto;
@@ -36,6 +39,18 @@ public class MemberController {
       @AuthenticationPrincipal UserDetails userDetails) {
 
     return memberService.paginateStudyGroupMembers(groupId, searchConditions, userDetails, pageable);
+  }
+
+  @DeleteMapping("/{userId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "스터디 그룹 멤버 추방", description = "그룹의 owner 권한을 가진 사용자가 스터디 그룹의 멤버를 추방합니다.")
+  @ApiResponse(responseCode = "204", description = "멤버 추방 성공")
+  @ApiResponse(responseCode = "403", description = "권한 없음")
+  @ApiResponse(responseCode = "404", description = "스터디 그룹 또는 사용자를 찾을 수 없음")
+  public void expelMember(@PathVariable Long groupId, @PathVariable Long userId,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    memberService.expelMember(groupId, userId, userDetails);
   }
 
 }
