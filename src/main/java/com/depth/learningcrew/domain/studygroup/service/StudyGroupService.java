@@ -3,6 +3,8 @@ package com.depth.learningcrew.domain.studygroup.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.depth.learningcrew.domain.studygroup.entity.*;
+import com.depth.learningcrew.domain.studygroup.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -12,14 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
-import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
-import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
-import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -37,6 +31,7 @@ public class StudyGroupService {
   private final FileHandler fileHandler;
   private final DibsRepository dibsRepository;
   private final StudyStepRepository studyStepRepository;
+  private final MemberRepository memberRepository;
 
   @Transactional(readOnly = true)
   public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
@@ -140,6 +135,10 @@ public class StudyGroupService {
 
     StudyGroup savedGroup = studyGroupRepository.save(studyGroup);
 
+    MemberId memberId = MemberId.of(owner, savedGroup);
+    Member member = new Member(memberId);
+    memberRepository.save(member);
+
     // Step 저장
     if (request.getSteps() != null) {
       int stepNumber = 1;
@@ -154,7 +153,6 @@ public class StudyGroupService {
             .endDate(endDate)
             .build();
         savedGroup.getSteps().add(step);
-        studyStepRepository.save(step);
       }
     }
 
@@ -169,5 +167,19 @@ public class StudyGroupService {
     Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository.paginateMyMemberedGroups(
             searchConditions, user, pageable);
     return new PagedModel<>(result);
+  }
+
+  @Transactional
+  public void deleteStudyGroup(Long groupId, UserDetails user) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+            .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    studyGroup.canDeleteBy(user);
+
+    if (studyGroup.getStudyGroupImage() != null) {
+      fileHandler.deleteFile(studyGroup.getStudyGroupImage());
+    }
+
+    studyGroupRepository.delete(studyGroup);
   }
 }
