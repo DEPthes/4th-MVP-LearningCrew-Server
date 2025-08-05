@@ -12,7 +12,20 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -79,7 +92,6 @@ public class StudyGroup extends TimeStampedEntity {
     @Builder.Default
     private List<Dibs> dibsList = new ArrayList<>();
 
-
     public void canUpdateBy(UserDetails user) {
         if (user.getUser().getRole().equals(Role.ADMIN)) {
             return;
@@ -97,6 +109,12 @@ public class StudyGroup extends TimeStampedEntity {
         if (!this.categories.contains(category)) {
             this.categories.add(category);
             category.getStudyGroups().add(this);
+        }
+    }
+
+    public void decreaseMemberCount() {
+        if (this.memberCount > 0) {
+            this.memberCount--;
         }
     }
 }
