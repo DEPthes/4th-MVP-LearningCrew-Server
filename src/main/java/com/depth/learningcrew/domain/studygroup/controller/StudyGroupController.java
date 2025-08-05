@@ -82,9 +82,9 @@ public class StudyGroupController {
   }
 
   @DeleteMapping("/{id}")
-  @Operation(summary = "스터디 그룹 삭제", description = "스터디 그룹을 삭제합니다.")
+  @Operation(summary = "스터디 그룹 폐쇄", description = "스터디 그룹을 폐쇄합니다.")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @ApiResponse(responseCode = "204", description = "스터디 그룹 삭제 성공")
+  @ApiResponse(responseCode = "204", description = "스터디 그룹 폐쇄 성공")
   public void deleteStudyGroup(
           @PathVariable Long id,
           @AuthenticationPrincipal UserDetails userDetails) {
