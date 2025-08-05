@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.user.service;
 
+import com.depth.learningcrew.domain.file.repository.AttachedFileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileHandler fileHandler;
+    private final AttachedFileRepository attachedFileRepository;
 
     @Transactional
     public UserDto.UserUpdateResponse update(User user, UserDto.UserUpdateRequest request) {
@@ -42,27 +44,18 @@ public class UserService {
 
         request.applyTo(found, passwordEncoder);
 
-        /* TODO: 로직 점검
-        * 1. found에 setProfileImage를 하는데, user에도 setProfileImage를 하는 이유가 궁금합니다
-        * 2. ProfileImage가 연관관계 주인이면, profileImage.setUser(found) 가 있어야 하지 않은지 의문입니다
-        * 3. profileImageRepository.save(profileImage); 필요하지 않나하는 생각이 듭니다
-        *    PersistenceContext에 반영되지 않아서 profileImage가 영속화되지 않을 것 같아요.
-        * */
         if (request.getProfileImage() != null) {
+            ProfileImage newProfileImage = ProfileImage.from(request.getProfileImage());
+            newProfileImage.setUser(found);
+
+            fileHandler.saveFile(request.getProfileImage(), newProfileImage);
+            ProfileImage savedProfileImage = attachedFileRepository.save(newProfileImage);
+
             if (found.getProfileImage() != null) {
                 fileHandler.deleteFile(found.getProfileImage());
             }
 
-            ProfileImage profileImage = ProfileImage.from(request.getProfileImage());
-            // 생각1. 연관관계 주인이면, profileImage.setUser(found) 가 있어야할 것 같아요
-            // profileImage.setUser(found);
-
-            // 생각2. profileImageRepository.save(profileImage); 필요할 것 같아요
-            // profileImageRepository.save(profileImage);
-
-            fileHandler.saveFile(request.getProfileImage(), profileImage);
-            found.setProfileImage(profileImage);
-            user.setProfileImage(profileImage); // 생각3. 이건 제거해도 되지 않을까 하는 생각이 듭니다
+            found.setProfileImage(savedProfileImage);
         }
 
         return UserDto.UserUpdateResponse.from(found);
