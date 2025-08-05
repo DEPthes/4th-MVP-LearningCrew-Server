@@ -76,4 +76,13 @@ public class StudyGroupController {
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.createStudyGroup(request, userDetails);
   }
+
+  @GetMapping("my/membered")
+  @Operation(summary = "내가 가입한 스터디 그룹 목록 조회", description = "가입한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> getMyMemberedStudyGroups(
+          @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
+          @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+          @AuthenticationPrincipal UserDetails userDetails) {
+    return studyGroupService.paginateMyMemberedStudyGroups(searchConditions, userDetails, pageable);
+  }
 }
