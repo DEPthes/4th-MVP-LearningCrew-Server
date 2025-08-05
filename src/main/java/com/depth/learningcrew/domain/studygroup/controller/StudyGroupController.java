@@ -63,7 +63,7 @@ public class StudyGroupController {
   public PaginationResponse<StudyGroupDto.StudyGroupResponse> getAllStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
       @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
-      @AuthenticationPrincipal UserDetails userDetails // nullable
+      @AuthenticationPrincipal UserDetails userDetails
   ) {
     return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
   }
