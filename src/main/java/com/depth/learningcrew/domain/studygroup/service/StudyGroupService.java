@@ -86,7 +86,7 @@ public class StudyGroupService {
   public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
       Long groupId,
       UserDetails user) {
-    StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId.intValue())
+    StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
     boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);

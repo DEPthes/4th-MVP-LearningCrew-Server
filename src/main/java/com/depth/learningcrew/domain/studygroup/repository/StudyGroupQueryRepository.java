@@ -231,7 +231,7 @@ public class StudyGroupQueryRepository {
         return paginateByType(searchConditions, user, pageable, StudyGroupFilterType.ALL);
     }
 
-    public Optional<StudyGroup> findDetailById(Integer groupId) {
+    public Optional<StudyGroup> findDetailById(Long groupId) {
         return Optional.ofNullable(queryFactory.selectFrom(studyGroup)
                 .leftJoin(studyGroup.owner, user).fetchJoin()
                 .leftJoin(studyGroup.categories, groupCategory).fetchJoin()
