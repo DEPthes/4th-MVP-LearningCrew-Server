@@ -3,24 +3,24 @@ package com.depth.learningcrew.domain.studygroup.service;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
-import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
-import com.depth.learningcrew.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.depth.learningcrew.common.response.PaginationResponse;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
 import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
 import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
@@ -39,14 +39,14 @@ public class StudyGroupService {
   private final StudyStepRepository studyStepRepository;
 
   @Transactional(readOnly = true)
-  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,
       UserDetails user,
       Pageable pageable) {
     Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, user, pageable);
 
-    return new PagedModel<>(result);
+    return PaginationResponse.from(result);
   }
 
   @Transactional
@@ -84,32 +84,42 @@ public class StudyGroupService {
 
   @Transactional(readOnly = true)
   public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
-          Long groupId,
-          UserDetails user) {
-    StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
-            .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+      Long groupId,
+      UserDetails user) {
+    StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId.intValue())
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
     boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
     return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
   }
 
+  @Transactional(readOnly = true)
+  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateAllStudyGroups(
+      StudyGroupDto.SearchConditions searchConditions,
+      UserDetails user,
+      Pageable pageable) {
+    Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository.paginateAllGroups(
+        searchConditions, user, pageable);
+    return PaginationResponse.from(result);
+  }
+
   @Transactional
   public StudyGroupDto.StudyGroupDetailResponse createStudyGroup(
-          StudyGroupDto.StudyGroupCreateRequest request,
-          UserDetails user) {
+      StudyGroupDto.StudyGroupCreateRequest request,
+      UserDetails user) {
 
     User owner = user.getUser();
 
     StudyGroup studyGroup = StudyGroup.builder()
-            .name(request.getName())
-            .summary(request.getSummary())
-            .maxMembers(request.getMaxMembers())
-            .memberCount(1)
-            .currentStep(1)
-            .startDate(request.getStartDate())
-            .endDate(request.getEndDate())
-            .owner(owner)
-            .build();
+        .name(request.getName())
+        .summary(request.getSummary())
+        .maxMembers(request.getMaxMembers())
+        .memberCount(1)
+        .currentStep(1)
+        .startDate(request.getStartDate())
+        .endDate(request.getEndDate())
+        .owner(owner)
+        .build();
 
     // 카테고리 처리
     if (request.getCategories() != null) {
@@ -133,14 +143,14 @@ public class StudyGroupService {
       int stepNumber = 1;
       for (LocalDate endDate : request.getSteps()) {
         StudyStepId stepId = StudyStepId.builder()
-                .step(stepNumber++)
-                .studyGroupId(savedGroup)
-                .build();
+            .step(stepNumber++)
+            .studyGroupId(savedGroup)
+            .build();
 
         StudyStep step = StudyStep.builder()
-                .id(stepId)
-                .endDate(endDate)
-                .build();
+            .id(stepId)
+            .endDate(endDate)
+            .build();
         savedGroup.getSteps().add(step);
         studyStepRepository.save(step);
       }
