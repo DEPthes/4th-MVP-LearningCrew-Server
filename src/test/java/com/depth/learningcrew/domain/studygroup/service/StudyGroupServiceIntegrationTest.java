@@ -8,11 +8,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.studygroup.repository.GroupCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,9 @@ class StudyGroupServiceIntegrationTest {
 
   @PersistenceContext
   private EntityManager entityManager;
+
+  @Autowired
+  private GroupCategoryRepository groupCategoryRepository;
 
   private User owner;
   private User otherUser;
@@ -260,5 +266,94 @@ class StudyGroupServiceIntegrationTest {
     // then
     assertThat(result).isNotNull();
     assertThat(result.getDibs()).isFalse();
+  }
+
+  @Test
+  @DisplayName("스터디 그룹을 생성할 수 있다")
+  void createStudyGroup_ShouldCreateSuccessfully() {
+    // given
+    MockMultipartFile groupImage = new MockMultipartFile(
+            "groupImage",
+            "test-image.jpg",
+            "image/jpeg",
+            "dummy image content".getBytes()
+    );
+
+    StudyGroupDto.StudyGroupCreateRequest request = StudyGroupDto.StudyGroupCreateRequest.builder()
+            .name("새로운 스터디")
+            .summary("스터디 요약")
+            .maxMembers(5)
+            .startDate(LocalDate.of(2025, 8, 10))
+            .endDate(LocalDate.of(2025, 8, 30))
+            .categories(List.of("디자인", "프로그래밍"))
+            .groupImage(groupImage)
+            .steps(List.of(
+                    LocalDate.of(2025, 8, 15),
+                    LocalDate.of(2025, 8, 20)
+            ))
+            .build();
+
+    // when
+    StudyGroupDto.StudyGroupDetailResponse response = studyGroupService.createStudyGroup(request, ownerDetails);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.getName()).isEqualTo("새로운 스터디");
+    assertThat(response.getSummary()).isEqualTo("스터디 요약");
+    assertThat(response.getMaxMembers()).isEqualTo(5);
+    assertThat(response.getOwner().getId()).isEqualTo(owner.getId());
+
+    StudyGroup savedGroup = entityManager.find(StudyGroup.class, response.getId());
+    assertThat(savedGroup).isNotNull();
+    assertThat(savedGroup.getSteps()).hasSize(2);
+    assertThat(savedGroup.getCategories()).hasSize(2);
+
+    assertThat(programmingCategory.getStudyGroups()).anyMatch(g -> g.getId().equals(response.getId()));
+    assertThat(designCategory.getStudyGroups()).anyMatch(g -> g.getId().equals(response.getId()));
+
+    StudyGroupImage savedImage = savedGroup.getStudyGroupImage();
+    assertThat(savedImage).isNotNull();
+    assertThat(savedImage.getFileName()).isEqualTo("test-image.jpg");
+    assertThat(savedImage.getSize()).isEqualTo(groupImage.getSize());
+    assertThat(savedImage.getUuid()).isNotBlank();
+
+  }
+
+  @Test
+  @DisplayName("새로운 카테고리를 포함해 스터디 그룹을 생성할 수 있다")
+  void createStudyGroup_WithNewCategories_ShouldCreateSuccessfully() {
+    // given
+    String newCategory1 = "새로운 카테고리";
+
+    StudyGroupDto.StudyGroupCreateRequest request = StudyGroupDto.StudyGroupCreateRequest.builder()
+            .name("새로운 카테고리 스터디")
+            .summary("새로운 카테고리 테스트")
+            .maxMembers(8)
+            .startDate(LocalDate.of(2025, 9, 1))
+            .endDate(LocalDate.of(2025, 9, 30))
+            .categories(List.of(newCategory1))
+            .steps(List.of(
+                    LocalDate.of(2025, 9, 10),
+                    LocalDate.of(2025, 9, 20)
+            ))
+            .build();
+
+    // when
+    StudyGroupDto.StudyGroupDetailResponse response =
+            studyGroupService.createStudyGroup(request, ownerDetails);
+
+    // then
+    assertThat(response).isNotNull();
+    assertThat(response.getName()).isEqualTo("새로운 카테고리 스터디");
+    assertThat(response.getCategories()).hasSize(1);
+    assertThat(response.getSteps()).hasSize(2);
+
+    StudyGroup savedGroup = entityManager.find(StudyGroup.class, response.getId());
+    assertThat(savedGroup).isNotNull();
+    assertThat(savedGroup.getCategories()).hasSize(1);
+
+    GroupCategory savedCategory1 = groupCategoryRepository.findByName(newCategory1).orElse(null);
+    assertThat(savedCategory1).isNotNull();
+    assertThat(savedCategory1.getStudyGroups()).anyMatch(g -> g.getId().equals(savedGroup.getId()));
   }
 }

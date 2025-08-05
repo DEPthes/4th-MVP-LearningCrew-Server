@@ -284,5 +284,38 @@ public class StudyGroupDto {
                     .currentStep(studyGroup.getCurrentStep())
                     .build();
         }
-        }
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    @Schema(description = "스터디 그룹 생성 요청")
+    public static class StudyGroupCreateRequest {
+        @Schema(description = "스터디 그룹 이름", example = "group name")
+        private String name;
+
+        @Schema(description = "스터디 그룹 요약", example = "group summary")
+        private String summary;
+
+        @Schema(description = "최대 모집 인원 수", example = "10")
+        private Integer maxMembers;
+
+        @Schema(description = "그룹 이미지 파일", type = "string", format = "binary")
+        private MultipartFile groupImage;
+
+        @Schema(description = "카테고리 목록")
+        private List<String> categories;
+
+        @Schema(description = "시작 날짜", example = "2024-01-01")
+        private LocalDate startDate;
+
+        @Schema(description = "종료 날짜", example = "2024-12-31")
+        private LocalDate endDate;
+
+        @Schema(description = "각 단계 종료일 리스트")
+        private List<LocalDate> steps;
+    }
+
 }
