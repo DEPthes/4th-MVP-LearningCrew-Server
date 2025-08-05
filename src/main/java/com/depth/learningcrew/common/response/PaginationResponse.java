@@ -34,12 +34,6 @@ public class PaginationResponse<T> {
         @Schema(description = "전체 페이지 수", example = "23")
         private final int totalPages;
 
-        // RP
-        // @Schema(description = "다음 페이지 존재 여부")
-        // private final boolean hasNext;
-        //
-        // @Schema(description = "이전 페이지 존재 여부")
-        // private final boolean hasPrevious;
     }
 
     public static <T> PaginationResponse<T> from(Page<T> page) {
