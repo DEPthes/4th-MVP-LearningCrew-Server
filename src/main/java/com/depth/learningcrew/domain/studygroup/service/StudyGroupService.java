@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.depth.learningcrew.common.response.PaginationResponse;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
@@ -39,14 +39,14 @@ public class StudyGroupService {
   private final StudyStepRepository studyStepRepository;
 
   @Transactional(readOnly = true)
-  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
+  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,
       UserDetails user,
       Pageable pageable) {
     Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository
         .paginateMyOwnedGroups(searchConditions, user, pageable);
 
-    return PaginationResponse.from(result);
+    return new PagedModel<>(result);
   }
 
   @Transactional
@@ -94,13 +94,15 @@ public class StudyGroupService {
   }
 
   @Transactional(readOnly = true)
-  public PaginationResponse<StudyGroupDto.StudyGroupResponse> paginateAllStudyGroups(
+  public PagedModel<StudyGroupDto.StudyGroupResponse> paginateAllStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,
       UserDetails user,
       Pageable pageable) {
+
     Page<StudyGroupDto.StudyGroupResponse> result = studyGroupQueryRepository.paginateAllGroups(
         searchConditions, user, pageable);
-    return PaginationResponse.from(result);
+
+    return new PagedModel<>(result);
   }
 
   @Transactional
