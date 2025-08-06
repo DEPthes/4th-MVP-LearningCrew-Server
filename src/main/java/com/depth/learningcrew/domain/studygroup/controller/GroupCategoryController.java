@@ -2,13 +2,15 @@ package com.depth.learningcrew.domain.studygroup.controller;
 
 import com.depth.learningcrew.domain.studygroup.dto.GroupCategoryDto;
 import com.depth.learningcrew.domain.studygroup.service.GroupCategoryService;
+import com.depth.learningcrew.system.security.model.UserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,5 +27,14 @@ public class GroupCategoryController {
     @ApiResponse(responseCode = "200", description = "카테고리 목록 조회 성공")
     public List<GroupCategoryDto.GroupCategoryResponse> getGroupCategories() {
         return groupCategoryService.getGroupCategories();
+    }
+
+    @PatchMapping("/{categoryId}")
+    @Operation(summary = "특정 카테고리 수정", description = "owner만 특정 카테고리를 수정할 수 있습니다. 모든 정보를 하나의 요청으로 전송합니다.")
+    public GroupCategoryDto.GroupCategoryUpdateResponse updateGroupCategory(
+            @PathVariable Integer categoryId,
+            @Valid @RequestBody GroupCategoryDto.GroupCategoryUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return groupCategoryService.updateGroupCategory(categoryId, request, userDetails);
     }
 }
