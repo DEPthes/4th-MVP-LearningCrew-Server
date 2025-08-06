@@ -27,4 +27,35 @@ public class GroupCategoryDto {
                     .build();
         }
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class GroupCategoryUpdateRequest {
+        private String name;
+
+        public void applyTo(GroupCategory groupCategory) {
+            if(name != null) {
+                groupCategory.setName(name);
+            }
+        }
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class GroupCategoryUpdateResponse {
+        private Integer id;
+
+        private String name;
+
+        public static GroupCategoryUpdateResponse from(GroupCategory groupCategory) {
+            return GroupCategoryUpdateResponse.builder()
+                    .id(groupCategory.getId())
+                    .name(groupCategory.getName())
+                    .build();
+        }
+    }
 }
