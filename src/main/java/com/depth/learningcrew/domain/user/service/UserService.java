@@ -1,12 +1,12 @@
 package com.depth.learningcrew.domain.user.service;
 
-import com.depth.learningcrew.domain.file.repository.AttachedFileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.depth.learningcrew.domain.file.entity.ProfileImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
+import com.depth.learningcrew.domain.file.repository.AttachedFileRepository;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
@@ -44,12 +44,12 @@ public class UserService {
 
         request.applyTo(found, passwordEncoder);
 
-        if (request.getProfileImage() != null) {
-            ProfileImage newProfileImage = ProfileImage.from(request.getProfileImage());
-            newProfileImage.setUser(found);
+        ProfileImage imageToSave = ProfileImage.from(request.getProfileImage());
+        if (imageToSave != null) {
+            imageToSave.setUser(found);
 
-            fileHandler.saveFile(request.getProfileImage(), newProfileImage);
-            ProfileImage savedProfileImage = attachedFileRepository.save(newProfileImage);
+            fileHandler.saveFile(request.getProfileImage(), imageToSave);
+            ProfileImage savedProfileImage = attachedFileRepository.save(imageToSave);
 
             if (found.getProfileImage() != null) {
                 fileHandler.deleteFile(found.getProfileImage());
