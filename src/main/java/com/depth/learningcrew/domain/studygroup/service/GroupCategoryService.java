@@ -3,6 +3,7 @@ package com.depth.learningcrew.domain.studygroup.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.depth.learningcrew.system.security.model.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,5 +39,20 @@ public class GroupCategoryService {
             throw new RestException(ErrorCode.GLOBAL_BAD_REQUEST, "존재하지 않는 카테고리 이름이 포함되어 있습니다.");
         }
         return result;
+    }
+
+    @Transactional
+    public GroupCategoryDto.GroupCategoryUpdateResponse updateGroupCategory(
+            Integer categoryId,
+            GroupCategoryDto.GroupCategoryUpdateRequest request,
+            UserDetails userDetails) {
+        GroupCategory groupCategory = groupCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+        groupCategory.canUpdateBy(userDetails);
+
+        request.applyTo(groupCategory);
+
+        return GroupCategoryDto.GroupCategoryUpdateResponse.from(groupCategory);
     }
 }
