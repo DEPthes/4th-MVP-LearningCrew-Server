@@ -17,6 +17,7 @@ public class GroupCategoryDto {
     public static class GroupCategoryResponse {
         @Schema(description = "그룹 카테고리 ID", example = "1")
         private Integer id;
+
         @Schema(description = "그룹 카테고리명", example = "언어")
         private String name;
 
@@ -32,7 +33,9 @@ public class GroupCategoryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
+    @Schema(description = "특정 카테고리 수정 요청")
     public static class GroupCategoryUpdateRequest {
+        @Schema(description = "그룹 카테고리명", example = "수정된 카테고리명")
         private String name;
 
         public void applyTo(GroupCategory groupCategory) {
@@ -46,9 +49,12 @@ public class GroupCategoryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
+    @Schema(description = "특정 카테고리 수정 응답")
     public static class GroupCategoryUpdateResponse {
+        @Schema(description = "그룹 카테고리 ID", example = "1")
         private Integer id;
 
+        @Schema(description = "그룹 카테고리명", example = "언어")
         private String name;
 
         public static GroupCategoryUpdateResponse from(GroupCategory groupCategory) {

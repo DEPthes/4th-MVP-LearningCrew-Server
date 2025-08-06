@@ -30,6 +30,7 @@ public class GroupCategoryController {
     }
 
     @PatchMapping("/{categoryId}")
+    @Operation(summary = "특정 카테고리 수정", description = "owner만 특정 카테고리를 수정할 수 있습니다. 모든 정보를 하나의 요청으로 전송합니다.")
     public GroupCategoryDto.GroupCategoryUpdateResponse updateGroupCategory(
             @PathVariable Integer categoryId,
             @Valid @RequestBody GroupCategoryDto.GroupCategoryUpdateRequest request,
