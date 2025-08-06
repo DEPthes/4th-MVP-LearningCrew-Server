@@ -67,6 +67,24 @@ public class MemberService {
     studyGroup.decreaseMemberCount();
   }
 
+  @Transactional
+  public void leaveMember(Long groupId, UserDetails userDetails) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    User user = userDetails.getUser();
+
+    cannotLeaveIfOwner(user, studyGroup);
+
+    Member member = memberRepository.findById_UserAndId_StudyGroup(user, studyGroup)
+        .orElseThrow(() -> new RestException(ErrorCode.AUTH_FORBIDDEN));
+
+    memberRepository.delete(member);
+
+    // 멤버 수 감소
+    studyGroup.decreaseMemberCount();
+  }
+
   private void cannotViewIfNotOwner(UserDetails userDetails, StudyGroup studyGroup) {
     if (!studyGroup.getOwner().getId().equals(userDetails.getUser().getId())) {
       throw new RestException(ErrorCode.AUTH_FORBIDDEN);
@@ -83,6 +101,12 @@ public class MemberService {
   private void cannotExpelOwner(UserDetails userDetails, StudyGroup studyGroup, User userToExpel) {
     if (studyGroup.getOwner().getId().equals(userToExpel.getId())) {
       throw new RestException(ErrorCode.STUDY_GROUP_OWNER_CANNOT_BE_EXPELLED);
+    }
+  }
+
+  private void cannotLeaveIfOwner(User user, StudyGroup studyGroup) {
+    if (studyGroup.getOwner().getId().equals(user.getId())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
     }
   }
 }
