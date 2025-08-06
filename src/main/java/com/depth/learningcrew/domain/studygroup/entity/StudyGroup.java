@@ -12,6 +12,7 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,6 +24,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -43,7 +45,7 @@ public class StudyGroup extends TimeStampedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, length = 30)
     private String name;
@@ -52,7 +54,7 @@ public class StudyGroup extends TimeStampedEntity {
     private String summary;
 
     @Lob
-    @Column(nullable = false)
+    @Column
     private String content;
 
     @Column(nullable = false)
@@ -79,8 +81,16 @@ public class StudyGroup extends TimeStampedEntity {
     @JoinColumn(nullable = false, name = "owner_id")
     private User owner;
 
-    @OneToOne(mappedBy = "studyGroup")
+    @OneToOne(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private StudyGroupImage studyGroupImage;
+
+    @OneToMany(mappedBy = "id.studyGroupId")
+    @Builder.Default
+    private List<StudyStep> steps = new ArrayList<>();
+
+    @OneToMany(mappedBy = "id.studyGroup")
+    @Builder.Default
+    private List<Dibs> dibsList = new ArrayList<>();
 
     public void canUpdateBy(UserDetails user) {
         if (user.getUser().getRole().equals(Role.ADMIN)) {
@@ -93,5 +103,18 @@ public class StudyGroup extends TimeStampedEntity {
 
         throw new RestException(ErrorCode.AUTH_FORBIDDEN);
 
+    }
+
+    public void addCategory(GroupCategory category) {
+        if (!this.categories.contains(category)) {
+            this.categories.add(category);
+            category.getStudyGroups().add(this);
+        }
+    }
+
+    public void decreaseMemberCount() {
+        if (this.memberCount > 0) {
+            this.memberCount--;
+        }
     }
 }

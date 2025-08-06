@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.depth.learningcrew.domain.file.entity.HandlingType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class FileHandlerTest {
     testProfileImage = ProfileImage.builder()
         .uuid("test-uuid-123")
         .fileName("test-image.jpg")
-        .handingType(com.depth.learningcrew.domain.file.entity.HandingType.IMAGE)
+        .handlingType(HandlingType.IMAGE)
         .size(1024L)
         .build();
 
@@ -151,7 +152,7 @@ class FileHandlerTest {
     ProfileImage largeProfileImage = ProfileImage.builder()
         .uuid("large-uuid-456")
         .fileName("large-image.jpg")
-        .handingType(com.depth.learningcrew.domain.file.entity.HandingType.IMAGE)
+        .handlingType(HandlingType.IMAGE)
         .size((long) largeContent.length)
         .build();
 
@@ -177,7 +178,7 @@ class FileHandlerTest {
     ProfileImage emptyProfileImage = ProfileImage.builder()
         .uuid("empty-uuid-789")
         .fileName("empty-image.jpg")
-        .handingType(com.depth.learningcrew.domain.file.entity.HandingType.IMAGE)
+        .handlingType(HandlingType.IMAGE)
         .size(0L)
         .build();
 

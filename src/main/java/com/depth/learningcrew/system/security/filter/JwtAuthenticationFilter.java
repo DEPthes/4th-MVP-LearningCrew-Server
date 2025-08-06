@@ -1,5 +1,16 @@
 package com.depth.learningcrew.system.security.filter;
 
+import java.io.IOException;
+import java.util.List;
+
+import com.depth.learningcrew.system.security.initializer.JwtAuthPathInitializer;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
+
 import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
 import com.depth.learningcrew.system.security.exception.JwtAuthenticationException;
 import com.depth.learningcrew.system.security.exception.JwtBlacklistedTokenException;
@@ -7,20 +18,12 @@ import com.depth.learningcrew.system.security.exception.JwtInvalidTokenException
 import com.depth.learningcrew.system.security.exception.JwtTokenMissingException;
 import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.AntPathMatcher;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.lang.NonNull;
-
-import java.io.IOException;
-import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -32,12 +35,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserLoadService userLoadService;
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final RefreshTokenValidator refreshTokenValidator;
+    private final JwtAuthPathInitializer jwtAuthPathInitializer;
 
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
         String servletPath = request.getServletPath();
 
         if (this.isMatchingURI(servletPath)) {
@@ -45,12 +48,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String accessToken = jwtTokenResolver.parseTokenFromRequest(request)
                         .orElseThrow(JwtTokenMissingException::new);
 
-                if (!jwtTokenResolver.validateToken(accessToken)) {throw new JwtBlacklistedTokenException();}
+                if (!jwtTokenResolver.validateToken(accessToken)) {
+                    throw new JwtBlacklistedTokenException();
+                }
 
                 var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
                 var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
 
-                if(userDetails.isEmpty()) {throw new JwtInvalidTokenException();}
+                if (userDetails.isEmpty()) {
+                    throw new JwtInvalidTokenException();
+                }
 
                 // Refresh UUID 검증
                 refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
@@ -60,11 +67,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new UsernamePasswordAuthenticationToken(
                                         userDetails.get(),
                                         null,
-                                        userDetails.get().getAuthorities()
-                                )
-                        );
+                                        userDetails.get().getAuthorities()));
                 filterChain.doFilter(request, response);
-            }catch (Exception e) {
+            } catch (Exception e) {
                 if (e instanceof JwtAuthenticationException) {
                     handlerExceptionResolver.resolveException(request, response, null, e);
                 } else {
@@ -73,7 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new JwtAuthenticationException("Authentication failed", 401, e));
                 }
             }
-        }else{
+        } else {
             filterChain.doFilter(request, response);
         }
     }
@@ -85,6 +90,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean isIgnored = ignorePatterns.stream()
                 .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
 
-        return isAllowed && !isIgnored;
+        // 어노테이션을 통해 제외된 경로 확인
+        boolean isExcluded = jwtAuthPathInitializer.getExcludePaths().stream()
+                .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
+
+        return isAllowed && !isIgnored && !isExcluded;
     }
 }

@@ -24,6 +24,8 @@ public class UserDto {
     @AllArgsConstructor
     @Getter
     public static class UserResponse {
+        @Schema(description = "사용자 ID", example = "1")
+        private Long id;
         @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
         @Schema(description = "사용자 닉네임", example = "user nickname")
@@ -41,6 +43,7 @@ public class UserDto {
 
         public static UserResponse from(User user) {
             return UserResponse.builder()
+                    .id(user.getId())
                     .email(user.getEmail())
                     .nickname(user.getNickname())
                     .role(user.getRole())
@@ -69,7 +72,7 @@ public class UserDto {
         @Schema(description = "사용자 비밀번호", example = "password content")
         private String password;
 
-        @Schema(description = "사용자 프로필 이미지")
+        @Schema(description = "사용자 프로필 이미지", example = "MultipartFile", type = "file")
         private MultipartFile profileImage;
 
         public void applyTo(User user, PasswordEncoder encoder) {

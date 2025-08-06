@@ -32,6 +32,9 @@ public class ApplicationDto {
     @Schema(description = "마지막 수정 시간", example = "2024-01-01T00:00:00")
     private LocalDateTime lastModifiedAt;
 
+    @Schema(description = "수락 시간", example = "2024-01-01T00:00:00")
+    private LocalDateTime approvedAt;
+
     @Schema(description = "신청 상태", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
     private State state;
 
@@ -41,8 +44,30 @@ public class ApplicationDto {
           .studyGroup(StudyGroupDto.StudyGroupResponse.from(application.getId().getStudyGroup(), false))
           .createdAt(application.getCreatedAt())
           .lastModifiedAt(application.getLastModifiedAt())
+          .approvedAt(application.getApprovedAt())
           .state(application.getState())
           .build();
     }
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Getter
+  @Schema(description = "스터디 그룹 가입 신청 검색 조건")
+  public static class SearchConditions {
+    @Schema(description = "검색 키워드 (신청자 이름 | 스터디 그룹 이름)", example = "홍길동 | 스터디 그룹 이름")
+    private String keyword;
+
+    @Schema(description = "신청 상태 필터", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
+    private State state;
+
+    @Schema(description = "정렬 기준", example = "created_at", allowableValues = { "created_at", "alphabet" })
+    @Builder.Default
+    private String sort = "created_at";
+
+    @Schema(description = "정렬 순서", example = "desc", allowableValues = { "asc", "desc" })
+    @Builder.Default
+    private String order = "desc";
   }
 }

@@ -44,3 +44,7 @@ out/
 ### Cursor ###
 .cursor/
 /upload/
+.DS_Store
+
+### Dummy ###
+*dummy*

@@ -1,8 +1,7 @@
 package com.depth.learningcrew.system.configuration.security;
 
-import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
-import com.depth.learningcrew.system.security.service.UserLoadServiceImpl;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,7 +13,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.depth.learningcrew.system.security.configurer.JwtAutoConfigurerFactory;
+import com.depth.learningcrew.system.security.initializer.JwtAuthPathInitializer;
+import com.depth.learningcrew.system.security.service.UserLoadServiceImpl;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -22,22 +25,16 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAutoConfigurerFactory jwtAutoConfigurerFactory;
+    private final JwtAuthPathInitializer jwtAuthPathInitializer;
 
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity httpSecurity,
-            UserLoadServiceImpl userLoadServiceImpl
-    ) throws Exception {
+            UserLoadServiceImpl userLoadServiceImpl) throws Exception {
         jwtAutoConfigurerFactory.create(userLoadServiceImpl)
                 .pathConfigure((it) -> {
+                    // 기본 포함 경로 설정
                     it.includePath("/api/**");
-                    it.excludePath("/api/auth/register");
-                    it.excludePath("/api/auth/login");
-                    it.excludePath("/api/auth/email-exist");
-                    it.excludePath("/api/auth/nickname-exist");
-                    it.excludePath("/api/auth/token/refresh");
-                    it.excludePath("/api/files/images/**");
-                    it.excludePath("/api/files/downloads/**");
                 })
                 .configure(httpSecurity);
 

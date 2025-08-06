@@ -1,5 +1,7 @@
 package com.depth.learningcrew.domain.studygroup.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.depth.learningcrew.domain.studygroup.entity.Member;
@@ -11,4 +13,5 @@ public interface MemberRepository extends JpaRepository<Member, MemberId> {
 
   boolean existsById_UserAndId_StudyGroup(User user, StudyGroup studyGroup);
 
+  Optional<Member> findById_UserAndId_StudyGroup(User user, StudyGroup studyGroup);
 }

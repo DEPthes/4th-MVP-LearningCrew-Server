@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.user.service;
 
+import com.depth.learningcrew.domain.file.repository.AttachedFileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final FileHandler fileHandler;
+    private final AttachedFileRepository attachedFileRepository;
 
     @Transactional
     public UserDto.UserUpdateResponse update(User user, UserDto.UserUpdateRequest request) {
@@ -43,14 +45,17 @@ public class UserService {
         request.applyTo(found, passwordEncoder);
 
         if (request.getProfileImage() != null) {
+            ProfileImage newProfileImage = ProfileImage.from(request.getProfileImage());
+            newProfileImage.setUser(found);
+
+            fileHandler.saveFile(request.getProfileImage(), newProfileImage);
+            ProfileImage savedProfileImage = attachedFileRepository.save(newProfileImage);
+
             if (found.getProfileImage() != null) {
                 fileHandler.deleteFile(found.getProfileImage());
             }
 
-            ProfileImage profileImage = ProfileImage.from(request.getProfileImage());
-            fileHandler.saveFile(request.getProfileImage(), profileImage);
-            found.setProfileImage(profileImage);
-            user.setProfileImage(profileImage);
+            found.setProfileImage(savedProfileImage);
         }
 
         return UserDto.UserUpdateResponse.from(found);

@@ -18,7 +18,7 @@ public abstract class AttachedFile extends TimeStampedEntity {
     private String uuid;
 
     @Enumerated(EnumType.STRING)
-    private HandingType handingType;
+    private HandlingType handlingType;
 
     private String fileName;
 
