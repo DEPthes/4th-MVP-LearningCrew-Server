@@ -41,45 +41,70 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
+
         String servletPath = request.getServletPath();
+        boolean requiresAuth = this.isMatchingURI(servletPath);
 
-        if (this.isMatchingURI(servletPath)) {
-            try {
-                String accessToken = jwtTokenResolver.parseTokenFromRequest(request)
-                        .orElseThrow(JwtTokenMissingException::new);
-
-                if (!jwtTokenResolver.validateToken(accessToken)) {
-                    throw new JwtBlacklistedTokenException();
-                }
-
-                var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
-                var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
-
-                if (userDetails.isEmpty()) {
-                    throw new JwtInvalidTokenException();
-                }
-
-                // Refresh UUID 검증
-                refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
-
-                SecurityContextHolder.getContext()
-                        .setAuthentication(
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails.get(),
-                                        null,
-                                        userDetails.get().getAuthorities()));
-                filterChain.doFilter(request, response);
-            } catch (Exception e) {
-                if (e instanceof JwtAuthenticationException) {
-                    handlerExceptionResolver.resolveException(request, response, null, e);
-                } else {
-                    handlerExceptionResolver.resolveException(
-                            request, response, null,
-                            new JwtAuthenticationException("Authentication failed", 401, e));
-                }
-            }
-        } else {
+        try {
+            authenticateWithJwt(request, requiresAuth);
             filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            if (requiresAuth) {
+                handleAuthenticationError(request, response, e);
+            } else {
+                SecurityContextHolder.clearContext();
+                filterChain.doFilter(request, response);
+            }
+        }
+    }
+
+    private void authenticateWithJwt(HttpServletRequest request, boolean requiresAuth) {
+        var accessTokenOpt = jwtTokenResolver.parseTokenFromRequest(request);
+
+        if (accessTokenOpt.isEmpty()) {
+            if (requiresAuth) {
+                throw new JwtTokenMissingException();
+            }
+            return;
+        }
+
+        String accessToken = accessTokenOpt.get();
+
+        if (!jwtTokenResolver.validateToken(accessToken)) {
+            if (requiresAuth) {
+                throw new JwtBlacklistedTokenException();
+            }
+            return;
+        }
+
+        var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
+        var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
+
+        if (userDetails.isEmpty()) {
+            if (requiresAuth) {
+                throw new JwtInvalidTokenException();
+            }
+            return;
+        }
+
+        // Refresh UUID 검증
+        refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
+
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails.get(),
+                                null,
+                                userDetails.get().getAuthorities()));
+    }
+
+    private void handleAuthenticationError(HttpServletRequest request, HttpServletResponse response, Exception e) {
+        if (e instanceof JwtAuthenticationException) {
+            handlerExceptionResolver.resolveException(request, response, null, e);
+        } else {
+            handlerExceptionResolver.resolveException(
+                    request, response, null,
+                    new JwtAuthenticationException("Authentication failed", 401, e));
         }
     }
 
