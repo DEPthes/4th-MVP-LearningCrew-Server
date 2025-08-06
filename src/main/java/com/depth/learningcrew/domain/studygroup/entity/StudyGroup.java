@@ -84,13 +84,21 @@ public class StudyGroup extends TimeStampedEntity {
     @OneToOne(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private StudyGroupImage studyGroupImage;
 
-    @OneToMany(mappedBy = "id.studyGroupId")
+    @OneToMany(mappedBy = "id.studyGroupId", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<StudyStep> steps = new ArrayList<>();
 
-    @OneToMany(mappedBy = "id.studyGroup")
+    @OneToMany(mappedBy = "id.studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Dibs> dibsList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "id.studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Member> members = new ArrayList<>();
+
+    @OneToMany(mappedBy = "id.studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Application> applications = new ArrayList<>();
 
     public void canUpdateBy(UserDetails user) {
         if (user.getUser().getRole().equals(Role.ADMIN)) {
@@ -103,6 +111,18 @@ public class StudyGroup extends TimeStampedEntity {
 
         throw new RestException(ErrorCode.AUTH_FORBIDDEN);
 
+    }
+
+    public void canDeleteBy(UserDetails user) {
+        if (user.getUser().getRole().equals(Role.ADMIN)) {
+            return;
+        }
+
+        if (this.owner.getId().equals(user.getUser().getId())) {
+            return;
+        }
+
+        throw new RestException(ErrorCode.AUTH_FORBIDDEN);
     }
 
     public void addCategory(GroupCategory category) {
