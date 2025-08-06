@@ -116,6 +116,7 @@ public class StudyGroupService {
         .startDate(request.getStartDate())
         .endDate(request.getEndDate())
         .owner(owner)
+        .content("")
         .build();
 
     // 카테고리 처리

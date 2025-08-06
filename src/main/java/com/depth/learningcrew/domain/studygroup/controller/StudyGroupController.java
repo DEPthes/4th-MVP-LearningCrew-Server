@@ -63,11 +63,12 @@ public class StudyGroupController {
     return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
   }
 
-  @PostMapping
+  @PostMapping(consumes = "multipart/form-data")
   @Operation(summary = "스터디 그룹 생성", description = "새로운 스터디 그룹을 생성합니다.")
   @ApiResponse(responseCode = "201", description = "스터디 그룹 생성 성공")
+  @ResponseStatus(HttpStatus.CREATED)
   public StudyGroupDto.StudyGroupDetailResponse createStudyGroup(
-      @ModelAttribute StudyGroupDto.StudyGroupCreateRequest request,
+      @ModelAttribute @ParameterObject StudyGroupDto.StudyGroupCreateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
     return studyGroupService.createStudyGroup(request, userDetails);
   }
