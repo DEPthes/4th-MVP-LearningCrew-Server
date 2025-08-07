@@ -1,7 +1,12 @@
 package com.depth.learningcrew.domain.qna.entity;
 
-import com.depth.learningcrew.common.auditor.UserStampedEntity;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.depth.learningcrew.common.auditor.UserStampedEntity;
+import com.depth.learningcrew.domain.file.entity.CommentImageFile;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,9 +16,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,4 +47,18 @@ public class Comment extends UserStampedEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(nullable = false, name = "q_and_a_id")
   private QAndA qAndA;
+
+  @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<CommentImageFile> attachedImages = new ArrayList<>();
+
+  public void addAttachedImage(CommentImageFile attachedImage) {
+    this.attachedImages.add(attachedImage);
+    attachedImage.setComment(this);
+  }
+
+  public void removeAttachedImage(CommentImageFile attachedImage) {
+    this.attachedImages.remove(attachedImage);
+    attachedImage.setComment(null);
+  }
 }
