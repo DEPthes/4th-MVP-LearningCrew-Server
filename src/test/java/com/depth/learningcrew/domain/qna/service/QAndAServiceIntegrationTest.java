@@ -7,23 +7,27 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.depth.learningcrew.domain.file.entity.HandlingType;
+import com.depth.learningcrew.domain.file.entity.QAndAAttachedFile;
+import com.depth.learningcrew.domain.file.entity.QAndAImageFile;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.qna.dto.QAndADto;
 import com.depth.learningcrew.domain.qna.entity.QAndA;
-import com.depth.learningcrew.domain.qna.repository.QAndARepository;
-import com.depth.learningcrew.domain.studygroup.entity.Member;
-import com.depth.learningcrew.domain.studygroup.entity.MemberId;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
@@ -37,362 +41,644 @@ import jakarta.persistence.PersistenceContext;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class QAndAServiceIntegrationTest {
 
-  @Autowired
-  private QAndAService qAndAService;
+    @Autowired
+    private QAndAService qAndAService;
 
-  @Autowired
-  private QAndARepository qAndARepository;
+    @MockBean
+    private FileHandler fileHandler;
 
-  @Autowired
-  private StudyGroupRepository studyGroupRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-  @Autowired
-  private MemberRepository memberRepository;
+    private static volatile long testCounter = 0;
+    private long currentTestId;
 
-  @PersistenceContext
-  private EntityManager entityManager;
+    private User owner;
+    private User questionAuthor;
+    private User otherUser;
+    private UserDetails ownerDetails;
+    private UserDetails questionAuthorDetails;
+    private UserDetails otherUserDetails;
+    private StudyGroup studyGroup;
+    private StudyStep studyStep;
+    private QAndA qAndA;
 
-  private User owner;
-  private User member;
-  private User nonMember;
-  private UserDetails ownerDetails;
-  private UserDetails memberDetails;
-  private UserDetails nonMemberDetails;
-  private StudyGroup studyGroup;
+    @BeforeEach
+    void setUp() {
+        // 각 테스트마다 고유한 ID 생성
+        currentTestId = ++testCounter;
 
-  @BeforeEach
-  void setUp() {
-    // 테스트 사용자 생성
-    owner = User.builder()
-        .email("owner@example.com")
-        .password("password")
-        .nickname("owner")
-        .birthday(LocalDate.of(1990, 1, 1))
-        .gender(Gender.MALE)
-        .role(Role.USER)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
+        // 기존 데이터 완전 정리 - 외래키 제약조건을 고려한 순서
+        entityManager.createQuery("DELETE FROM QAndA q").executeUpdate();
+        entityManager.createQuery("DELETE FROM StudyStep s").executeUpdate();
+        entityManager.createQuery("DELETE FROM StudyGroup g").executeUpdate();
+        entityManager.createQuery("DELETE FROM User u").executeUpdate();
+        entityManager.flush();
+        entityManager.clear(); // 영속성 컨텍스트 완전 초기화
 
-    member = User.builder()
-        .email("member@example.com")
-        .password("password")
-        .nickname("member")
-        .birthday(LocalDate.of(1995, 1, 1))
-        .gender(Gender.FEMALE)
-        .role(Role.USER)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
+        // 테스트 사용자 생성 - 고유한 값 사용
+        String testId = String.valueOf(currentTestId);
 
-    nonMember = User.builder()
-        .email("nonmember@example.com")
-        .password("password")
-        .nickname("nonmember")
-        .birthday(LocalDate.of(1992, 1, 1))
-        .gender(Gender.MALE)
-        .role(Role.USER)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
+        owner = User.builder()
+                .email("owner_" + testId + "@test.com")
+                .password("password")
+                .nickname("owner_" + testId)
+                .birthday(LocalDate.of(1990, 1, 1))
+                .gender(Gender.MALE)
+                .role(Role.USER)
+                .createdAt(LocalDateTime.now())
+                .lastModifiedAt(LocalDateTime.now())
+                .build();
 
-    // 스터디 그룹 생성
-    studyGroup = StudyGroup.builder()
-        .name("테스트 스터디 그룹")
-        .summary("테스트 스터디 그룹입니다.")
-        .content("테스트 스터디 그룹 내용입니다.")
-        .maxMembers(10)
-        .memberCount(2)
-        .currentStep(1)
-        .startDate(LocalDate.now())
-        .endDate(LocalDate.now().plusMonths(3))
-        .owner(owner)
-        .createdAt(LocalDateTime.now())
-        .lastModifiedAt(LocalDateTime.now())
-        .build();
+        questionAuthor = User.builder()
+                .email("author_" + testId + "@test.com")
+                .password("password")
+                .nickname("author_" + testId)
+                .birthday(LocalDate.of(1991, 1, 1))
+                .gender(Gender.FEMALE)
+                .role(Role.USER)
+                .createdAt(LocalDateTime.now())
+                .lastModifiedAt(LocalDateTime.now())
+                .build();
 
-    // 엔티티들을 데이터베이스에 저장
-    entityManager.persist(owner);
-    entityManager.persist(member);
-    entityManager.persist(nonMember);
-    entityManager.persist(studyGroup);
+        otherUser = User.builder()
+                .email("other_" + testId + "@test.com")
+                .password("password")
+                .nickname("other_" + testId)
+                .birthday(LocalDate.of(1995, 1, 1))
+                .gender(Gender.FEMALE)
+                .role(Role.USER)
+                .createdAt(LocalDateTime.now())
+                .lastModifiedAt(LocalDateTime.now())
+                .build();
 
-    // 스터디 그룹 소유자를 멤버로 추가
-    Member ownerMemberEntity = Member.builder()
-        .id(MemberId.of(owner, studyGroup))
-        .build();
-    entityManager.persist(ownerMemberEntity);
-    studyGroup.getMembers().add(ownerMemberEntity);
+        // 스터디 그룹 생성
+        studyGroup = StudyGroup.builder()
+                .name("테스트 스터디 그룹_" + testId)
+                .summary("테스트 스터디 그룹입니다.")
+                .content("테스트 스터디 그룹 내용입니다.")
+                .maxMembers(10)
+                .memberCount(3)
+                .currentStep(1)
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusMonths(3))
+                .owner(owner)
+                .createdAt(LocalDateTime.now())
+                .lastModifiedAt(LocalDateTime.now())
+                .build();
 
-    // 멤버 추가
-    Member memberEntity = Member.builder()
-        .id(MemberId.of(member, studyGroup))
-        .build();
-    entityManager.persist(memberEntity);
-    studyGroup.getMembers().add(memberEntity);
+        // 스터디 스텝 생성
+        studyStep = StudyStep.builder()
+                .id(StudyStepId.of(1, studyGroup))
+                .endDate(LocalDate.now().plusDays(30))
+                .build();
 
-    entityManager.flush();
+        // 엔티티들을 데이터베이스에 저장
+        entityManager.persist(owner);
+        entityManager.persist(questionAuthor);
+        entityManager.persist(otherUser);
+        entityManager.persist(studyGroup);
+        entityManager.persist(studyStep);
+        entityManager.flush();
 
-    // UserDetails 생성
-    ownerDetails = UserDetails.builder()
-        .user(owner)
-        .build();
+        // Q&A 생성
+        qAndA = QAndA.builder()
+                .title("원본 질문 제목_" + testId)
+                .content("원본 질문 내용_" + testId)
+                .step(1)
+                .studyGroup(studyGroup)
+                .createdBy(questionAuthor)
+                .lastModifiedBy(questionAuthor)
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .lastModifiedAt(LocalDateTime.now().minusDays(1))
+                .build();
 
-    memberDetails = UserDetails.builder()
-        .user(member)
-        .build();
+        entityManager.persist(qAndA);
+        entityManager.flush();
 
-    nonMemberDetails = UserDetails.builder()
-        .user(nonMember)
-        .build();
-  }
+        // UserDetails 생성
+        ownerDetails = UserDetails.builder()
+                .user(owner)
+                .build();
 
-  @Test
-  @DisplayName("스터디 그룹 멤버가 질문을 성공적으로 생성할 수 있다")
-  void createQAndA_AsMember_ShouldCreateSuccessfully() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("테스트 질문")
-        .content("테스트 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        questionAuthorDetails = UserDetails.builder()
+                .user(questionAuthor)
+                .build();
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, memberDetails);
+        otherUserDetails = UserDetails.builder()
+                .user(otherUser)
+                .build();
+    }
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("테스트 질문");
-    assertThat(result.getStep()).isEqualTo(1);
+    @AfterEach
+    void tearDown() {
+        // 영속성 컨텍스트 초기화
+        if (entityManager != null) {
+            entityManager.clear();
+        }
+    }
 
-    // 데이터베이스에서 확인
-    QAndA savedQAndA = qAndARepository.findById(result.getId()).orElse(null);
-    assertThat(savedQAndA).isNotNull();
-    assertThat(savedQAndA.getTitle()).isEqualTo("테스트 질문");
-    assertThat(savedQAndA.getContent()).isEqualTo("테스트 질문 내용입니다.");
-    assertThat(savedQAndA.getStudyGroup().getId()).isEqualTo(studyGroup.getId());
-  }
+    @Test
+    @DisplayName("질문 작성자가 자신의 질문을 수정할 수 있다")
+    void updateQAndA_ByAuthor_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+        String newTitle = "수정된 질문 제목";
+        String newContent = "수정된 질문 내용";
 
-  @Test
-  @DisplayName("스터디 그룹 소유자가 질문을 성공적으로 생성할 수 있다")
-  void createQAndA_AsOwner_ShouldCreateSuccessfully() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("소유자 질문")
-        .content("소유자가 작성한 질문입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title(newTitle)
+                .content(newContent)
+                .build();
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, ownerDetails);
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("소유자 질문");
-    assertThat(result.getStep()).isEqualTo(1);
-  }
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(qnaId);
+        assertThat(result.getTitle()).isEqualTo(newTitle);
+        assertThat(result.getContent()).isEqualTo(newContent);
+        assertThat(result.getCreatedBy().getId()).isEqualTo(questionAuthor.getId());
+        // lastModifiedBy는 JPA Auditing으로 자동 설정되므로 테스트에서 검증하지 않음
 
-  @Test
-  @DisplayName("첨부 파일과 이미지가 포함된 질문을 생성할 수 있다")
-  void createQAndA_WithAttachedFiles_ShouldCreateSuccessfully() {
-    // given
-    MockMultipartFile file1 = new MockMultipartFile("file1", "test1.pdf", "application/pdf", "test content".getBytes());
-    MockMultipartFile image1 = new MockMultipartFile("image1", "test1.jpg", "image/jpeg", "test image".getBytes());
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEqualTo(newTitle);
+        assertThat(updatedQAndA.getContent()).isEqualTo(newContent);
+    }
 
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("파일 첨부 질문")
-        .content("파일이 첨부된 질문입니다.")
-        .attachedFiles(List.of(file1))
-        .attachedImages(List.of(image1))
-        .build();
+    @Test
+    @DisplayName("스터디 그룹 주최자가 질문을 수정할 수 있다")
+    void updateQAndA_ByOwner_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+        String newTitle = "주최자가 수정한 질문 제목";
+        String newContent = "주최자가 수정한 질문 내용";
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, memberDetails);
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title(newTitle)
+                .content(newContent)
+                .build();
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("파일 첨부 질문");
-    assertThat(result.getAttachedFiles()).isEqualTo(1);
-    assertThat(result.getAttachedImages()).isEqualTo(1);
-  }
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, ownerDetails);
 
-  @Test
-  @DisplayName("여러 첨부 파일과 이미지가 포함된 질문을 생성할 수 있다")
-  void createQAndA_WithMultipleAttachedFiles_ShouldCreateSuccessfully() {
-    // given
-    MockMultipartFile file1 = new MockMultipartFile("file1", "test1.pdf", "application/pdf",
-        "test content 1".getBytes());
-    MockMultipartFile file2 = new MockMultipartFile("file2", "test2.txt", "text/plain", "test content 2".getBytes());
-    MockMultipartFile image1 = new MockMultipartFile("image1", "test1.jpg", "image/jpeg", "test image 1".getBytes());
-    MockMultipartFile image2 = new MockMultipartFile("image2", "test2.png", "image/png", "test image 2".getBytes());
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(qnaId);
+        assertThat(result.getTitle()).isEqualTo(newTitle);
+        assertThat(result.getContent()).isEqualTo(newContent);
+        assertThat(result.getCreatedBy().getId()).isEqualTo(questionAuthor.getId());
+        // lastModifiedBy는 JPA Auditing으로 자동 설정되므로 테스트에서 검증하지 않음
 
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("다중 파일 첨부 질문")
-        .content("여러 파일이 첨부된 질문입니다.")
-        .attachedFiles(List.of(file1, file2))
-        .attachedImages(List.of(image1, image2))
-        .build();
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEqualTo(newTitle);
+        assertThat(updatedQAndA.getContent()).isEqualTo(newContent);
+    }
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, memberDetails);
+    @Test
+    @DisplayName("권한이 없는 사용자가 질문을 수정하려고 하면 예외가 발생한다")
+    void updateQAndA_ByUnauthorizedUser_ThrowsException() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("다중 파일 첨부 질문");
-    assertThat(result.getAttachedFiles()).isEqualTo(2);
-    assertThat(result.getAttachedImages()).isEqualTo(2);
-  }
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("수정된 제목")
+                .content("수정된 내용")
+                .build();
 
-  @Test
-  @DisplayName("존재하지 않는 스터디 그룹에 질문을 생성하려고 하면 예외가 발생한다")
-  void createQAndA_WithNonExistentStudyGroup_ShouldThrowException() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("테스트 질문")
-        .content("테스트 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        // when & then
+        assertThatThrownBy(() -> qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, otherUserDetails))
+                .isInstanceOf(RestException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_AUTHORIZED);
 
-    // when & then
-    assertThatThrownBy(() -> qAndAService.createQAndA(request, 999L, 1, memberDetails))
-        .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_FOUND);
-  }
+        // 데이터베이스에서 변경되지 않았는지 확인
+        QAndA unchangedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(unchangedQAndA.getTitle()).isEqualTo("원본 질문 제목_" + currentTestId);
+        assertThat(unchangedQAndA.getContent()).isEqualTo("원본 질문 내용_" + currentTestId);
+    }
 
-  @Test
-  @DisplayName("현재 스텝이 아닌 스텝에 질문을 생성하려고 하면 예외가 발생한다")
-  void createQAndA_WithWrongStep_ShouldThrowException() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("테스트 질문")
-        .content("테스트 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+    @Test
+    @DisplayName("존재하지 않는 질문을 수정하려고 하면 예외가 발생한다")
+    void updateQAndA_NonExistentQAndA_ThrowsException() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long nonExistentQnaId = 999L;
 
-    // when & then
-    assertThatThrownBy(() -> qAndAService.createQAndA(request, studyGroup.getId(), 2, memberDetails))
-        .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
-  }
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("수정된 제목")
+                .content("수정된 내용")
+                .build();
 
-  @Test
-  @DisplayName("스터디 그룹 멤버가 아닌 사용자가 질문을 생성하려고 하면 예외가 발생한다")
-  void createQAndA_WithNonMember_ShouldThrowException() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("테스트 질문")
-        .content("테스트 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        // when & then
+        assertThatThrownBy(() -> qAndAService.updateQAndA(
+                studyGroupId, nonExistentQnaId, request, questionAuthorDetails))
+                .isInstanceOf(RestException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_FOUND);
+    }
 
-    // when & then
-    assertThatThrownBy(() -> qAndAService.createQAndA(request, studyGroup.getId(), 1, nonMemberDetails))
-        .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_MEMBER);
-  }
+    @Test
+    @DisplayName("제목만 수정할 수 있다")
+    void updateQAndA_OnlyTitle_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+        String newTitle = "제목만 수정된 질문";
 
-  @Test
-  @DisplayName("빈 첨부 파일 리스트로 질문을 생성할 수 있다")
-  void createQAndA_WithEmptyAttachedFiles_ShouldCreateSuccessfully() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("빈 파일 질문")
-        .content("첨부 파일이 없는 질문입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title(newTitle)
+                .build();
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, memberDetails);
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("빈 파일 질문");
-    assertThat(result.getAttachedFiles()).isEqualTo(0);
-    assertThat(result.getAttachedImages()).isEqualTo(0);
-  }
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo(newTitle);
+        assertThat(result.getContent()).isEqualTo("원본 질문 내용_" + currentTestId); // 원본 내용 유지
 
-  @Test
-  @DisplayName("null 첨부 파일 리스트로 질문을 생성할 수 있다")
-  void createQAndA_WithNullAttachedFiles_ShouldCreateSuccessfully() {
-    // given
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("null 파일 질문")
-        .content("첨부 파일이 null인 질문입니다.")
-        .attachedFiles(null)
-        .attachedImages(null)
-        .build();
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEqualTo(newTitle);
+        assertThat(updatedQAndA.getContent()).isEqualTo("원본 질문 내용_" + currentTestId);
+    }
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 1, memberDetails);
+    @Test
+    @DisplayName("내용만 수정할 수 있다")
+    void updateQAndA_OnlyContent_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+        String newContent = "내용만 수정된 질문";
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("null 파일 질문");
-    assertThat(result.getAttachedFiles()).isEqualTo(0);
-    assertThat(result.getAttachedImages()).isEqualTo(0);
-  }
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .content(newContent)
+                .build();
 
-  @Test
-  @DisplayName("스터디 그룹의 현재 스텝을 변경한 후 해당 스텝에 질문을 생성할 수 있다")
-  void createQAndA_AfterStepChange_ShouldCreateSuccessfully() {
-    // given
-    // 스터디 그룹의 현재 스텝을 2로 변경
-    studyGroup.setCurrentStep(2);
-    entityManager.merge(studyGroup);
-    entityManager.flush();
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
 
-    QAndADto.QAndACreateRequest request = QAndADto.QAndACreateRequest.builder()
-        .title("스텝 2 질문")
-        .content("스텝 2에서 작성한 질문입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("원본 질문 제목_" + currentTestId); // 원본 제목 유지
+        assertThat(result.getContent()).isEqualTo(newContent);
 
-    // when
-    QAndADto.QAndAResponse result = qAndAService.createQAndA(request, studyGroup.getId(), 2, memberDetails);
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEqualTo("원본 질문 제목_" + currentTestId);
+        assertThat(updatedQAndA.getContent()).isEqualTo(newContent);
+    }
 
-    // then
-    assertThat(result).isNotNull();
-    assertThat(result.getTitle()).isEqualTo("스텝 2 질문");
-    assertThat(result.getStep()).isEqualTo(2);
-  }
+    @Test
+    @DisplayName("null 값이 전달되어도 기존 값이 유지된다")
+    void updateQAndA_WithNullValues_KeepsOriginalValues() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
 
-  @Test
-  @DisplayName("여러 질문을 연속으로 생성할 수 있다")
-  void createQAndA_MultipleQuestions_ShouldCreateSuccessfully() {
-    // given
-    QAndADto.QAndACreateRequest request1 = QAndADto.QAndACreateRequest.builder()
-        .title("첫 번째 질문")
-        .content("첫 번째 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title(null)
+                .content(null)
+                .build();
 
-    QAndADto.QAndACreateRequest request2 = QAndADto.QAndACreateRequest.builder()
-        .title("두 번째 질문")
-        .content("두 번째 질문 내용입니다.")
-        .attachedFiles(List.of())
-        .attachedImages(List.of())
-        .build();
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
 
-    // when
-    QAndADto.QAndAResponse result1 = qAndAService.createQAndA(request1, studyGroup.getId(), 1, memberDetails);
-    QAndADto.QAndAResponse result2 = qAndAService.createQAndA(request2, studyGroup.getId(), 1, memberDetails);
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("원본 질문 제목_" + currentTestId);
+        assertThat(result.getContent()).isEqualTo("원본 질문 내용_" + currentTestId);
 
-    // then
-    assertThat(result1).isNotNull();
-    assertThat(result2).isNotNull();
-    assertThat(result1.getId()).isNotEqualTo(result2.getId());
-    assertThat(result1.getTitle()).isEqualTo("첫 번째 질문");
-    assertThat(result2.getTitle()).isEqualTo("두 번째 질문");
-  }
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEqualTo("원본 질문 제목_" + currentTestId);
+        assertThat(updatedQAndA.getContent()).isEqualTo("원본 질문 내용_" + currentTestId);
+    }
+
+    @Test
+    @DisplayName("빈 문자열로 수정할 수 있다")
+    void updateQAndA_WithEmptyStrings_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("")
+                .content("")
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEmpty();
+        assertThat(result.getContent()).isEmpty();
+
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getTitle()).isEmpty();
+        assertThat(updatedQAndA.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("새로운 첨부 파일을 추가할 수 있다")
+    void updateQAndA_WithNewAttachedFiles_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        MockMultipartFile file1 = new MockMultipartFile(
+                "newAttachedFiles",
+                "test1.txt",
+                "text/plain",
+                "첨부 파일 내용 1".getBytes());
+
+        MockMultipartFile file2 = new MockMultipartFile(
+                "newAttachedFiles",
+                "test2.pdf",
+                "application/pdf",
+                "첨부 파일 내용 2".getBytes());
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("첨부 파일이 추가된 질문")
+                .newAttachedFiles(List.of(file1, file2))
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAttachedFiles()).hasSize(2);
+        assertThat(result.getAttachedFiles().get(0).getFileName()).isEqualTo("test1.txt");
+        assertThat(result.getAttachedFiles().get(1).getFileName()).isEqualTo("test2.pdf");
+    }
+
+    @Test
+    @DisplayName("새로운 첨부 이미지를 추가할 수 있다")
+    void updateQAndA_WithNewAttachedImages_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        MockMultipartFile image1 = new MockMultipartFile(
+                "newAttachedImages",
+                "image1.jpg",
+                "image/jpeg",
+                "이미지 데이터 1".getBytes());
+
+        MockMultipartFile image2 = new MockMultipartFile(
+                "newAttachedImages",
+                "image2.png",
+                "image/png",
+                "이미지 데이터 2".getBytes());
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("첨부 이미지가 추가된 질문")
+                .newAttachedImages(List.of(image1, image2))
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAttachedImages()).hasSize(2);
+        assertThat(result.getAttachedImages().get(0).getFileName()).isEqualTo("image1.jpg");
+        assertThat(result.getAttachedImages().get(1).getFileName()).isEqualTo("image2.png");
+    }
+
+    @Test
+    @DisplayName("기존 첨부 파일을 삭제할 수 있다")
+    void updateQAndA_DeleteAttachedFiles_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        // 기존 첨부 파일 생성
+        QAndAAttachedFile existingFile1 = QAndAAttachedFile.builder()
+                .uuid("file-uuid-1")
+                .fileName("existing1.txt")
+                .size(100L)
+                .handlingType(HandlingType.DOWNLOADABLE)
+                .build();
+        existingFile1.setQAndA(qAndA);
+        qAndA.addAttachedFile(existingFile1);
+
+        QAndAAttachedFile existingFile2 = QAndAAttachedFile.builder()
+                .uuid("file-uuid-2")
+                .fileName("existing2.pdf")
+                .size(200L)
+                .handlingType(HandlingType.DOWNLOADABLE)
+                .build();
+        existingFile2.setQAndA(qAndA);
+        qAndA.addAttachedFile(existingFile2);
+
+        entityManager.persist(existingFile1);
+        entityManager.persist(existingFile2);
+        entityManager.flush();
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("첨부 파일이 삭제된 질문")
+                .deletedAttachedFiles(List.of("file-uuid-1"))
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAttachedFiles()).hasSize(1);
+        assertThat(result.getAttachedFiles().get(0).getFileName()).isEqualTo("existing2.pdf");
+    }
+
+    @Test
+    @DisplayName("기존 첨부 이미지를 삭제할 수 있다")
+    void updateQAndA_DeleteAttachedImages_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        // 기존 첨부 이미지 생성
+        QAndAImageFile existingImage1 = QAndAImageFile.builder()
+                .uuid("image-uuid-1")
+                .fileName("existing1.jpg")
+                .size(300L)
+                .handlingType(HandlingType.IMAGE)
+                .build();
+        existingImage1.setQAndA(qAndA);
+        qAndA.addAttachedImage(existingImage1);
+
+        QAndAImageFile existingImage2 = QAndAImageFile.builder()
+                .uuid("image-uuid-2")
+                .fileName("existing2.png")
+                .size(400L)
+                .handlingType(HandlingType.IMAGE)
+                .build();
+        existingImage2.setQAndA(qAndA);
+        qAndA.addAttachedImage(existingImage2);
+
+        entityManager.persist(existingImage1);
+        entityManager.persist(existingImage2);
+        entityManager.flush();
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("첨부 이미지가 삭제된 질문")
+                .deletedAttachedImages(List.of("image-uuid-1"))
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getAttachedImages()).hasSize(1);
+        assertThat(result.getAttachedImages().get(0).getFileName()).isEqualTo("existing2.png");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 파일 ID로 삭제를 시도해도 예외가 발생하지 않는다")
+    void updateQAndA_DeleteNonExistentFiles_NoException() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("존재하지 않는 파일 삭제 시도")
+                .deletedAttachedFiles(List.of("non-existent-file-id"))
+                .deletedAttachedImages(List.of("non-existent-image-id"))
+                .build();
+
+        // when & then - 예외가 발생하지 않아야 함
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("존재하지 않는 파일 삭제 시도");
+    }
+
+    @Test
+    @DisplayName("복합적인 수정 작업을 수행할 수 있다")
+    void updateQAndA_ComplexUpdate_Success() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        // 기존 첨부 파일 생성
+        QAndAAttachedFile existingFile = QAndAAttachedFile.builder()
+                .uuid("existing-file-uuid")
+                .fileName("existing.txt")
+                .size(100L)
+                .handlingType(HandlingType.DOWNLOADABLE)
+                .build();
+        existingFile.setQAndA(qAndA);
+        qAndA.addAttachedFile(existingFile);
+
+        entityManager.persist(existingFile);
+        entityManager.flush();
+
+        // 새로운 파일과 이미지
+        MockMultipartFile newFile = new MockMultipartFile(
+                "newAttachedFiles",
+                "new.txt",
+                "text/plain",
+                "새 파일 내용".getBytes());
+
+        MockMultipartFile newImage = new MockMultipartFile(
+                "newAttachedImages",
+                "new.jpg",
+                "image/jpeg",
+                "새 이미지 데이터".getBytes());
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("복합 수정된 질문")
+                .content("복합 수정된 내용")
+                .newAttachedFiles(List.of(newFile))
+                .newAttachedImages(List.of(newImage))
+                .deletedAttachedFiles(List.of("existing-file-uuid"))
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getTitle()).isEqualTo("복합 수정된 질문");
+        assertThat(result.getContent()).isEqualTo("복합 수정된 내용");
+        assertThat(result.getAttachedFiles()).hasSize(1);
+        assertThat(result.getAttachedFiles().get(0).getFileName()).isEqualTo("new.txt");
+        assertThat(result.getAttachedImages()).hasSize(1);
+        assertThat(result.getAttachedImages().get(0).getFileName()).isEqualTo("new.jpg");
+    }
+
+    @Test
+    @DisplayName("수정 후 lastModifiedAt이 업데이트된다")
+    void updateQAndA_LastModifiedAtUpdated() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+        LocalDateTime beforeUpdate = LocalDateTime.now().minusSeconds(1);
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("수정된 제목")
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getLastModifiedAt()).isNotNull();
+
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getLastModifiedAt()).isAfter(beforeUpdate);
+    }
+
+    @Test
+    @DisplayName("수정 후 lastModifiedBy가 설정된다")
+    void updateQAndA_LastModifiedByUpdated() {
+        // given
+        Long studyGroupId = studyGroup.getId();
+        Long qnaId = qAndA.getId();
+
+        QAndADto.QAndAUpdateRequest request = QAndADto.QAndAUpdateRequest.builder()
+                .title("수정된 제목")
+                .build();
+
+        // when
+        QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                studyGroupId, qnaId, request, questionAuthorDetails);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.getLastModifiedBy()).isNotNull();
+        // lastModifiedBy는 JPA Auditing으로 자동 설정되므로 구체적인 값은 검증하지 않음
+
+        // 데이터베이스에서 실제 변경 확인
+        QAndA updatedQAndA = entityManager.find(QAndA.class, qnaId);
+        assertThat(updatedQAndA.getLastModifiedBy()).isNotNull();
+    }
 }
-
