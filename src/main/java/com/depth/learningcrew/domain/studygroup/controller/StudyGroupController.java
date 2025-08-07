@@ -1,5 +1,7 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+import jakarta.annotation.Nullable;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -59,16 +61,17 @@ public class StudyGroupController {
   @ApiResponse(responseCode = "200", description = "스터디 그룹 조회 성공")
   public StudyGroupDto.StudyGroupDetailResponse getStudyGroup(
       @PathVariable Long id,
-      @AuthenticationPrincipal UserDetails userDetails) {
+      @AuthenticationPrincipal @Nullable UserDetails userDetails) {
 
     return studyGroupService.getStudyGroupDetail(id, userDetails);
   }
 
+  @NoJwtAuth
   @GetMapping
   @Operation(summary = "전체 스터디 그룹 목록 조회", description = "조건에 맞는 모든 스터디 그룹을 페이지네이션하여 조회합니다.")
   public PagedModel<StudyGroupDto.StudyGroupResponse> getAllStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
-      @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+      @PageableDefault @ParameterObject Pageable pageable,
       @AuthenticationPrincipal UserDetails userDetails) {
 
     return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
