@@ -14,6 +14,8 @@ import java.util.Optional;
 
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
+import com.querydsl.core.types.dsl.Expressions;
+import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +42,7 @@ public class StudyGroupQueryRepository {
 
     public Page<StudyGroupDto.StudyGroupResponse> paginateByType(
             StudyGroupDto.SearchConditions searchConditions,
-            UserDetails user,
+            @Nullable UserDetails user,
             Pageable pageable,
             StudyGroupFilterType filterType
     ) {
@@ -64,19 +66,20 @@ public class StudyGroupQueryRepository {
 
     private JPAQuery<Tuple> buildBaseQuery(
             StudyGroupDto.SearchConditions searchConditions,
-            UserDetails user,
+            @Nullable UserDetails user,
             StudyGroupFilterType filterType
     ) {
         JPAQuery<Tuple> query = queryFactory
                 .select(
                         studyGroup,
+                        Objects.nonNull(user) ?
                         JPAExpressions.selectOne()
                                 .from(dibs)
                                 .where(
                                         dibs.id.studyGroup.eq(studyGroup),
                                         dibs.id.user.id.eq(user.getUser().getId())
                                 )
-                                .exists()
+                                .exists() : Expressions.asBoolean(false)
                 )
                 .from(studyGroup);
 
@@ -89,7 +92,7 @@ public class StudyGroupQueryRepository {
 
     private JPAQuery<Long> buildCountQuery(
             StudyGroupDto.SearchConditions searchConditions,
-            UserDetails user,
+            @Nullable UserDetails user,
             StudyGroupFilterType filterType
     ) {
         JPAQuery<Long> query = queryFactory
@@ -103,9 +106,9 @@ public class StudyGroupQueryRepository {
         return query;
     }
 
-    private void applyFilterTypeCondition(JPAQuery<?> query, UserDetails user, StudyGroupFilterType filterType) {
+    private void applyFilterTypeCondition(JPAQuery<?> query, @Nullable UserDetails user, StudyGroupFilterType filterType) {
         if (user == null || user.getUser() == null){
-            throw new RestException(ErrorCode.USER_NOT_FOUND);
+            return;
         }
 
         if (filterType == StudyGroupFilterType.OWNED) {
