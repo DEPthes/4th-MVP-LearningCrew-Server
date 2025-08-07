@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,7 @@ public class GroupCategoryController {
     }
 
     @PatchMapping("/{categoryId}")
-    @Operation(summary = "특정 카테고리 수정", description = "owner만 특정 카테고리를 수정할 수 있습니다. 모든 정보를 하나의 요청으로 전송합니다.")
+    @Operation(summary = "특정 카테고리 수정", description = "admin만 특정 카테고리를 수정할 수 있습니다. 모든 정보를 하나의 요청으로 전송합니다.")
     public GroupCategoryDto.GroupCategoryUpdateResponse updateGroupCategory(
             @PathVariable Integer categoryId,
             @Valid @RequestBody GroupCategoryDto.GroupCategoryUpdateRequest request,
@@ -41,6 +42,9 @@ public class GroupCategoryController {
     }
 
     @PostMapping
+    @Operation(summary = "카테고리 생성", description = "admin만 카테고리를 생성할 수 있습니다. 새로운 카테고리를 생성합니다.")
+    @ApiResponse(responseCode = "201", description = "카테고리 생성 성공")
+    @ResponseStatus(HttpStatus.CREATED)
     public GroupCategoryDto.GroupCategoryResponse createGroupCategory(
             @Valid @RequestBody GroupCategoryDto.GroupCategoryCreateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {

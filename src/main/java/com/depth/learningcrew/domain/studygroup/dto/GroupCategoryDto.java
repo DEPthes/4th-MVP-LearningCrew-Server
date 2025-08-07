@@ -69,7 +69,9 @@ public class GroupCategoryDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
+    @Schema(description = "카테고리 생성 요청")
     public static class GroupCategoryCreateRequest {
+        @Schema(description = "그룹 카테고리명", example = "group category")
         private String name;
     }
 }
