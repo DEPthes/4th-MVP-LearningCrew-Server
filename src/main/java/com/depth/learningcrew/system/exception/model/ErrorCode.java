@@ -58,6 +58,8 @@ public enum ErrorCode {
     STUDY_GROUP_APPLICATION_ALREADY_REJECTED(400, "이미 거절된 신청입니다."),
     STUDY_GROUP_NOT_FOUND(404, "스터디 그룹을 찾을 수 없습니다."),
     STUDY_GROUP_OWNER_CANNOT_BE_EXPELLED(400, "스터디 그룹의 소유자는 추방할 수 없습니다."),
+    STUDY_GROUP_NOT_CURRENT_STEP(400, "현재 스텝에서는 질문을 생성할 수 없습니다."),
+    STUDY_GROUP_NOT_MEMBER(400, "스터디 그룹의 멤버가 아닙니다."),
 
     // Other
     INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."),;
