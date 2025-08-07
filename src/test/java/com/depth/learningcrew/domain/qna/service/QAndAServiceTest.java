@@ -1,0 +1,277 @@
+package com.depth.learningcrew.domain.qna.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+
+import com.depth.learningcrew.domain.file.handler.FileHandler;
+import com.depth.learningcrew.domain.qna.dto.QAndADto;
+import com.depth.learningcrew.domain.qna.entity.QAndA;
+import com.depth.learningcrew.domain.qna.repository.QAndARepository;
+import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.repository.MemberQueryRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
+import com.depth.learningcrew.domain.user.entity.Gender;
+import com.depth.learningcrew.domain.user.entity.Role;
+import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
+import com.depth.learningcrew.system.security.model.UserDetails;
+
+@ExtendWith(MockitoExtension.class)
+class QAndAServiceTest {
+
+  @Mock
+  private QAndARepository qAndARepository;
+
+  @Mock
+  private StudyGroupRepository studyGroupRepository;
+
+  @Mock
+  private MemberQueryRepository memberQueryRepository;
+
+  @Mock
+  private FileHandler fileHandler;
+
+  @InjectMocks
+  private QAndAService qAndAService;
+
+  private User testUser;
+  private UserDetails testUserDetails;
+  private StudyGroup testStudyGroup;
+  private QAndA testQAndA;
+  private QAndADto.QAndACreateRequest createRequest;
+
+  @BeforeEach
+  void setUp() {
+    // 테스트 사용자 설정
+    testUser = User.builder()
+        .id(1L)
+        .email("test@example.com")
+        .password("password")
+        .nickname("testUser")
+        .birthday(LocalDate.of(1990, 1, 1))
+        .gender(Gender.MALE)
+        .role(Role.USER)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
+    testUserDetails = UserDetails.builder()
+        .user(testUser)
+        .build();
+
+    // 테스트 스터디 그룹 설정
+    testStudyGroup = StudyGroup.builder()
+        .id(1L)
+        .name("테스트 스터디 그룹")
+        .summary("테스트 스터디 그룹입니다.")
+        .maxMembers(10)
+        .currentStep(1)
+        .startDate(LocalDate.now())
+        .endDate(LocalDate.now().plusMonths(3))
+        .owner(testUser)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
+    // 테스트 Q&A 설정
+    testQAndA = QAndA.builder()
+        .id(1L)
+        .title("테스트 질문")
+        .content("테스트 질문 내용입니다.")
+        .step(1)
+        .studyGroup(testStudyGroup)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
+    // 테스트 요청 DTO 설정
+    createRequest = QAndADto.QAndACreateRequest.builder()
+        .title("테스트 질문")
+        .content("테스트 질문 내용입니다.")
+        .attachedFiles(List.of())
+        .attachedImages(List.of())
+        .build();
+  }
+
+  @Test
+  @DisplayName("질문을 성공적으로 생성할 수 있다")
+  void createQAndA_ShouldCreateSuccessfully() {
+    // given
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(true);
+    when(qAndARepository.save(any(QAndA.class))).thenReturn(testQAndA);
+
+    // when
+    QAndADto.QAndAResponse result = qAndAService.createQAndA(createRequest, 1L, 1, testUserDetails);
+
+    // then
+    verify(studyGroupRepository, times(1)).findById(1L);
+    verify(memberQueryRepository, times(1)).isMember(testStudyGroup, testUser);
+    verify(qAndARepository, times(1)).save(any(QAndA.class));
+
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo(testQAndA.getId());
+    assertThat(result.getTitle()).isEqualTo(testQAndA.getTitle());
+    assertThat(result.getStep()).isEqualTo(testQAndA.getStep());
+  }
+
+  @Test
+  @DisplayName("첨부 파일과 이미지가 포함된 질문을 생성할 수 있다")
+  void createQAndA_WithAttachedFiles_ShouldCreateSuccessfully() {
+    // given
+    MockMultipartFile file1 = new MockMultipartFile("file1", "test1.pdf", "application/pdf", "test content".getBytes());
+    MockMultipartFile image1 = new MockMultipartFile("image1", "test1.jpg", "image/jpeg", "test image".getBytes());
+
+    QAndADto.QAndACreateRequest requestWithFiles = QAndADto.QAndACreateRequest.builder()
+        .title("파일 첨부 질문")
+        .content("파일이 첨부된 질문입니다.")
+        .attachedFiles(List.of(file1))
+        .attachedImages(List.of(image1))
+        .build();
+
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(true);
+    when(qAndARepository.save(any(QAndA.class))).thenReturn(testQAndA);
+
+    // when
+    QAndADto.QAndAResponse result = qAndAService.createQAndA(requestWithFiles, 1L, 1, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).saveFile(eq(file1), any());
+    verify(fileHandler, times(1)).saveFile(eq(image1), any());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 스터디 그룹에 질문을 생성하려고 하면 예외가 발생한다")
+  void createQAndA_WithNonExistentStudyGroup_ShouldThrowException() {
+    // given
+    when(studyGroupRepository.findById(999L)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.createQAndA(createRequest, 999L, 1, testUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("현재 스텝이 아닌 스텝에 질문을 생성하려고 하면 예외가 발생한다")
+  void createQAndA_WithWrongStep_ShouldThrowException() {
+    // given
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.createQAndA(createRequest, 1L, 2, testUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
+  }
+
+  @Test
+  @DisplayName("스터디 그룹 멤버가 아닌 사용자가 질문을 생성하려고 하면 예외가 발생한다")
+  void createQAndA_WithNonMember_ShouldThrowException() {
+    // given
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(false);
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.createQAndA(createRequest, 1L, 1, testUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_MEMBER);
+  }
+
+  @Test
+  @DisplayName("빈 첨부 파일 리스트로 질문을 생성할 수 있다")
+  void createQAndA_WithEmptyAttachedFiles_ShouldCreateSuccessfully() {
+    // given
+    QAndADto.QAndACreateRequest requestWithEmptyFiles = QAndADto.QAndACreateRequest.builder()
+        .title("빈 파일 질문")
+        .content("첨부 파일이 없는 질문입니다.")
+        .attachedFiles(List.of())
+        .attachedImages(List.of())
+        .build();
+
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(true);
+    when(qAndARepository.save(any(QAndA.class))).thenReturn(testQAndA);
+
+    // when
+    QAndADto.QAndAResponse result = qAndAService.createQAndA(requestWithEmptyFiles, 1L, 1, testUserDetails);
+
+    // then
+    verify(fileHandler, times(0)).saveFile(any(), any());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("null 첨부 파일 리스트로 질문을 생성할 수 있다")
+  void createQAndA_WithNullAttachedFiles_ShouldCreateSuccessfully() {
+    // given
+    QAndADto.QAndACreateRequest requestWithNullFiles = QAndADto.QAndACreateRequest.builder()
+        .title("null 파일 질문")
+        .content("첨부 파일이 null인 질문입니다.")
+        .attachedFiles(null)
+        .attachedImages(null)
+        .build();
+
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(true);
+    when(qAndARepository.save(any(QAndA.class))).thenReturn(testQAndA);
+
+    // when
+    QAndADto.QAndAResponse result = qAndAService.createQAndA(requestWithNullFiles, 1L, 1, testUserDetails);
+
+    // then
+    verify(fileHandler, times(0)).saveFile(any(), any());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("여러 첨부 파일과 이미지가 포함된 질문을 생성할 수 있다")
+  void createQAndA_WithMultipleAttachedFiles_ShouldCreateSuccessfully() {
+    // given
+    MockMultipartFile file1 = new MockMultipartFile("file1", "test1.pdf", "application/pdf",
+        "test content 1".getBytes());
+    MockMultipartFile file2 = new MockMultipartFile("file2", "test2.txt", "text/plain", "test content 2".getBytes());
+    MockMultipartFile image1 = new MockMultipartFile("image1", "test1.jpg", "image/jpeg", "test image 1".getBytes());
+    MockMultipartFile image2 = new MockMultipartFile("image2", "test2.png", "image/png", "test image 2".getBytes());
+
+    QAndADto.QAndACreateRequest requestWithMultipleFiles = QAndADto.QAndACreateRequest.builder()
+        .title("다중 파일 첨부 질문")
+        .content("여러 파일이 첨부된 질문입니다.")
+        .attachedFiles(List.of(file1, file2))
+        .attachedImages(List.of(image1, image2))
+        .build();
+
+    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
+    when(memberQueryRepository.isMember(testStudyGroup, testUser)).thenReturn(true);
+    when(qAndARepository.save(any(QAndA.class))).thenReturn(testQAndA);
+
+    // when
+    QAndADto.QAndAResponse result = qAndAService.createQAndA(requestWithMultipleFiles, 1L, 1, testUserDetails);
+
+    // then
+    verify(fileHandler, times(4)).saveFile(any(), any());
+    assertThat(result).isNotNull();
+  }
+}
+
