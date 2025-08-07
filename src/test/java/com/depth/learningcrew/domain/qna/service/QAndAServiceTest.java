@@ -102,6 +102,10 @@ class QAndAServiceTest {
         .studyGroup(testStudyGroup)
         .createdAt(LocalDateTime.now())
         .lastModifiedAt(LocalDateTime.now())
+        .createdBy(testUser)
+        .lastModifiedBy(testUser)
+        .attachedFiles(new java.util.ArrayList<>())
+        .attachedImages(new java.util.ArrayList<>())
         .build();
 
     // 테스트 요청 DTO 설정
@@ -273,5 +277,220 @@ class QAndAServiceTest {
     verify(fileHandler, times(4)).saveFile(any(), any());
     assertThat(result).isNotNull();
   }
-}
 
+  @Test
+  @DisplayName("질문을 성공적으로 수정할 수 있다")
+  void updateQAndA_ShouldUpdateSuccessfully() {
+    // given
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .title("수정된 제목")
+        .content("수정된 내용")
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    assertThat(result).isNotNull();
+    assertThat(result.getTitle()).isEqualTo("수정된 제목");
+    assertThat(result.getContent()).isEqualTo("수정된 내용");
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 질문을 수정하려고 하면 예외가 발생한다")
+  void updateQAndA_WithNonExistentQAndA_ShouldThrowException() {
+    // given
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .title("수정된 제목")
+        .content("수정된 내용")
+        .build();
+    when(qAndARepository.findById(999L)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.updateQAndA(1L, 999L, updateRequest, testUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("권한이 없는 사용자가 질문을 수정하려고 하면 예외가 발생한다")
+  void updateQAndA_WithUnauthorizedUser_ShouldThrowException() {
+    // given
+    User otherUser = User.builder().id(2L).role(Role.USER).build();
+    UserDetails otherUserDetails = UserDetails.builder().user(otherUser).build();
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .title("수정된 제목")
+        .content("수정된 내용")
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.updateQAndA(1L, 1L, updateRequest, otherUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_AUTHORIZED);
+  }
+
+  @Test
+  @DisplayName("질문 제목만 수정할 수 있다")
+  void updateQAndA_OnlyTitle_ShouldUpdateTitle() {
+    // given
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .title("제목만 수정")
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    assertThat(result.getTitle()).isEqualTo("제목만 수정");
+    assertThat(result.getContent()).isEqualTo("테스트 질문 내용입니다.");
+  }
+
+  @Test
+  @DisplayName("질문 내용만 수정할 수 있다")
+  void updateQAndA_OnlyContent_ShouldUpdateContent() {
+    // given
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .content("내용만 수정")
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    assertThat(result.getTitle()).isEqualTo("테스트 질문");
+    assertThat(result.getContent()).isEqualTo("내용만 수정");
+  }
+
+  @Test
+  @DisplayName("null 값이 전달되어도 기존 값이 유지된다")
+  void updateQAndA_WithNullValues_ShouldKeepOriginal() {
+    // given
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .title(null)
+        .content(null)
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    assertThat(result.getTitle()).isEqualTo("테스트 질문");
+    assertThat(result.getContent()).isEqualTo("테스트 질문 내용입니다.");
+  }
+
+  @Test
+  @DisplayName("첨부 파일을 추가할 수 있다")
+  void updateQAndA_AddNewAttachedFiles_ShouldSucceed() {
+    // given
+    MockMultipartFile file1 = new MockMultipartFile("newAttachedFiles", "file1.txt", "text/plain", "file1".getBytes());
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .newAttachedFiles(List.of(file1))
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).saveFile(eq(file1), any());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("첨부 이미지를 추가할 수 있다")
+  void updateQAndA_AddNewAttachedImages_ShouldSucceed() {
+    // given
+    MockMultipartFile image1 = new MockMultipartFile("newAttachedImages", "image1.jpg", "image/jpeg",
+        "img1".getBytes());
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .newAttachedImages(List.of(image1))
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).saveFile(eq(image1), any());
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("첨부 파일을 삭제할 수 있다")
+  void updateQAndA_DeleteAttachedFiles_ShouldSucceed() {
+    // given
+    // QAndA에 파일을 미리 추가
+    var file = com.depth.learningcrew.domain.file.entity.QAndAAttachedFile.builder()
+        .uuid("file-uuid-1").fileName("file1.txt").build();
+    testQAndA.getAttachedFiles().add(file);
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .deletedAttachedFiles(List.of("file-uuid-1"))
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).deleteFile(file);
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("첨부 이미지를 삭제할 수 있다")
+  void updateQAndA_DeleteAttachedImages_ShouldSucceed() {
+    // given
+    var image = com.depth.learningcrew.domain.file.entity.QAndAImageFile.builder()
+        .uuid("img-uuid-1").fileName("img1.jpg").build();
+    testQAndA.getAttachedImages().add(image);
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .deletedAttachedImages(List.of("img-uuid-1"))
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).deleteFile(image);
+    assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("복합적으로 파일 추가/삭제, 이미지 추가/삭제를 동시에 할 수 있다")
+  void updateQAndA_ComplexUpdate_ShouldSucceed() {
+    // given
+    var file = com.depth.learningcrew.domain.file.entity.QAndAAttachedFile.builder()
+        .uuid("file-uuid-1").fileName("file1.txt").build();
+    testQAndA.getAttachedFiles().add(file);
+    var image = com.depth.learningcrew.domain.file.entity.QAndAImageFile.builder()
+        .uuid("img-uuid-1").fileName("img1.jpg").build();
+    testQAndA.getAttachedImages().add(image);
+    MockMultipartFile newFile = new MockMultipartFile("newAttachedFiles", "file2.txt", "text/plain",
+        "file2".getBytes());
+    MockMultipartFile newImage = new MockMultipartFile("newAttachedImages", "img2.jpg", "image/jpeg",
+        "img2".getBytes());
+    QAndADto.QAndAUpdateRequest updateRequest = QAndADto.QAndAUpdateRequest.builder()
+        .newAttachedFiles(List.of(newFile))
+        .newAttachedImages(List.of(newImage))
+        .deletedAttachedFiles(List.of("file-uuid-1"))
+        .deletedAttachedImages(List.of("img-uuid-1"))
+        .build();
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).deleteFile(file);
+    verify(fileHandler, times(1)).deleteFile(image);
+    verify(fileHandler, times(1)).saveFile(eq(newFile), any());
+    verify(fileHandler, times(1)).saveFile(eq(newImage), any());
+    assertThat(result).isNotNull();
+  }
+}

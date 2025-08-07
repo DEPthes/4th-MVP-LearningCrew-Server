@@ -55,6 +55,90 @@ public class QAndAService {
     return QAndADto.QAndAResponse.from(saved);
   }
 
+  private void deleteAttachedFiles(List<String> fileIds, QAndA qAndA) {
+    if (fileIds != null && !fileIds.isEmpty()) {
+      fileIds.forEach(fileId -> {
+        QAndAAttachedFile file = qAndA.getAttachedFiles().stream()
+            .filter(f -> f.getUuid().equals(fileId))
+            .findFirst()
+            .orElse(null);
+        if (file != null) {
+          qAndA.removeAttachedFile(file);
+          fileHandler.deleteFile(file);
+        }
+      });
+    }
+  }
+
+  private void deleteAttachedImages(List<String> imageIds, QAndA qAndA) {
+    if (imageIds != null && !imageIds.isEmpty()) {
+      imageIds.forEach(imageId -> {
+        QAndAImageFile image = qAndA.getAttachedImages().stream()
+            .filter(img -> img.getUuid().equals(imageId))
+            .findFirst()
+            .orElse(null);
+        if (image != null) {
+          qAndA.removeAttachedImage(image);
+          fileHandler.deleteFile(image);
+        }
+      });
+    }
+  }
+
+  private void saveNewAttachedFiles(List<MultipartFile> files, QAndA qAndA) {
+    if (files != null && !files.isEmpty()) {
+      files.forEach(file -> {
+        QAndAAttachedFile attachedFile = QAndAAttachedFile.from(file);
+        attachedFile.setQAndA(qAndA);
+        qAndA.addAttachedFile(attachedFile);
+        fileHandler.saveFile(file, attachedFile);
+      });
+    }
+  }
+
+  private void saveNewAttachedImages(List<MultipartFile> files, QAndA qAndA) {
+    if (files != null && !files.isEmpty()) {
+      files.forEach(file -> {
+        QAndAImageFile attachedImage = QAndAImageFile.from(file);
+        attachedImage.setQAndA(qAndA);
+        qAndA.addAttachedImage(attachedImage);
+        fileHandler.saveFile(file, attachedImage);
+      });
+    }
+  }
+
+  @Transactional
+  public QAndADto.QAndAUpdateResponse updateQAndA(
+      Long studyGroupId,
+      Long qnaId,
+      QAndADto.QAndAUpdateRequest request,
+      UserDetails user) {
+
+    QAndA qAndA = qAndARepository.findById(qnaId)
+        .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    // 권한 검사
+    qAndA.canUpdateBy(user.getUser());
+
+    // 제목과 내용 업데이트
+    if (request.getTitle() != null) {
+      qAndA.setTitle(request.getTitle());
+    }
+    if (request.getContent() != null) {
+      qAndA.setContent(request.getContent());
+    }
+
+    // 기존 파일 삭제
+    deleteAttachedFiles(request.getDeletedAttachedFiles(), qAndA);
+    deleteAttachedImages(request.getDeletedAttachedImages(), qAndA);
+
+    // 새 파일 추가
+    saveNewAttachedFiles(request.getNewAttachedFiles(), qAndA);
+    saveNewAttachedImages(request.getNewAttachedImages(), qAndA);
+
+    return QAndADto.QAndAUpdateResponse.from(qAndA);
+  }
+
   private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
     if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
       throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);

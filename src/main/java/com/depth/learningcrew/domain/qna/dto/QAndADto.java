@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.depth.learningcrew.domain.file.dto.FileDto;
 import com.depth.learningcrew.domain.qna.entity.QAndA;
+import com.depth.learningcrew.domain.user.dto.UserDto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -42,6 +43,31 @@ public class QAndADto {
           .content(content)
           .build();
     }
+  }
+
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @Data
+  @Builder
+  @Schema(description = "질문 수정 요청 DTO")
+  public static class QAndAUpdateRequest {
+    @Schema(description = "질문 제목", example = "수정된 질문 제목")
+    private String title;
+
+    @Schema(description = "질문 내용", example = "수정된 질문 내용")
+    private String content;
+
+    @Schema(description = "새로 추가할 첨부 파일 목록")
+    private List<MultipartFile> newAttachedFiles;
+
+    @Schema(description = "새로 추가할 첨부 이미지 목록")
+    private List<MultipartFile> newAttachedImages;
+
+    @Schema(description = "삭제할 첨부 파일 ID 목록")
+    private List<String> deletedAttachedFiles;
+
+    @Schema(description = "삭제할 이미지 파일 ID 목록")
+    private List<String> deletedAttachedImages;
   }
 
   @AllArgsConstructor
@@ -112,6 +138,58 @@ public class QAndADto {
           .comments(entity.getComments().stream().map(CommentDto.CommentResponse::from).toList())
           .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+          .build();
+    }
+  }
+
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @Data
+  @Builder
+  @Schema(description = "질문 수정 응답 DTO")
+  public static class QAndAUpdateResponse {
+    @Schema(description = "질문 ID", example = "42")
+    private Long id;
+
+    @Schema(description = "스터디 스텝 번호", example = "1")
+    private Integer step;
+
+    @Schema(description = "질문 제목", example = "수정된 질문 제목")
+    private String title;
+
+    @Schema(description = "질문 내용", example = "수정된 질문 내용")
+    private String content;
+
+    @Schema(description = "첨부 파일 목록")
+    private List<FileDto.FileResponse> attachedFiles;
+
+    @Schema(description = "첨부 이미지 목록")
+    private List<FileDto.FileResponse> attachedImages;
+
+    @Schema(description = "작성자 정보")
+    private UserDto.UserResponse createdBy;
+
+    @Schema(description = "수정자 정보")
+    private UserDto.UserResponse lastModifiedBy;
+
+    @Schema(description = "생성일시", example = "2025-08-06T20:00:00Z")
+    private String createdAt;
+
+    @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
+    private String lastModifiedAt;
+
+    public static QAndAUpdateResponse from(QAndA entity) {
+      return QAndAUpdateResponse.builder()
+          .id(entity.getId())
+          .step(entity.getStep())
+          .title(entity.getTitle())
+          .content(entity.getContent())
+          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
+          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+          .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
+          .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
+          .createdAt(entity.getCreatedAt().toString())
+          .lastModifiedAt(entity.getLastModifiedAt().toString())
           .build();
     }
   }
