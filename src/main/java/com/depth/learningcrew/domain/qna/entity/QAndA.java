@@ -7,6 +7,10 @@ import com.depth.learningcrew.common.auditor.UserStampedEntity;
 import com.depth.learningcrew.domain.file.entity.QAndAAttachedFile;
 import com.depth.learningcrew.domain.file.entity.QAndAImageFile;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.user.entity.Role;
+import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -94,5 +98,24 @@ public class QAndA extends UserStampedEntity {
   public void removeAttachedImage(QAndAImageFile attachedImage) {
     this.attachedImages.remove(attachedImage);
     attachedImage.setQAndA(null);
+  }
+
+  public void canUpdateBy(User user) {
+    // 관리자는 모든 질문을 수정할 수 있음
+    if (user.getRole().equals(Role.ADMIN)) {
+      return;
+    }
+
+    // 질문 작성자는 자신의 질문을 수정할 수 있음
+    if (this.getCreatedBy().getId().equals(user.getId())) {
+      return;
+    }
+
+    // 스터디 그룹 주최자는 그룹 내 질문을 수정할 수 있음
+    if (this.studyGroup.getOwner().getId().equals(user.getId())) {
+      return;
+    }
+
+    throw new RestException(ErrorCode.QANDA_NOT_AUTHORIZED);
   }
 }
