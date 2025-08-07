@@ -53,7 +53,7 @@ public class StudyGroupImage extends AttachedFile {
         }
 
         String extension = splitted[splitted.length - 1];
-        if (!List.of("JPG").contains(extension.toUpperCase())) {
+        if (!List.of("JPG", "JPEG", "PNG").contains(extension.toUpperCase())) {
             throw new RestException(ErrorCode.FILE_NOT_IMAGE);
         }
     }

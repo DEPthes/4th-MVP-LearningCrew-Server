@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.depth.learningcrew.domain.file.entity.HandlingType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +23,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.depth.learningcrew.domain.file.entity.HandlingType;
 import com.depth.learningcrew.domain.file.entity.ProfileImage;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
+import com.depth.learningcrew.domain.file.repository.AttachedFileRepository;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
@@ -45,6 +46,9 @@ class UserServiceTest {
 
   @Mock
   private FileHandler fileHandler;
+
+  @Mock
+  private AttachedFileRepository attachedFileRepository;
 
   @InjectMocks
   private UserService userService;
@@ -87,6 +91,7 @@ class UserServiceTest {
         .build();
 
     when(userRepository.findById(testUser.getId())).thenReturn(java.util.Optional.of(testUser));
+    when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
     UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
@@ -125,6 +130,7 @@ class UserServiceTest {
         .build();
 
     when(userRepository.findById(testUser.getId())).thenReturn(java.util.Optional.of(testUser));
+    when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
     UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
@@ -252,6 +258,7 @@ class UserServiceTest {
 
     when(userRepository.findById(testUser.getId())).thenReturn(java.util.Optional.of(testUser));
     when(passwordEncoder.encode("newPassword123")).thenReturn("encodedNewPassword");
+    when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
     UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);

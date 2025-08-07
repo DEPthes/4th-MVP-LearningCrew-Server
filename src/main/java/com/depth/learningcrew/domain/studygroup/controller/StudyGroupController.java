@@ -1,12 +1,22 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+import jakarta.annotation.Nullable;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
 import com.depth.learningcrew.domain.studygroup.service.StudyGroupService;
@@ -32,6 +42,7 @@ public class StudyGroupController {
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
       @PageableDefault @ParameterObject Pageable pageable,
       @AuthenticationPrincipal UserDetails userDetails) {
+
     return studyGroupService.paginateMyOwnedStudyGroups(searchConditions, userDetails, pageable);
   }
 
@@ -41,6 +52,7 @@ public class StudyGroupController {
       @PathVariable Long groupId,
       @Valid @ModelAttribute @ParameterObject StudyGroupDto.StudyGroupUpdateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
+
     return studyGroupService.updateStudyGroup(groupId, request, userDetails);
   }
 
@@ -49,17 +61,19 @@ public class StudyGroupController {
   @ApiResponse(responseCode = "200", description = "스터디 그룹 조회 성공")
   public StudyGroupDto.StudyGroupDetailResponse getStudyGroup(
       @PathVariable Long id,
-      @AuthenticationPrincipal UserDetails userDetails) {
+      @AuthenticationPrincipal @Nullable UserDetails userDetails) {
+
     return studyGroupService.getStudyGroupDetail(id, userDetails);
   }
 
+  @NoJwtAuth
   @GetMapping
   @Operation(summary = "전체 스터디 그룹 목록 조회", description = "조건에 맞는 모든 스터디 그룹을 페이지네이션하여 조회합니다.")
   public PagedModel<StudyGroupDto.StudyGroupResponse> getAllStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
-      @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
-      @AuthenticationPrincipal UserDetails userDetails
-  ) {
+      @PageableDefault @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
     return studyGroupService.paginateAllStudyGroups(searchConditions, userDetails, pageable);
   }
 
@@ -70,15 +84,17 @@ public class StudyGroupController {
   public StudyGroupDto.StudyGroupDetailResponse createStudyGroup(
       @ModelAttribute @ParameterObject StudyGroupDto.StudyGroupCreateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
+
     return studyGroupService.createStudyGroup(request, userDetails);
   }
 
   @GetMapping("my/membered")
   @Operation(summary = "내가 가입한 스터디 그룹 목록 조회", description = "가입한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
   public PagedModel<StudyGroupDto.StudyGroupResponse> getMyMemberedStudyGroups(
-          @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
-          @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
-          @AuthenticationPrincipal UserDetails userDetails) {
+      @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
+      @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
     return studyGroupService.paginateMyMemberedStudyGroups(searchConditions, userDetails, pageable);
   }
 
@@ -87,8 +103,9 @@ public class StudyGroupController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @ApiResponse(responseCode = "204", description = "스터디 그룹 폐쇄 성공")
   public void deleteStudyGroup(
-          @PathVariable Long id,
-          @AuthenticationPrincipal UserDetails userDetails) {
+      @PathVariable Long id,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
     studyGroupService.deleteStudyGroup(id, userDetails);
   }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -40,9 +41,8 @@ public class AuthDto {
         @Schema(description = "사용자 생년월일", example = "yyyy-mm-dd")
         private LocalDate birthday;
 
-        // TODO: AttachedFile Entity 구현 이후 주석 해제
-        // @Schema(description = "프로필 이미지 정보")
-        // private AttachedFile profileImage;
+         @Schema(description = "프로필 이미지 정보")
+         private MultipartFile profileImage;
 
         @NotNull(message = "성별을 입력해주세요.")
         @Schema(

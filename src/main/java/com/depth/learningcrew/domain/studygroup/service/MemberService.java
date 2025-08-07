@@ -55,11 +55,29 @@ public class MemberService {
     User userToExpel = userRepository.findById(userId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-    cannotExpelIfNotOwner(userDetails, studyGroup, userToExpel);
-    cannotExpelOwner(userDetails, studyGroup, userToExpel);
+    cannotExpelIfYouAreNotOwner(userDetails, studyGroup, userToExpel);
+    cannotExpelToOwner(userDetails, studyGroup, userToExpel);
 
     Member member = memberRepository.findById_UserAndId_StudyGroup(userToExpel, studyGroup)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    memberRepository.delete(member);
+
+    // 멤버 수 감소
+    studyGroup.decreaseMemberCount();
+  }
+
+  @Transactional
+  public void leaveMember(Long groupId, UserDetails userDetails) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    User user = userDetails.getUser();
+
+    cannotLeaveIfOwner(user, studyGroup);
+
+    Member member = memberRepository.findById_UserAndId_StudyGroup(user, studyGroup)
+        .orElseThrow(() -> new RestException(ErrorCode.AUTH_FORBIDDEN));
 
     memberRepository.delete(member);
 
@@ -73,16 +91,22 @@ public class MemberService {
     }
   }
 
-  private void cannotExpelIfNotOwner(UserDetails userDetails, StudyGroup studyGroup, User userToExpel) {
+  private void cannotExpelIfYouAreNotOwner(UserDetails userDetails, StudyGroup studyGroup, User userToExpel) {
     // owner가 아닌 경우 추방 불가
     if (!studyGroup.getOwner().getId().equals(userDetails.getUser().getId())) {
       throw new RestException(ErrorCode.AUTH_FORBIDDEN);
     }
   }
 
-  private void cannotExpelOwner(UserDetails userDetails, StudyGroup studyGroup, User userToExpel) {
+  private void cannotExpelToOwner(UserDetails userDetails, StudyGroup studyGroup, User userToExpel) {
     if (studyGroup.getOwner().getId().equals(userToExpel.getId())) {
       throw new RestException(ErrorCode.STUDY_GROUP_OWNER_CANNOT_BE_EXPELLED);
+    }
+  }
+
+  private void cannotLeaveIfOwner(User user, StudyGroup studyGroup) {
+    if (studyGroup.getOwner().getId().equals(user.getId())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
     }
   }
 }

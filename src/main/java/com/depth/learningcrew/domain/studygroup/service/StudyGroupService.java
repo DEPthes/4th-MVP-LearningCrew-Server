@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.depth.learningcrew.domain.studygroup.entity.*;
 import com.depth.learningcrew.domain.studygroup.repository.*;
+import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -80,11 +81,13 @@ public class StudyGroupService {
   @Transactional(readOnly = true)
   public StudyGroupDto.StudyGroupDetailResponse getStudyGroupDetail(
       Long groupId,
-      UserDetails user) {
+      @Nullable UserDetails user
+  ) {
     StudyGroup studyGroup = studyGroupQueryRepository.findDetailById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-    boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
+    // user가 null이면 false, 아니면 dibs 여부 확인
+    Boolean dibs = user != null && dibsRepository.existsById_UserAndId_StudyGroup(user.getUser(), studyGroup);
     return StudyGroupDto.StudyGroupDetailResponse.from(studyGroup, dibs);
   }
 

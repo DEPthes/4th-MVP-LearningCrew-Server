@@ -2,12 +2,7 @@ package com.depth.learningcrew.domain.auth.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.service.AuthService;
@@ -38,7 +33,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponse(responseCode = "200", description = "회원가입 성공")
-    public UserDto.UserResponse signUp(@RequestBody @Valid AuthDto.SignUpRequest request) {
+    public UserDto.UserResponse signUp(@ModelAttribute @Valid AuthDto.SignUpRequest request) {
         return authService.signUp(request);
     }
 
