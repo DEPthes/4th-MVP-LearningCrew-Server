@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,5 +69,30 @@ public class GroupCategoryService {
         request.applyTo(groupCategory);
 
         return GroupCategoryDto.GroupCategoryUpdateResponse.from(groupCategory);
+    }
+
+    @Transactional
+    public GroupCategoryDto.GroupCategoryResponse createGroupCategory(
+            GroupCategoryDto.GroupCategoryCreateRequest request,
+            UserDetails userDetails) {
+        cannotCreateWhenAlreadyExists(request.getName());
+
+        if(!userDetails.getUser().getRole().equals(Role.ADMIN)) {
+            throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+        }
+
+        GroupCategory groupCategory = GroupCategory.builder()
+                .name(request.getName())
+                .build();
+
+        GroupCategory savedCategory = groupCategoryRepository.save(groupCategory);
+
+        return GroupCategoryDto.GroupCategoryResponse.from(savedCategory);
+    }
+
+    private void cannotCreateWhenAlreadyExists(String name) {
+        if(groupCategoryRepository.existsByName(name)) {
+            throw new RestException(ErrorCode.GROUP_CATEGORY_ALREADY_EXIST);
+        }
     }
 }
