@@ -39,4 +39,11 @@ public class GroupCategoryController {
             @AuthenticationPrincipal UserDetails userDetails) {
         return groupCategoryService.updateGroupCategory(categoryId, request, userDetails);
     }
+
+    @PostMapping
+    public GroupCategoryDto.GroupCategoryResponse createGroupCategory(
+            @Valid @RequestBody GroupCategoryDto.GroupCategoryCreateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return groupCategoryService.createGroupCategory(request, userDetails);
+    }
 }
