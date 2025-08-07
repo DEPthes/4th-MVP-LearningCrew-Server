@@ -61,6 +61,9 @@ public enum ErrorCode {
     STUDY_GROUP_NOT_CURRENT_STEP(400, "현재 스텝에서는 질문을 생성할 수 없습니다."),
     STUDY_GROUP_NOT_MEMBER(400, "스터디 그룹의 멤버가 아닙니다."),
 
+    // Group Category
+    GROUP_CATEGORY_ALREADY_EXIST(400, "중복되는 카테고리명입니다."),
+
     // Q&A
     QANDA_NOT_FOUND(404, "질문을 찾을 수 없습니다."),
     QANDA_NOT_AUTHORIZED(403, "질문을 수정할 권한이 없습니다."),
