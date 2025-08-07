@@ -64,4 +64,12 @@ public class GroupCategoryDto {
                     .build();
         }
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class GroupCategoryCreateRequest {
+        private String name;
+    }
 }
