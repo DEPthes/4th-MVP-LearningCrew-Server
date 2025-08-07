@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.depth.learningcrew.domain.studygroup.dto.MemberDto;
 import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.user.entity.User;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -22,6 +23,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberQueryRepository {
   private final JPAQueryFactory queryFactory;
+
+  public boolean isMember(StudyGroup studyGroup, User user) {
+    return queryFactory
+        .selectFrom(member)
+        .where(member.id.studyGroup.eq(studyGroup), member.id.user.eq(user))
+        .fetchOne() != null;
+  }
 
   public Page<MemberDto.MemberResponse> paginateStudyGroupMembers(
       StudyGroup studyGroup,
