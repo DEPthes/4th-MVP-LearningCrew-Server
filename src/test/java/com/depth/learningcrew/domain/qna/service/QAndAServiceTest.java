@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.qna.dto.QAndADto;
+import com.depth.learningcrew.domain.qna.entity.Comment;
 import com.depth.learningcrew.domain.qna.entity.QAndA;
 import com.depth.learningcrew.domain.qna.repository.QAndARepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
@@ -58,6 +60,7 @@ class QAndAServiceTest {
   private UserDetails testUserDetails;
   private StudyGroup testStudyGroup;
   private QAndA testQAndA;
+  private QAndA anotherQAndA;
   private QAndADto.QAndACreateRequest createRequest;
 
   @BeforeEach
@@ -106,6 +109,21 @@ class QAndAServiceTest {
         .lastModifiedBy(testUser)
         .attachedFiles(new java.util.ArrayList<>())
         .attachedImages(new java.util.ArrayList<>())
+        .build();
+
+    anotherQAndA = QAndA.builder()
+        .id(2L)
+        .title("다른 질문")
+        .content("다른 질문 내용")
+        .step(1)
+        .studyGroup(testStudyGroup)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .createdBy(testUser)
+        .lastModifiedBy(testUser)
+        .attachedFiles(new java.util.ArrayList<>())
+        .attachedImages(new java.util.ArrayList<>())
+        .comments(new java.util.ArrayList<>())
         .build();
 
     // 테스트 요청 DTO 설정
@@ -492,5 +510,65 @@ class QAndAServiceTest {
     verify(fileHandler, times(1)).saveFile(eq(newFile), any());
     verify(fileHandler, times(1)).saveFile(eq(newImage), any());
     assertThat(result).isNotNull();
+  }
+
+  @Test
+  @DisplayName("질문 삭제 성공 시 첨부파일/이미지 및 댓글 이미지까지 파일 삭제 호출")
+  void deleteQAndA_ShouldDeleteFilesAndCommentImages() {
+    // given
+    var file = com.depth.learningcrew.domain.file.entity.QAndAAttachedFile.builder()
+        .uuid("file-uuid-1").fileName("file1.txt").build();
+    var image = com.depth.learningcrew.domain.file.entity.QAndAImageFile.builder()
+        .uuid("img-uuid-1").fileName("img1.jpg").build();
+    testQAndA.getAttachedFiles().add(file);
+    testQAndA.getAttachedImages().add(image);
+
+    Comment comment = Comment.builder().content("c").build();
+    var cimg = com.depth.learningcrew.domain.file.entity.CommentImageFile.builder()
+        .uuid("cimg-1").fileName("cimg.png").build();
+    comment.addAttachedImage(cimg);
+    testQAndA.addComment(comment);
+
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when
+    qAndAService.deleteQAndA(1L, testUserDetails);
+
+    // then
+    verify(fileHandler, times(1)).deleteFile(file);
+    verify(fileHandler, times(1)).deleteFile(image);
+    verify(fileHandler, times(1)).deleteFile(cimg);
+    verify(qAndARepository, times(1)).delete(testQAndA);
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 질문 삭제 시 예외 발생")
+  void deleteQAndA_NotFound_ShouldThrow() {
+    // given
+    when(qAndARepository.findById(999L)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.deleteQAndA(999L, testUserDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_FOUND);
+
+    verify(qAndARepository, never()).delete(any());
+  }
+
+  @Test
+  @DisplayName("권한 없는 사용자 삭제 시 예외 발생")
+  void deleteQAndA_Unauthorized_ShouldThrow() {
+    // given: 다른 사용자 생성
+    User otherUser = User.builder().id(2L).role(Role.USER).build();
+    UserDetails otherDetails = UserDetails.builder().user(otherUser).build();
+
+    when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
+
+    // when & then
+    assertThatThrownBy(() -> qAndAService.deleteQAndA(1L, otherDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_AUTHORIZED);
+
+    verify(qAndARepository, never()).delete(any());
   }
 }
