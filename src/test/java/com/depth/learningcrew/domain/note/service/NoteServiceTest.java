@@ -154,7 +154,7 @@ public class NoteServiceTest {
     }
 
     @Test
-    @DisplayName("현재 단계가 아니면 예외가 발생한다")
+    @DisplayName("현재 스텝이 아니면 예외가 발생한다")
     void createNote_fail_whenNotCurrentStep() throws Exception {
         // given
         StudyGroup notCurrent = StudyGroup.builder()
@@ -178,7 +178,7 @@ public class NoteServiceTest {
     }
 
     @Test
-    @DisplayName("멤버이며 현재 스텝이고, 파일/이미지가 포함되면 파일 저장이 호출되고 노트에 첨부가 반영된다")
+    @DisplayName("스터디그룹의 멤버이며 현재 스텝이고 파일/이미지가 포함되면 첨부가 저장된다")
     void createNote_success_withFilesAndImages() {
         // given
         when(studyGroupRepository.findById(groupId)).thenReturn(Optional.of(studyGroup));
