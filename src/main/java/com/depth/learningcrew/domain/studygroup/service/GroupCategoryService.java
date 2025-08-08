@@ -62,7 +62,7 @@ public class GroupCategoryService {
             GroupCategoryDto.GroupCategoryUpdateRequest request,
             UserDetails userDetails) {
         GroupCategory groupCategory = groupCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+                .orElseThrow(() -> new RestException(ErrorCode.GROUP_CATEGORY_NOT_FOUND));
 
         groupCategory.canUpdateBy(userDetails);
 
@@ -94,5 +94,17 @@ public class GroupCategoryService {
         if(groupCategoryRepository.existsByName(name)) {
             throw new RestException(ErrorCode.GROUP_CATEGORY_ALREADY_EXIST);
         }
+    }
+
+    @Transactional
+    public void deleteGroupCategory(
+            Integer categoryId,
+            UserDetails user) {
+        GroupCategory groupCategory = groupCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RestException(ErrorCode.GROUP_CATEGORY_NOT_FOUND));
+
+        groupCategory.canDeleteBy(user);
+
+        groupCategoryRepository.delete(groupCategory);
     }
 }
