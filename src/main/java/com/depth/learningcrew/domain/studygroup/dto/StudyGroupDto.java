@@ -320,6 +320,19 @@ public class StudyGroupDto {
 
         @Schema(description = "각 단계 종료일 리스트")
         private List<LocalDate> steps;
+
+        public StudyGroup toEntity() {
+            return StudyGroup.builder()
+                    .name(name)
+                    .summary(summary)
+                    .maxMembers(maxMembers)
+                    .memberCount(1) // 초기 멤버 수는 1로 설정 (주최자 포함)
+                    .currentStep(1) // 초기 스텝은 1로 설정
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .content("") // 초기 내용은 빈 문자열
+                    .build();
+        }
     }
 
 }

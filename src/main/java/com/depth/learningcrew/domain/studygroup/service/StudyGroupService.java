@@ -116,40 +116,24 @@ public class StudyGroupService {
 
     User owner = user.getUser();
 
-    StudyGroup studyGroup = StudyGroup.builder()
-        .name(request.getName())
-        .summary(request.getSummary())
-        .maxMembers(request.getMaxMembers())
-        .memberCount(1)
-        .currentStep(1)
-        .startDate(request.getStartDate())
-        .endDate(request.getEndDate())
-        .owner(owner)
-        .content("")
-        .build();
-
-    // 카테고리 처리
-    if (request.getCategories() != null) {
-      List<GroupCategory> categories = groupCategoryService.findOrCreateByNames(request.getCategories());
-      for (GroupCategory category : categories) {
-        studyGroup.addCategory(category);
-      }
-    }
-
-    // 이미지 파일 처리
-    if (request.getGroupImage() != null && !request.getGroupImage().isEmpty()) {
-      StudyGroupImage image = StudyGroupImage.from(request.getGroupImage(), studyGroup);
-      fileHandler.saveFile(request.getGroupImage(), image);
-      studyGroup.setStudyGroupImage(image);
-    }
-
+    StudyGroup studyGroup = request.toEntity();
+    studyGroup.setOwner(owner);
+    
+    saveStudygroupImageFile(request, studyGroup);
+    saveCateogires(request, studyGroup);
+    
     StudyGroup savedGroup = studyGroupRepository.save(studyGroup);
 
     MemberId memberId = MemberId.of(owner, savedGroup);
     Member member = new Member(memberId);
     memberRepository.save(member);
+    
+    saveIncludedSteps(request, savedGroup);
 
-    // Step 저장
+    return StudyGroupDto.StudyGroupDetailResponse.from(savedGroup, false);
+  }
+
+  private static void saveIncludedSteps(StudyGroupDto.StudyGroupCreateRequest request, StudyGroup savedGroup) {
     if (request.getSteps() != null) {
       int stepNumber = 1;
       for (LocalDate endDate : request.getSteps()) {
@@ -165,8 +149,23 @@ public class StudyGroupService {
         savedGroup.getSteps().add(step);
       }
     }
+  }
 
-    return StudyGroupDto.StudyGroupDetailResponse.from(savedGroup, false);
+  private void saveCateogires(StudyGroupDto.StudyGroupCreateRequest request, StudyGroup studyGroup) {
+    if (request.getCategories() != null) {
+      List<GroupCategory> categories = groupCategoryService.findOrCreateByNames(request.getCategories());
+      for (GroupCategory category : categories) {
+        studyGroup.addCategory(category);
+      }
+    }
+  }
+
+  private void saveStudygroupImageFile(StudyGroupDto.StudyGroupCreateRequest request, StudyGroup studyGroup) {
+    if (request.getGroupImage() != null && !request.getGroupImage().isEmpty()) {
+      StudyGroupImage image = StudyGroupImage.from(request.getGroupImage(), studyGroup);
+      fileHandler.saveFile(request.getGroupImage(), image);
+      studyGroup.setStudyGroupImage(image);
+    }
   }
 
   @Transactional(readOnly = true)
