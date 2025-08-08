@@ -51,6 +51,8 @@ public class GroupCategoryController {
     }
 
     @DeleteMapping("/{categoryId}")
+    @Operation(summary = "카테고리 삭제", description = "admin만 카테고리를 삭제할 수 있습니다. 해당 카테고리를 삭제합니다.")
+    @ApiResponse(responseCode = "204", description = "카테고리 삭제 성공")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteGroupCategory(
             @PathVariable Integer categoryId,
