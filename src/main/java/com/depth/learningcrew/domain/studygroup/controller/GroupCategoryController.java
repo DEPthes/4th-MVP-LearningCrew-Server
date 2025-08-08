@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -49,5 +48,13 @@ public class GroupCategoryController {
             @Valid @RequestBody GroupCategoryDto.GroupCategoryCreateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         return groupCategoryService.createGroupCategory(request, userDetails);
+    }
+
+    @DeleteMapping("/{categoryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGroupCategory(
+            @PathVariable Integer categoryId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        groupCategoryService.deleteGroupCategory(categoryId, userDetails);
     }
 }
