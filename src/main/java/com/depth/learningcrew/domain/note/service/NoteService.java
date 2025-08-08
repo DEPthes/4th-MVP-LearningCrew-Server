@@ -7,10 +7,8 @@ import com.depth.learningcrew.domain.note.dto.NoteDto;
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -27,7 +25,6 @@ import java.util.List;
 public class NoteService {
 
     private final StudyGroupRepository studyGroupRepository;
-    private final StudyStepRepository studyStepRepository;
     private final MemberRepository memberRepository;
     private final NoteRepository noteRepository;
     private final FileHandler fileHandler;

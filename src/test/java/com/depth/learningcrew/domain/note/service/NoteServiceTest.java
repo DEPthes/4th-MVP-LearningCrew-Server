@@ -7,11 +7,8 @@ import com.depth.learningcrew.domain.note.dto.NoteDto;
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
-import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
@@ -33,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
@@ -155,7 +151,7 @@ public class NoteServiceTest {
 
     @Test
     @DisplayName("현재 스텝이 아니면 예외가 발생한다")
-    void createNote_fail_whenNotCurrentStep() throws Exception {
+    void createNote_fail_whenNotCurrentStep() {
         // given
         StudyGroup notCurrent = StudyGroup.builder()
                 .id(groupId)
