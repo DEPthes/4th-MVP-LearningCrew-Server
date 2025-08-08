@@ -47,4 +47,12 @@ public class GroupCategory {
 
         throw new RestException(ErrorCode.AUTH_FORBIDDEN);
     }
+
+    public void canDeleteBy(UserDetails user) {
+        if(user.getUser().getRole().equals(Role.ADMIN)) {
+            return;
+        }
+
+        throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
 }

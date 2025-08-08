@@ -63,6 +63,7 @@ public enum ErrorCode {
 
     // Group Category
     GROUP_CATEGORY_ALREADY_EXIST(400, "중복되는 카테고리명입니다."),
+    GROUP_CATEGORY_NOT_FOUND(404, "그룹 카테고리를 찾을 수 없습니다."),
 
     // Q&A
     QANDA_NOT_FOUND(404, "질문을 찾을 수 없습니다."),
