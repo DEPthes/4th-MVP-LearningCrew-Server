@@ -2,6 +2,7 @@ package com.depth.learningcrew.domain.qna.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,14 +22,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/study-groups")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "Q&A", description = "질문과 답변 API")
 public class QAndAController {
 
   private final QAndAService qAndAService;
 
-  @PostMapping(value = "/{groupId}/steps/{stepId}/questions")
+  @PostMapping(value = "/study-groups/{groupId}/steps/{stepId}/questions")
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "질문 생성", description = "특정 스터디 그룹의 스텝에 질문을 생성합니다.")
   public QAndADto.QAndAResponse createQAndA(
@@ -40,7 +41,7 @@ public class QAndAController {
     return qAndAService.createQAndA(request, groupId, stepId, user);
   }
 
-  @PatchMapping(value = "/{studyGroupId}/qna/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PatchMapping(value = "/study-groups/{studyGroupId}/qna/{qnaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "질문 수정", description = "스터디 그룹의 질문을 수정합니다. 질문 작성자 또는 스터디 그룹 주최자만 수정할 수 있습니다.")
   public QAndADto.QAndAUpdateResponse updateQAndA(
       @Parameter(description = "스터디 그룹 ID", example = "1") @PathVariable Long studyGroupId,
@@ -49,5 +50,15 @@ public class QAndAController {
       @Parameter(hidden = true) UserDetails user) {
 
     return qAndAService.updateQAndA(studyGroupId, qnaId, request, user);
+  }
+
+  @DeleteMapping(value = "/qna/{qnaId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "질문 삭제", description = "스터디 그룹의 질문을 삭제합니다. 질문 작성자 또는 스터디 그룹 주최자만 삭제할 수 있습니다.")
+  public void deleteQAndA(
+      @Parameter(description = "질문 ID", example = "42") @PathVariable Long qnaId,
+      @Parameter(hidden = true) UserDetails user) {
+
+    qAndAService.deleteQAndA(qnaId, user);
   }
 }

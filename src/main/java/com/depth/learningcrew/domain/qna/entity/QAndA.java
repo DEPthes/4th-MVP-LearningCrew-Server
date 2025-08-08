@@ -118,4 +118,23 @@ public class QAndA extends UserStampedEntity {
 
     throw new RestException(ErrorCode.QANDA_NOT_AUTHORIZED);
   }
+
+  public void canDeleteBy(User user) {
+    // 관리자는 모든 질문을 삭제할 수 있음
+    if (user.getRole().equals(Role.ADMIN)) {
+      return;
+    }
+
+    // 질문 작성자는 자신의 질문을 삭제할 수 있음
+    if (this.getCreatedBy().getId().equals(user.getId())) {
+      return;
+    }
+
+    // 스터디 그룹 주최자는 그룹 내 질문을 삭제할 수 있음
+    if (this.studyGroup.getOwner().getId().equals(user.getId())) {
+      return;
+    }
+
+    throw new RestException(ErrorCode.QANDA_NOT_AUTHORIZED);
+  }
 }

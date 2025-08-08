@@ -55,6 +55,61 @@ public class QAndAService {
     return QAndADto.QAndAResponse.from(saved);
   }
 
+  @Transactional
+  public QAndADto.QAndAUpdateResponse updateQAndA(
+      Long studyGroupId,
+      Long qnaId,
+      QAndADto.QAndAUpdateRequest request,
+      UserDetails user) {
+
+    QAndA qAndA = qAndARepository.findById(qnaId)
+        .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    // 권한 검사
+    qAndA.canUpdateBy(user.getUser());
+
+    // 제목과 내용 업데이트
+    if (request.getTitle() != null) {
+      qAndA.setTitle(request.getTitle());
+    }
+    if (request.getContent() != null) {
+      qAndA.setContent(request.getContent());
+    }
+
+    // 기존 파일 삭제
+    deleteAttachedFiles(request.getDeletedAttachedFiles(), qAndA);
+    deleteAttachedImages(request.getDeletedAttachedImages(), qAndA);
+
+    // 새 파일 추가
+    saveNewAttachedFiles(request.getNewAttachedFiles(), qAndA);
+    saveNewAttachedImages(request.getNewAttachedImages(), qAndA);
+
+    return QAndADto.QAndAUpdateResponse.from(qAndA);
+  }
+
+  @Transactional
+  public void deleteQAndA(Long qnaId, UserDetails user) {
+    QAndA qAndA = qAndARepository.findById(qnaId)
+        .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    qAndA.canDeleteBy(user.getUser());
+
+    deleteAllRelatedFiles(qAndA);
+    qAndARepository.delete(qAndA);
+  }
+
+  private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
+    if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
+      throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
+    }
+  }
+
+  private void cannotCreateWhenNotMember(StudyGroup studyGroup, UserDetails user) {
+    if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+      throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
+    }
+  }
+
   private void deleteAttachedFiles(List<String> fileIds, QAndA qAndA) {
     if (fileIds != null && !fileIds.isEmpty()) {
       fileIds.forEach(fileId -> {
@@ -107,50 +162,6 @@ public class QAndAService {
     }
   }
 
-  @Transactional
-  public QAndADto.QAndAUpdateResponse updateQAndA(
-      Long studyGroupId,
-      Long qnaId,
-      QAndADto.QAndAUpdateRequest request,
-      UserDetails user) {
-
-    QAndA qAndA = qAndARepository.findById(qnaId)
-        .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
-
-    // 권한 검사
-    qAndA.canUpdateBy(user.getUser());
-
-    // 제목과 내용 업데이트
-    if (request.getTitle() != null) {
-      qAndA.setTitle(request.getTitle());
-    }
-    if (request.getContent() != null) {
-      qAndA.setContent(request.getContent());
-    }
-
-    // 기존 파일 삭제
-    deleteAttachedFiles(request.getDeletedAttachedFiles(), qAndA);
-    deleteAttachedImages(request.getDeletedAttachedImages(), qAndA);
-
-    // 새 파일 추가
-    saveNewAttachedFiles(request.getNewAttachedFiles(), qAndA);
-    saveNewAttachedImages(request.getNewAttachedImages(), qAndA);
-
-    return QAndADto.QAndAUpdateResponse.from(qAndA);
-  }
-
-  private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
-    if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
-      throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
-    }
-  }
-
-  private void cannotCreateWhenNotMember(StudyGroup studyGroup, UserDetails user) {
-    if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
-      throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
-    }
-  }
-
   private void saveAttachedFiles(List<MultipartFile> files, QAndA qAndA) {
     if (files != null && !files.isEmpty()) {
       files.forEach(file -> {
@@ -173,4 +184,22 @@ public class QAndAService {
     }
   }
 
+  private void deleteAllRelatedFiles(QAndA qAndA) {
+    // 질문 첨부 파일 삭제
+    if (qAndA.getAttachedFiles() != null) {
+      qAndA.getAttachedFiles().forEach(fileHandler::deleteFile);
+    }
+    if (qAndA.getAttachedImages() != null) {
+      qAndA.getAttachedImages().forEach(fileHandler::deleteFile);
+    }
+
+    // 댓글 첨부 이미지 삭제
+    if (qAndA.getComments() != null) {
+      qAndA.getComments().forEach(comment -> {
+        if (comment.getAttachedImages() != null) {
+          comment.getAttachedImages().forEach(fileHandler::deleteFile);
+        }
+      });
+    }
+  }
 }
