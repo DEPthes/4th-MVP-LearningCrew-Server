@@ -60,6 +60,7 @@ public enum ErrorCode {
     STUDY_GROUP_OWNER_CANNOT_BE_EXPELLED(400, "스터디 그룹의 소유자는 추방할 수 없습니다."),
     STUDY_GROUP_NOT_CURRENT_STEP(400, "현재 스텝에서는 질문을 생성할 수 없습니다."),
     STUDY_GROUP_NOT_MEMBER(400, "스터디 그룹의 멤버가 아닙니다."),
+    STUDY_GROUP_STEP_NOT_WRITABLE(400, "현재 진행 중인 스텝에서만 작성할 수 있습니다."),
 
     // Group Category
     GROUP_CATEGORY_ALREADY_EXIST(400, "중복되는 카테고리명입니다."),
