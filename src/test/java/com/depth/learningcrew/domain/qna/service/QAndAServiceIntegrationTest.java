@@ -201,7 +201,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -233,7 +233,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, ownerDetails);
 
                 // then
@@ -306,7 +306,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -333,7 +333,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -360,7 +360,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -387,7 +387,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -426,7 +426,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -461,7 +461,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -507,7 +507,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -552,7 +552,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -575,7 +575,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when & then - 예외가 발생하지 않아야 함
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 assertThat(result).isNotNull();
@@ -624,7 +624,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -650,7 +650,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
@@ -674,7 +674,7 @@ class QAndAServiceIntegrationTest {
                                 .build();
 
                 // when
-                QAndADto.QAndAUpdateResponse result = qAndAService.updateQAndA(
+                QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(
                                 studyGroupId, qnaId, request, questionAuthorDetails);
 
                 // then
