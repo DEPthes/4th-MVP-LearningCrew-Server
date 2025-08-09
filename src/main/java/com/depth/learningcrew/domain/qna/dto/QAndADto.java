@@ -91,6 +91,18 @@ public class QAndADto {
     @Schema(description = "첨부 이미지 개수", example = "1")
     private Integer attachedImages;
 
+    @Schema(description = "생성일시", example = "2025-08-06T20:00:00Z")
+    private String createdAt;
+
+    @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
+    private String lastModifiedAt;
+
+    @Schema(description = "작성자 정보")
+    private UserDto.UserResponse createdBy;
+
+    @Schema(description = "수정자 정보")
+    private UserDto.UserResponse lastModifiedBy;
+
     public static QAndAResponse from(QAndA entity) {
       return QAndAResponse.builder()
           .id(entity.getId())
@@ -98,6 +110,10 @@ public class QAndADto {
           .title(entity.getTitle())
           .attachedFiles(entity.getAttachedFiles().size())
           .attachedImages(entity.getAttachedImages().size())
+          .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
+          .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
+          .createdAt(entity.getCreatedAt().toString())
+          .lastModifiedAt(entity.getLastModifiedAt().toString())
           .build();
     }
   }
@@ -129,43 +145,6 @@ public class QAndADto {
     @Schema(description = "첨부 이미지 목록")
     private List<FileDto.FileResponse> attachedImages;
 
-    public static QAndADetailResponse from(QAndA entity) {
-      return QAndADetailResponse.builder()
-          .id(entity.getId())
-          .step(entity.getStep())
-          .title(entity.getTitle())
-          .content(entity.getContent())
-          .comments(entity.getComments().stream().map(CommentDto.CommentResponse::from).toList())
-          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
-          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
-          .build();
-    }
-  }
-
-  @AllArgsConstructor
-  @NoArgsConstructor
-  @Data
-  @Builder
-  @Schema(description = "질문 수정 응답 DTO")
-  public static class QAndAUpdateResponse {
-    @Schema(description = "질문 ID", example = "42")
-    private Long id;
-
-    @Schema(description = "스터디 스텝 번호", example = "1")
-    private Integer step;
-
-    @Schema(description = "질문 제목", example = "수정된 질문 제목")
-    private String title;
-
-    @Schema(description = "질문 내용", example = "수정된 질문 내용")
-    private String content;
-
-    @Schema(description = "첨부 파일 목록")
-    private List<FileDto.FileResponse> attachedFiles;
-
-    @Schema(description = "첨부 이미지 목록")
-    private List<FileDto.FileResponse> attachedImages;
-
     @Schema(description = "작성자 정보")
     private UserDto.UserResponse createdBy;
 
@@ -178,12 +157,13 @@ public class QAndADto {
     @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
     private String lastModifiedAt;
 
-    public static QAndAUpdateResponse from(QAndA entity) {
-      return QAndAUpdateResponse.builder()
+    public static QAndADetailResponse from(QAndA entity) {
+      return QAndADetailResponse.builder()
           .id(entity.getId())
           .step(entity.getStep())
           .title(entity.getTitle())
           .content(entity.getContent())
+          .comments(entity.getComments().stream().map(CommentDto.CommentResponse::from).toList())
           .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))

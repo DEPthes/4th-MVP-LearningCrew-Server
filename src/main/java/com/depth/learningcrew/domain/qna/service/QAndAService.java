@@ -32,7 +32,7 @@ public class QAndAService {
   private final FileHandler fileHandler;
 
   @Transactional
-  public QAndADto.QAndAResponse createQAndA(
+  public QAndADto.QAndADetailResponse createQAndA(
       QAndADto.QAndACreateRequest request,
       Long studyGroupId,
       Integer step,
@@ -52,11 +52,11 @@ public class QAndAService {
     saveAttachedFiles(request.getAttachedFiles(), saved);
     saveAttachedImages(request.getAttachedImages(), saved);
 
-    return QAndADto.QAndAResponse.from(saved);
+    return QAndADto.QAndADetailResponse.from(saved);
   }
 
   @Transactional
-  public QAndADto.QAndAUpdateResponse updateQAndA(
+  public QAndADto.QAndADetailResponse updateQAndA(
       Long studyGroupId,
       Long qnaId,
       QAndADto.QAndAUpdateRequest request,
@@ -84,7 +84,7 @@ public class QAndAService {
     saveNewAttachedFiles(request.getNewAttachedFiles(), qAndA);
     saveNewAttachedImages(request.getNewAttachedImages(), qAndA);
 
-    return QAndADto.QAndAUpdateResponse.from(qAndA);
+    return QAndADto.QAndADetailResponse.from(qAndA);
   }
 
   @Transactional
