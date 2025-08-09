@@ -6,6 +6,10 @@ import java.util.List;
 import com.depth.learningcrew.common.auditor.UserStampedEntity;
 import com.depth.learningcrew.domain.file.entity.CommentAttachedFile;
 import com.depth.learningcrew.domain.file.entity.CommentImageFile;
+import com.depth.learningcrew.domain.user.entity.Role;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
+import com.depth.learningcrew.system.security.model.UserDetails;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -76,4 +80,20 @@ public class Comment extends UserStampedEntity {
     this.attachedFiles.remove(attachedFile);
     attachedFile.setComment(null);
   }
+
+  public void canUpdateBy(UserDetails user) {
+
+    // 관리자는 수정 가능
+    if (user.getUser().getRole().equals(Role.ADMIN)) {
+      return;
+    }
+
+    // 작성자 본인은 수정 가능
+    if (this.getCreatedBy() != null && this.getCreatedBy().getId().equals(user.getUser().getId())) {
+      return;
+    }
+
+    throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+  }
+
 }
