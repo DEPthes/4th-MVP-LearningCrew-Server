@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/study-groups/{studyGroupId}/qna/{qnaId}/comments")
 @RequiredArgsConstructor
-@Tag(name = "Q&A Comment", description = "질문에 대한 댓글(답변) API")
+@Tag(name = "Q&A")
 public class CommentController {
 
   private final CommentService commentService;
