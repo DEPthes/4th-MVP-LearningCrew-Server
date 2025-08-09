@@ -7,9 +7,8 @@ import com.depth.learningcrew.domain.note.dto.NoteDto;
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
+import com.depth.learningcrew.domain.studygroup.repository.MemberQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
-import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
@@ -19,58 +18,50 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class NoteService {
 
     private final StudyGroupRepository studyGroupRepository;
-    private final MemberRepository memberRepository;
+    private final MemberQueryRepository memberQueryRepository;
     private final NoteRepository noteRepository;
     private final FileHandler fileHandler;
 
     @Transactional
-    public NoteDto.NoteResponse createNote(Long groupId,
-                                           Integer step,
-                                           NoteDto.NoteCreateRequest request,
-                                           UserDetails userDetails) {
-        User user = userDetails.getUser();
+    public NoteDto.NoteResponse createNote(
+            Long groupId,
+            Integer step,
+            NoteDto.NoteCreateRequest request,
+            UserDetails user) {
 
-        StudyGroup studyGroup = getStudyGroup(groupId);
-        validateStudyGroupMember(user, studyGroup);
-        validateWritableStep(studyGroup, step);
+        StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
 
-        Note note = Note.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .step(step)
-                .studyGroup(studyGroup)
-                .createdBy(user)
-                .lastModifiedBy(user)
-                .build();
+        cannotCreateWhenNotCurrentStep(studyGroup, step);
+        cannotCreateWhenNotMember(studyGroup, user);
 
-        saveNewAttachedFiles(request.getAttachedFiles(), note);
-        saveNewAttachedImages(request.getAttachedImages(), note);
+        Note note = request.toEntity();
+        note.setStep(step);
+        note.setStudyGroup(studyGroup);
 
         Note saved = noteRepository.save(note);
+        saveNewAttachedFiles(request.getAttachedFiles(), saved);
+        saveNewAttachedImages(request.getAttachedImages(), saved);
+
         return NoteDto.NoteResponse.from(saved);
     }
 
-    private StudyGroup getStudyGroup(Long groupId) {
-        return studyGroupRepository.findById(groupId)
-                .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
-    }
-
-    private void validateStudyGroupMember(User user, StudyGroup group) {
-        if (!memberRepository.existsById_UserAndId_StudyGroup(user, group)) {
+    private void cannotCreateWhenNotMember(StudyGroup studyGroup, UserDetails user) {
+        if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
             throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
         }
     }
 
-    private void validateWritableStep(StudyGroup studyGroup, Integer step) {
-        Integer currentStep = studyGroup.getCurrentStep();
-        if (currentStep == null || !currentStep.equals(step)) {
-            throw new RestException(ErrorCode.STUDY_GROUP_STEP_NOT_WRITABLE);
+    private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
+        if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
+            throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
         }
     }
 

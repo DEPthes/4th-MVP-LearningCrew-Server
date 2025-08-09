@@ -30,6 +30,13 @@ public class NoteDto {
 
         @Schema(description = "첨부 이미지 목록")
         private List<MultipartFile> attachedImages;
+
+        public Note toEntity() {
+            return Note.builder()
+                    .title(title)
+                    .content(content)
+                    .build();
+        }
     }
 
     @Builder
