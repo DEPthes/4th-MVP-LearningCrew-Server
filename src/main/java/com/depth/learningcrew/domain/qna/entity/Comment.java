@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.common.auditor.UserStampedEntity;
+import com.depth.learningcrew.domain.file.entity.CommentAttachedFile;
 import com.depth.learningcrew.domain.file.entity.CommentImageFile;
 
 import jakarta.persistence.CascadeType;
@@ -60,5 +61,19 @@ public class Comment extends UserStampedEntity {
   public void removeAttachedImage(CommentImageFile attachedImage) {
     this.attachedImages.remove(attachedImage);
     attachedImage.setComment(null);
+  }
+
+  @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<CommentAttachedFile> attachedFiles = new ArrayList<>();
+
+  public void addAttachedFile(CommentAttachedFile attachedFile) {
+    this.attachedFiles.add(attachedFile);
+    attachedFile.setComment(this);
+  }
+
+  public void removeAttachedFile(CommentAttachedFile attachedFile) {
+    this.attachedFiles.remove(attachedFile);
+    attachedFile.setComment(null);
   }
 }
