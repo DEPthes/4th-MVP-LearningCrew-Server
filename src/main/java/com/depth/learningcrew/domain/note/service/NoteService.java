@@ -47,11 +47,38 @@ public class NoteService {
         note.setStudyGroup(studyGroup);
 
         Note saved = noteRepository.save(note);
-        saveNewAttachedFiles(request.getAttachedFiles(), saved);
-        saveNewAttachedImages(request.getAttachedImages(), saved);
+        saveAttachedFiles(request.getAttachedFiles(), saved);
+        saveAttachedImages(request.getAttachedImages(), saved);
 
         return NoteDto.NoteResponse.from(saved);
     }
+
+    @Transactional
+    public NoteDto.NoteResponse updateNote(
+            Long noteId,
+            NoteDto.NoteUpdateRequest request,
+            UserDetails user) {
+
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new RestException(ErrorCode.NOTE_NOT_FOUND));
+
+        note.canUpdateBy(user.getUser());
+
+        if (request.getTitle() != null) {
+            note.setTitle(request.getTitle());
+        }
+        if (request.getContent() != null) {
+            note.setContent(request.getContent());
+        }
+
+        deleteAttachedFiles(request.getDeletedAttachedFiles(), note);
+        deleteAttachedImages(request.getDeletedAttachedImages(), note);
+        saveAttachedFiles(request.getNewAttachedFiles(), note);
+        saveAttachedImages(request.getNewAttachedImages(), note);
+
+        return NoteDto.NoteResponse.from(note);
+    }
+
 
     private void cannotCreateWhenNotMember(StudyGroup studyGroup, UserDetails user) {
         if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
@@ -65,22 +92,56 @@ public class NoteService {
         }
     }
 
-    private void saveNewAttachedFiles(List<MultipartFile> files, Note note) {
+    private void saveAttachedFiles(List<MultipartFile> files, Note note) {
         if (files != null && !files.isEmpty()) {
             files.forEach(file -> {
+                if (file == null || file.isEmpty()) return;
                 NoteAttachedFile attachedFile = NoteAttachedFile.from(file);
+                if (attachedFile == null) return;
                 note.addAttachedFile(attachedFile);
                 fileHandler.saveFile(file, attachedFile);
             });
         }
     }
 
-    private void saveNewAttachedImages(List<MultipartFile> images, Note note) {
+    private void saveAttachedImages(List<MultipartFile> images, Note note) {
         if (images != null && !images.isEmpty()) {
             images.forEach(image -> {
+                if (image == null || image.isEmpty()) return;
                 NoteImageFile imageFile = NoteImageFile.from(image);
+                if (imageFile == null) return;
                 note.addAttachedImage(imageFile);
                 fileHandler.saveFile(image, imageFile);
+            });
+        }
+    }
+
+    public void deleteAttachedFiles(List<String> fileIds, Note note) {
+        if (fileIds != null && !fileIds.isEmpty()) {
+            fileIds.forEach(fileId -> {
+                NoteAttachedFile attachedFile = note.getAttachedFiles().stream()
+                        .filter(f -> f.getUuid().equals(fileId))
+                        .findFirst()
+                        .orElse(null);
+                if (attachedFile != null) {
+                    note.removeAttachedFile(attachedFile);
+                    fileHandler.deleteFile(attachedFile);
+                }
+            });
+        }
+    }
+
+    public void deleteAttachedImages(List<String> imageIds, Note note) {
+        if (imageIds != null && !imageIds.isEmpty()) {
+            imageIds.forEach(imageId -> {
+                NoteImageFile imageFile = note.getAttachedImages().stream()
+                        .filter(f -> f.getUuid().equals(imageId))
+                        .findFirst()
+                        .orElse(null);
+                if (imageFile != null) {
+                    note.removeAttachedImage(imageFile);
+                    fileHandler.deleteFile(imageFile);
+                }
             });
         }
     }
