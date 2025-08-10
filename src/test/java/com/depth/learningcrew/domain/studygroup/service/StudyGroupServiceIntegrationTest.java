@@ -8,9 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
-import com.depth.learningcrew.domain.studygroup.entity.*;
-import com.depth.learningcrew.domain.studygroup.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +17,25 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
+import com.depth.learningcrew.domain.studygroup.entity.Application;
+import com.depth.learningcrew.domain.studygroup.entity.ApplicationId;
+import com.depth.learningcrew.domain.studygroup.entity.Dibs;
+import com.depth.learningcrew.domain.studygroup.entity.DibsId;
+import com.depth.learningcrew.domain.studygroup.entity.GroupCategory;
+import com.depth.learningcrew.domain.studygroup.entity.Member;
+import com.depth.learningcrew.domain.studygroup.entity.MemberId;
+import com.depth.learningcrew.domain.studygroup.entity.State;
+import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
+import com.depth.learningcrew.domain.studygroup.entity.StudyStepId;
+import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
+import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
+import com.depth.learningcrew.domain.studygroup.repository.GroupCategoryRepository;
+import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyStepRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
@@ -59,7 +74,6 @@ class StudyGroupServiceIntegrationTest {
 
   @Autowired
   private ApplicationRepository applicationRepository;
-
 
   private User owner;
   private User otherUser;
@@ -286,25 +300,24 @@ class StudyGroupServiceIntegrationTest {
   void createStudyGroup_ShouldCreateSuccessfully() {
     // given
     MockMultipartFile groupImage = new MockMultipartFile(
-            "groupImage",
-            "test-image.jpg",
-            "image/jpeg",
-            "dummy image content".getBytes()
-    );
+        "groupImage",
+        "test-image.jpg",
+        "image/jpeg",
+        "dummy image content".getBytes());
 
     StudyGroupDto.StudyGroupCreateRequest request = StudyGroupDto.StudyGroupCreateRequest.builder()
-            .name("새로운 스터디")
-            .summary("스터디 요약")
-            .maxMembers(5)
-            .startDate(LocalDate.of(2025, 8, 10))
-            .endDate(LocalDate.of(2025, 8, 30))
-            .categories(List.of("디자인", "프로그래밍"))
-            .groupImage(groupImage)
-            .steps(List.of(
-                    LocalDate.of(2025, 8, 15),
-                    LocalDate.of(2025, 8, 20)
-            ))
-            .build();
+        .name("새로운 스터디")
+        .summary("스터디 요약")
+        .maxMembers(5)
+        .startDate(LocalDate.of(2025, 8, 1))
+        .endDate(LocalDate.of(2025, 8, 20)) // steps의 마지막 날짜와 일치하도록 수정
+        .categories(List.of("디자인", "프로그래밍"))
+        .groupImage(groupImage)
+        .steps(List.of(
+            LocalDate.of(2025, 8, 15),
+            LocalDate.of(2025, 8, 20) // 마지막 날짜
+        ))
+        .build();
 
     // when
     StudyGroupDto.StudyGroupDetailResponse response = studyGroupService.createStudyGroup(request, ownerDetails);
@@ -339,21 +352,20 @@ class StudyGroupServiceIntegrationTest {
     String newCategory1 = "새로운 카테고리";
 
     StudyGroupDto.StudyGroupCreateRequest request = StudyGroupDto.StudyGroupCreateRequest.builder()
-            .name("새로운 카테고리 스터디")
-            .summary("새로운 카테고리 테스트")
-            .maxMembers(8)
-            .startDate(LocalDate.of(2025, 9, 1))
-            .endDate(LocalDate.of(2025, 9, 30))
-            .categories(List.of(newCategory1))
-            .steps(List.of(
-                    LocalDate.of(2025, 9, 10),
-                    LocalDate.of(2025, 9, 20)
-            ))
-            .build();
+        .name("새로운 카테고리 스터디")
+        .summary("새로운 카테고리 테스트")
+        .maxMembers(8)
+        .startDate(LocalDate.of(2025, 9, 1))
+        .endDate(LocalDate.of(2025, 9, 20)) // steps의 마지막 날짜와 일치하도록 수정
+        .categories(List.of(newCategory1))
+        .steps(List.of(
+            LocalDate.of(2025, 9, 10),
+            LocalDate.of(2025, 9, 20) // 마지막 날짜
+        ))
+        .build();
 
     // when
-    StudyGroupDto.StudyGroupDetailResponse response =
-            studyGroupService.createStudyGroup(request, ownerDetails);
+    StudyGroupDto.StudyGroupDetailResponse response = studyGroupService.createStudyGroup(request, ownerDetails);
 
     // then
     assertThat(response).isNotNull();
@@ -376,33 +388,33 @@ class StudyGroupServiceIntegrationTest {
     // given
     // 찜
     Dibs dibs = Dibs.builder()
-            .id(DibsId.of(owner, studyGroup))
-            .build();
+        .id(DibsId.of(owner, studyGroup))
+        .build();
     entityManager.persist(dibs);
 
     // 멤버
     Member member = Member.builder()
-            .id(MemberId.of(owner, studyGroup))
-            .build();
+        .id(MemberId.of(owner, studyGroup))
+        .build();
     entityManager.persist(member);
 
     // 스텝
     StudyStep step1 = StudyStep.builder()
-            .id(StudyStepId.of(1, studyGroup))
-            .endDate(LocalDate.now().plusDays(1))
-            .build();
+        .id(StudyStepId.of(1, studyGroup))
+        .endDate(LocalDate.now().plusDays(1))
+        .build();
     entityManager.persist(step1);
 
     // 신청
     Application application = Application.builder()
-            .id(ApplicationId.of(otherUser, studyGroup))
-            .state(State.APPROVED)
-            .build();
+        .id(ApplicationId.of(otherUser, studyGroup))
+        .state(State.APPROVED)
+        .build();
     entityManager.persist(application);
 
     Member member2 = Member.builder()
-            .id(MemberId.of(otherUser, studyGroup))
-            .build();
+        .id(MemberId.of(otherUser, studyGroup))
+        .build();
     entityManager.persist(member2);
 
     entityManager.flush();
