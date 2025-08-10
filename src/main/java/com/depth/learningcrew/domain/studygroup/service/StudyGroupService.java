@@ -116,27 +116,61 @@ public class StudyGroupService {
 
     User owner = user.getUser();
 
+    cannotCreateWithInvalidateSteps(request);
+
     StudyGroup studyGroup = request.toEntity();
     studyGroup.setOwner(owner);
-    
+
     saveStudygroupImageFile(request, studyGroup);
     saveCateogires(request, studyGroup);
-    
+
     StudyGroup savedGroup = studyGroupRepository.save(studyGroup);
 
     MemberId memberId = MemberId.of(owner, savedGroup);
     Member member = new Member(memberId);
     memberRepository.save(member);
-    
+
     saveIncludedSteps(request, savedGroup);
 
     return StudyGroupDto.StudyGroupDetailResponse.from(savedGroup, false);
   }
 
+  private void cannotCreateWithInvalidateSteps(StudyGroupDto.StudyGroupCreateRequest request) {
+    if (request.getSteps() == null || request.getSteps().isEmpty()) {
+      return;
+    }
+
+    // 1. 중복된 일자가 있는지 확인 (먼저 체크)
+    if (request.getSteps().size() != request.getSteps().stream().distinct().count()) {
+      throw new RestException(ErrorCode.STUDY_GROUP_STEP_DUPLICATE_DATE);
+    }
+
+    // 2. steps 리스트를 일자별로 정렬
+    List<LocalDate> sortedSteps = request.getSteps().stream()
+        .sorted()
+        .toList();
+
+    // 3. step의 마지막 일자와 endDate가 일치하는지 확인
+    LocalDate lastStepDate = sortedSteps.get(sortedSteps.size() - 1);
+    if (request.getEndDate() != null && !lastStepDate.equals(request.getEndDate())) {
+      throw new RestException(ErrorCode.STUDY_GROUP_STEP_END_DATE_MISMATCH);
+    }
+
+    // 4. endDate가 null이면 step의 마지막 날짜로 설정
+    if (request.getEndDate() == null) {
+      request.setEndDate(lastStepDate);
+    }
+  }
+
   private static void saveIncludedSteps(StudyGroupDto.StudyGroupCreateRequest request, StudyGroup savedGroup) {
     if (request.getSteps() != null) {
+      // 정렬된 steps 사용
+      List<LocalDate> sortedSteps = request.getSteps().stream()
+          .sorted()
+          .toList();
+
       int stepNumber = 1;
-      for (LocalDate endDate : request.getSteps()) {
+      for (LocalDate endDate : sortedSteps) {
         StudyStepId stepId = StudyStepId.builder()
             .step(stepNumber++)
             .studyGroupId(savedGroup)
