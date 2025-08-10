@@ -96,4 +96,24 @@ public class Comment extends UserStampedEntity {
     throw new RestException(ErrorCode.AUTH_FORBIDDEN);
   }
 
+  public void canDeleteBy(UserDetails user) {
+
+    // 관리자는 삭제 가능
+    if (user.getUser().getRole().equals(Role.ADMIN)) {
+      return;
+    }
+
+    // 작성자 본인은 삭제 가능
+    if (this.getCreatedBy() != null && this.getCreatedBy().getId().equals(user.getUser().getId())) {
+      return;
+    }
+
+    // 스터디 그룹 주최자는 삭제 가능
+    if (this.getQAndA().getStudyGroup().getOwner().getId().equals(user.getUser().getId())) {
+      return;
+    }
+
+    throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+  }
+
 }

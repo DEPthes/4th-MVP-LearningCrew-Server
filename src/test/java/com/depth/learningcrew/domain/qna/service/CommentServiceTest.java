@@ -28,6 +28,7 @@ import com.depth.learningcrew.domain.file.entity.CommentImageFile;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.qna.dto.CommentDto;
 import com.depth.learningcrew.domain.qna.entity.Comment;
+import com.depth.learningcrew.domain.qna.entity.QAndA;
 import com.depth.learningcrew.domain.qna.repository.CommentRepository;
 import com.depth.learningcrew.domain.qna.repository.QAndARepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
@@ -68,6 +69,7 @@ class CommentServiceTest {
   private UserDetails anotherDetails;
   private UserDetails adminDetails;
   private StudyGroup studyGroup;
+  private QAndA qAndA;
   private Comment comment;
 
   @BeforeEach
@@ -125,9 +127,21 @@ class CommentServiceTest {
         .lastModifiedAt(LocalDateTime.now())
         .build();
 
+    qAndA = QAndA.builder()
+        .id(100L)
+        .title("Test Q&A")
+        .content("Test content")
+        .studyGroup(studyGroup)
+        .createdBy(author)
+        .lastModifiedBy(author)
+        .createdAt(LocalDateTime.now())
+        .lastModifiedAt(LocalDateTime.now())
+        .build();
+
     comment = Comment.builder()
         .id(100L)
         .content("original content")
+        .qAndA(qAndA)
         .attachedFiles(new java.util.ArrayList<>())
         .attachedImages(new java.util.ArrayList<>())
         .createdBy(author)
@@ -343,5 +357,95 @@ class CommentServiceTest {
 
     // then
     assertThat(result.getContent()).isEqualTo("original content");
+  }
+
+  @Test
+  @DisplayName("답변 작성자가 자신의 답변을 삭제할 수 있다")
+  void deleteComment_ByAuthor_Success() {
+    // given
+    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+
+    // when
+    commentService.deleteComment(100L, authorDetails);
+
+    // then
+    verify(commentRepository).delete(comment);
+  }
+
+  @Test
+  @DisplayName("스터디 그룹 주최자가 답변을 삭제할 수 있다")
+  void deleteComment_ByOwner_Success() {
+    // given
+    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+
+    // when
+    commentService.deleteComment(100L, authorDetails);
+
+    // then
+    verify(commentRepository).delete(comment);
+  }
+
+  @Test
+  @DisplayName("관리자가 답변을 삭제할 수 있다")
+  void deleteComment_ByAdmin_Success() {
+    // given
+    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+
+    // when
+    commentService.deleteComment(100L, adminDetails);
+
+    // then
+    verify(commentRepository).delete(comment);
+  }
+
+  @Test
+  @DisplayName("답변 작성자도 아니고 그룹 주최자도 아닌 사용자가 삭제 요청시 403 에러 발생")
+  void deleteComment_NotAuthorAndNotOwner_Forbidden() {
+    // given
+    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+
+    // when & then
+    assertThatThrownBy(() -> commentService.deleteComment(100L, anotherDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 답변이면 삭제 시도시 예외 발생")
+  void deleteComment_CommentNotFound() {
+    // given
+    when(commentRepository.findById(999L)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() -> commentService.deleteComment(999L, authorDetails))
+        .isInstanceOf(RestException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("답변 삭제시 첨부 파일들도 함께 삭제된다")
+  void deleteComment_WithAttachments_DeleteFiles() {
+    // given
+    CommentAttachedFile attachedFile = CommentAttachedFile.builder()
+        .uuid("file-uuid")
+        .fileName("file.txt")
+        .build();
+    comment.addAttachedFile(attachedFile);
+
+    CommentImageFile attachedImage = CommentImageFile.builder()
+        .uuid("img-uuid")
+        .fileName("img.jpg")
+        .build();
+    comment.addAttachedImage(attachedImage);
+
+    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+
+    // when
+    commentService.deleteComment(100L, authorDetails);
+
+    // then
+    verify(fileHandler, times(1)).deleteFile(attachedFile);
+    verify(fileHandler, times(1)).deleteFile(attachedImage);
+    verify(commentRepository).delete(comment);
   }
 }
