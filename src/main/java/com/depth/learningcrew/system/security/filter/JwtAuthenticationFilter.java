@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.depth.learningcrew.system.security.initializer.JwtAuthPathInitializer;
+import com.depth.learningcrew.system.security.model.ApiPathPattern;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,8 +28,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final List<String> ignorePatterns;
-    private final List<String> allowedPatterns;
+    private final List<ApiPathPattern> ignorePatterns;
+    private final List<ApiPathPattern> allowedPatterns;
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     private final JwtTokenResolver jwtTokenResolver;
@@ -43,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String servletPath = request.getServletPath();
-        boolean requiresAuth = this.isMatchingURI(servletPath);
+        boolean requiresAuth = this.isMatchingURI(servletPath, request.getMethod());
 
         try {
             authenticateWithJwt(request, requiresAuth);
@@ -108,16 +109,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isMatchingURI(String servletPath) {
+    private boolean isMatchingURI(String servletPath, String method) {
+        ApiPathPattern.METHODS apiMethod = ApiPathPattern.METHODS.parse(method);
+
+        if (apiMethod == null) {
+            return false;
+        }
+
         boolean isAllowed = allowedPatterns.stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
+                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
 
         boolean isIgnored = ignorePatterns.stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
+                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
 
         // 어노테이션을 통해 제외된 경로 확인
         boolean isExcluded = jwtAuthPathInitializer.getExcludePaths().stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern, servletPath));
+                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
 
         return isAllowed && !isIgnored && !isExcluded;
     }
