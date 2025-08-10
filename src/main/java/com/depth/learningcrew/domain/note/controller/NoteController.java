@@ -43,4 +43,15 @@ public class NoteController {
 
         return noteService.updateNote(noteId, request, userDetails);
     }
+
+    @GetMapping(value = "/notes/{noteId}")
+    @Operation(summary = "특정 노트 상세 조회", description = "노트 상세 정보를 조회합니다. 스터디 그룹의 멤버만 조회할 수 있습니다.")
+    @ApiResponse(responseCode = "200", description = "노트 상세 조회 성공")
+    public NoteDto.NoteResponse getNoteDetail(
+            @Parameter(description = "노트 ID", example = "1") @PathVariable Long noteId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return noteService.getNoteDetail(noteId, userDetails);
+
+    }
 }
