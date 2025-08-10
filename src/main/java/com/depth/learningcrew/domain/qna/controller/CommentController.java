@@ -42,16 +42,15 @@ public class CommentController {
     return commentService.createComment(studyGroupId, qnaId, request, userDetails);
   }
 
-  @PatchMapping("/study-groups/{studyGroupId}/qna/{qnaId}/comments/{commentId}")
+  @PatchMapping("/comments/{commentId}")
   @Operation(summary = "댓글(답변) 수정", description = "스터디 그룹 멤버가 작성한 댓글(답변)을 수정합니다. 작성자 또는 스터디 그룹 주최자/관리자만 수정할 수 있습니다.")
   @ApiResponse(responseCode = "200", description = "댓글 수정 성공")
   public CommentDto.CommentResponse updateComment(
-      @PathVariable Long studyGroupId,
       @PathVariable Long commentId,
       @Valid @ModelAttribute CommentDto.CommentUpdateRequest request,
       @AuthenticationPrincipal UserDetails userDetails) {
 
-    return commentService.updateComment(studyGroupId, commentId, request, userDetails);
+    return commentService.updateComment(commentId, request, userDetails);
   }
 
   @DeleteMapping("/comments/{commentId}")

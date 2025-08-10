@@ -56,13 +56,8 @@ public class CommentService {
   }
 
   @Transactional
-  public CommentDto.CommentResponse updateComment(Long studyGroupId, Long commentId,
+    public CommentDto.CommentResponse updateComment(Long commentId,
       CommentDto.CommentUpdateRequest request, UserDetails userDetails) {
-
-    StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
-        .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
-
-    cannotCommentIfNotMember(studyGroup, userDetails);
 
     Comment comment = commentRepository.findById(commentId)
         .orElseThrow(() -> new RestException(ErrorCode.COMMENT_NOT_FOUND));

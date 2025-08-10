@@ -164,7 +164,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, authorDetails);
+    var result = commentService.updateComment(10L, request, authorDetails);
 
     // then
     assertThat(result.getContent()).isEqualTo("updated");
@@ -189,7 +189,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, authorDetails);
+    var result = commentService.updateComment(10L, request, authorDetails);
 
     // then
     assertThat(result).isNotNull();
@@ -223,7 +223,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, authorDetails);
+    var result = commentService.updateComment(10L, request, authorDetails);
 
     // then
     assertThat(result).isNotNull();
@@ -245,7 +245,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, authorDetails);
+    var result = commentService.updateComment(10L, request, authorDetails);
 
     // then
     assertThat(result).isNotNull();
@@ -264,7 +264,7 @@ class CommentServiceTest {
         .build();
 
     // when & then
-    assertThatThrownBy(() -> commentService.updateComment(10L, 100L, request, authorDetails))
+    assertThatThrownBy(() -> commentService.updateComment(10L, request, authorDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
   }
@@ -282,7 +282,7 @@ class CommentServiceTest {
         .build();
 
     // when & then
-    assertThatThrownBy(() -> commentService.updateComment(10L, 100L, request, anotherDetails))
+    assertThatThrownBy(() -> commentService.updateComment(10L, request, anotherDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
   }
@@ -300,7 +300,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, adminDetails);
+    var result = commentService.updateComment(10L, request, adminDetails);
 
     // then
     assertThat(result.getContent()).isEqualTo("admin-updated");
@@ -317,7 +317,7 @@ class CommentServiceTest {
         .build();
 
     // when & then
-    assertThatThrownBy(() -> commentService.updateComment(999L, 100L, request, authorDetails))
+    assertThatThrownBy(() -> commentService.updateComment(999L, request, authorDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_FOUND);
   }
@@ -335,7 +335,7 @@ class CommentServiceTest {
         .build();
 
     // when & then
-    assertThatThrownBy(() -> commentService.updateComment(10L, 100L, request, authorDetails))
+    assertThatThrownBy(() -> commentService.updateComment(10L, request, authorDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
   }
@@ -353,7 +353,7 @@ class CommentServiceTest {
         .build();
 
     // when
-    var result = commentService.updateComment(10L, 100L, request, authorDetails);
+    var result = commentService.updateComment(10L, request, authorDetails);
 
     // then
     assertThat(result.getContent()).isEqualTo("original content");
