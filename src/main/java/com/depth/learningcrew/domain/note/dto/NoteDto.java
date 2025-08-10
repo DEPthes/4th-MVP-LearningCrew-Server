@@ -67,7 +67,7 @@ public class NoteDto {
         private UserDto.UserResponse createdBy;
 
         @Schema(description = "노트 마지막 수정자 정보")
-        private UserDto.UserResponse updatedBy;
+        private UserDto.UserResponse lastModifiedBy;
 
         @Schema(description = "노트 생성 시간")
         private LocalDateTime createdAt;
@@ -84,7 +84,7 @@ public class NoteDto {
                     .attachedFiles(note.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
                     .attachedImages(note.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
                     .createdBy(UserDto.UserResponse.from(note.getCreatedBy()))
-                    .updatedBy(UserDto.UserResponse.from(note.getLastModifiedBy()))
+                    .lastModifiedBy(UserDto.UserResponse.from(note.getLastModifiedBy()))
                     .createdAt(note.getCreatedAt())
                     .lastModifiedAt(note.getLastModifiedAt())
                     .build();
