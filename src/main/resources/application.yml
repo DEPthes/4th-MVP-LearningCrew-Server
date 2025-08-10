@@ -17,5 +17,9 @@ logging:
 server:
   port: 8080
 
+  tomcat:
+    max-part-count: 100
+    max-part-header-size: 2048
+
 file:
   save-path: ./upload
