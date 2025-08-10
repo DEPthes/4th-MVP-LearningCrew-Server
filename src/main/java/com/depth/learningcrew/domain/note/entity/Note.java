@@ -48,7 +48,7 @@ public class Note extends UserStampedEntity {
   private String title;
 
   @Lob
-  @Column
+  @Column(columnDefinition = "LONGTEXT") // 기획팀 설계 상, 한글 1000자 버텨야 함
   private String content;
 
   @Column(nullable = false)
