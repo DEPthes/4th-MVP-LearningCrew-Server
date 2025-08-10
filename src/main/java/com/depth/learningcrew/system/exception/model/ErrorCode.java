@@ -72,6 +72,10 @@ public enum ErrorCode {
     QANDA_NOT_FOUND(404, "질문을 찾을 수 없습니다."),
     QANDA_NOT_AUTHORIZED(403, "질문을 수정할 권한이 없습니다."),
 
+    // Note
+    NOTE_NOT_FOUND(404, "노트를 찾을 수 없습니다."),
+    NOTE_NOT_AUTHORIZED(403, "노트를 수정할 권한이 없습니다."),
+
     // Other
     INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."),;
 
