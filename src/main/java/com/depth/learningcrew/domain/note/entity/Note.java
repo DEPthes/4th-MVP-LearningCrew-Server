@@ -9,6 +9,10 @@ import com.depth.learningcrew.domain.file.entity.NoteImageFile;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
 
+import com.depth.learningcrew.domain.user.entity.Role;
+import com.depth.learningcrew.domain.user.entity.User;
+import com.depth.learningcrew.system.exception.model.ErrorCode;
+import com.depth.learningcrew.system.exception.model.RestException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -92,4 +96,24 @@ public class Note extends UserStampedEntity {
     this.attachedImages.remove(attachedImage);
     attachedImage.setNote(null);
   }
+
+  public void canUpdateBy(User user) {
+    // 관리자는 모든 노트를 수정할 수 있음
+    if (user.getRole().equals(Role.ADMIN)) {
+      return;
+    }
+
+    // 작성자는 자신의 노트를 수정할 수 있음
+    if (this.getCreatedBy().getId().equals(user.getId())) {
+      return;
+    }
+
+    // 스터디 그룹 주최자는 그룹 내 노트를 수정할 수 있음
+    if (this.studyGroup.getOwner().getId().equals(user.getId())) {
+      return;
+    }
+
+    throw new RestException(ErrorCode.NOTE_NOT_AUTHORIZED);
+  }
+
 }
