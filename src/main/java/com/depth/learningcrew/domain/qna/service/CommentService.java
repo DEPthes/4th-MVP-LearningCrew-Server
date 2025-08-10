@@ -82,6 +82,22 @@ public class CommentService {
     return CommentDto.CommentResponse.from(comment);
   }
 
+  @Transactional
+  public void deleteComment(Long commentId, UserDetails userDetails) {
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new RestException(ErrorCode.COMMENT_NOT_FOUND));
+
+    // 권한 검증 (답변 작성자 또는 스터디 그룹 주최자)
+    comment.canDeleteBy(userDetails);
+
+    // 첨부 파일들 삭제
+    comment.getAttachedImages().forEach(fileHandler::deleteFile);
+    comment.getAttachedFiles().forEach(fileHandler::deleteFile);
+
+    // 댓글 삭제
+    commentRepository.delete(comment);
+  }
+
   private void cannotCommentIfNotMember(StudyGroup studyGroup, UserDetails userDetails) {
     if (!memberQueryRepository.isMember(studyGroup, userDetails.getUser())) {
       throw new RestException(ErrorCode.AUTH_FORBIDDEN);
