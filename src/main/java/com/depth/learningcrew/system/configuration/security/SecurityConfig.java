@@ -2,6 +2,7 @@ package com.depth.learningcrew.system.configuration.security;
 
 import java.util.Arrays;
 
+import com.depth.learningcrew.system.security.model.ApiPathPattern;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,7 +35,13 @@ public class SecurityConfig {
         jwtAutoConfigurerFactory.create(userLoadServiceImpl)
                 .pathConfigure((it) -> {
                     // 기본 포함 경로 설정
-                    it.includePath("/api/**");
+                    it.include("/api/**", ApiPathPattern.METHODS.GET);
+                    it.include("/api/**", ApiPathPattern.METHODS.POST);
+                    it.include("/api/**", ApiPathPattern.METHODS.PUT);
+                    it.include("/api/**", ApiPathPattern.METHODS.PATCH);
+                    it.include("/api/**", ApiPathPattern.METHODS.DELETE);
+                    it.include("/api/**", ApiPathPattern.METHODS.OPTIONS);
+
                 })
                 .configure(httpSecurity);
 

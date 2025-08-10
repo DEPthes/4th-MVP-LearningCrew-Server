@@ -44,6 +44,28 @@ public class CommentDto {
   @NoArgsConstructor
   @Data
   @Builder
+  @Schema(description = "댓글 수정 요청 DTO")
+  public static class CommentUpdateRequest {
+    @Schema(description = "댓글 내용", example = "수정된 답변 내용")
+    private String content;
+
+    @Schema(description = "새로 추가할 첨부 이미지 목록")
+    private List<MultipartFile> newAttachedImages;
+
+    @Schema(description = "새로 추가할 첨부 파일 목록")
+    private List<MultipartFile> newAttachedFiles;
+
+    @Schema(description = "삭제할 첨부 이미지 ID 목록")
+    private List<String> deletedAttachedImages;
+
+    @Schema(description = "삭제할 첨부 파일 ID 목록")
+    private List<String> deletedAttachedFiles;
+  }
+
+  @AllArgsConstructor
+  @NoArgsConstructor
+  @Data
+  @Builder
   public static class CommentResponse {
     private Long id;
     private String content;

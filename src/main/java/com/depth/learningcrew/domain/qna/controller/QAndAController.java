@@ -42,15 +42,14 @@ public class QAndAController {
     return qAndAService.createQAndA(request, groupId, stepId, user);
   }
 
-  @PatchMapping(value = "/study-groups/{studyGroupId}/qna/{qnaId}")
+  @PatchMapping(value = "/qna/{qnaId}")
   @Operation(summary = "질문 수정", description = "스터디 그룹의 질문을 수정합니다. 질문 작성자 또는 스터디 그룹 주최자만 수정할 수 있습니다.")
   public QAndADto.QAndADetailResponse updateQAndA(
-      @Parameter(description = "스터디 그룹 ID", example = "1") @PathVariable Long studyGroupId,
       @Parameter(description = "질문 ID", example = "42") @PathVariable Long qnaId,
       @Parameter(description = "질문 수정 요청") @Valid @ModelAttribute QAndADto.QAndAUpdateRequest request,
       @AuthenticationPrincipal UserDetails user) {
 
-    return qAndAService.updateQAndA(studyGroupId, qnaId, request, user);
+    return qAndAService.updateQAndA(qnaId, request, user);
   }
 
   @DeleteMapping(value = "/qna/{qnaId}")

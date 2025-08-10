@@ -3,6 +3,7 @@ package com.depth.learningcrew.system.security.initializer;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+import com.depth.learningcrew.system.security.model.ApiPathPattern;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,13 +27,11 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
 
   private final RequestMappingHandlerMapping handlerMapping;
 
-  private final Set<String> excludePaths = new HashSet<>();
+  private final Set<ApiPathPattern> excludePaths = new HashSet<>();
   private volatile boolean initialized = false;
 
   public JwtAuthPathInitializer(
-          @Qualifier("requestMappingHandlerMapping")
-          RequestMappingHandlerMapping handlerMapping
-  ) {
+      @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlerMapping) {
     this.handlerMapping = handlerMapping;
   }
 
@@ -56,13 +56,18 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
 
       if (shouldExcludeFromJwtAuth(handlerMethod)) {
         if (mappingInfo.getPathPatternsCondition() != null) { // Spring Boot 3.x
-          Set<String> patterns = mappingInfo.getPathPatternsCondition().getPatternValues();
-          if (patterns != null && !patterns.isEmpty()) {
-            excludePaths.addAll(patterns);
-            log.info("JWT 인증 제외 경로 추가: {} (메서드: {}.{})",
-                    patterns,
-                    handlerMethod.getBeanType().getSimpleName(),
-                    handlerMethod.getMethod().getName());
+          Set<String> patterns = Objects.requireNonNull(mappingInfo.getPathPatternsCondition()).getPatternValues();
+          if (!patterns.isEmpty()) {
+            var method = mappingInfo.getMethodsCondition().getMethods().iterator().next();
+            for (String pattern : patterns) {
+              excludePaths.add(ApiPathPattern.of(pattern, ApiPathPattern.METHODS
+                  .valueOf(method.name())));
+            }
+            log.info("JWT 인증 제외 경로 추가: {} {}, (메서드: {}.{})",
+                method.name(),
+                patterns,
+                handlerMethod.getBeanType().getSimpleName(),
+                handlerMethod.getMethod().getName());
           }
         }
       }
@@ -75,18 +80,19 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
     Class<?> beanType = handlerMethod.getBeanType();
 
     NoJwtAuth methodAnnotation = AnnotationUtils.findAnnotation(method, NoJwtAuth.class);
-    if (methodAnnotation != null) return true;
+    if (methodAnnotation != null)
+      return true;
 
     NoJwtAuth classAnnotation = AnnotationUtils.findAnnotation(beanType, NoJwtAuth.class);
     return classAnnotation != null;
   }
 
-  public Set<String> getExcludePaths() {
+  public Set<ApiPathPattern> getExcludePaths() {
     return new HashSet<>(excludePaths);
   }
 
-  public void addExcludePath(String path) {
-    excludePaths.add(path);
+  public void addExcludePath(String path, ApiPathPattern.METHODS method) {
+    excludePaths.add(ApiPathPattern.of(path, method));
     log.info("런타임에 JWT 인증 제외 경로 추가: {}", path);
   }
 }

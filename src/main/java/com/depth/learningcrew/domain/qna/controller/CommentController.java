@@ -2,7 +2,9 @@ package com.depth.learningcrew.domain.qna.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,14 +22,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/study-groups/{studyGroupId}/qna/{qnaId}/comments")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "Q&A")
 public class CommentController {
 
   private final CommentService commentService;
 
-  @PostMapping
+  @PostMapping("/study-groups/{studyGroupId}/qna/{qnaId}/comments")
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "댓글(답변) 생성", description = "스터디 그룹 멤버가 질문에 댓글(답변)을 작성합니다.")
   @ApiResponse(responseCode = "201", description = "댓글 생성 성공")
@@ -38,5 +40,27 @@ public class CommentController {
       @AuthenticationPrincipal UserDetails userDetails) {
 
     return commentService.createComment(studyGroupId, qnaId, request, userDetails);
+  }
+
+  @PatchMapping("/comments/{commentId}")
+  @Operation(summary = "댓글(답변) 수정", description = "스터디 그룹 멤버가 작성한 댓글(답변)을 수정합니다. 작성자 또는 스터디 그룹 주최자/관리자만 수정할 수 있습니다.")
+  @ApiResponse(responseCode = "200", description = "댓글 수정 성공")
+  public CommentDto.CommentResponse updateComment(
+      @PathVariable Long commentId,
+      @Valid @ModelAttribute CommentDto.CommentUpdateRequest request,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    return commentService.updateComment(commentId, request, userDetails);
+  }
+
+  @DeleteMapping("/comments/{commentId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "댓글(답변) 삭제", description = "답변 작성자 또는 스터디 그룹 주최자가 작성된 답변을 삭제합니다.")
+  @ApiResponse(responseCode = "204", description = "댓글 삭제 성공")
+  public void deleteComment(
+      @PathVariable Long commentId,
+      @AuthenticationPrincipal UserDetails userDetails) {
+
+    commentService.deleteComment(commentId, userDetails);
   }
 }

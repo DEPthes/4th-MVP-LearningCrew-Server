@@ -55,6 +55,44 @@ public class CommentService {
     return CommentDto.CommentResponse.from(saved);
   }
 
+  @Transactional
+    public CommentDto.CommentResponse updateComment(Long commentId,
+      CommentDto.CommentUpdateRequest request, UserDetails userDetails) {
+
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new RestException(ErrorCode.COMMENT_NOT_FOUND));
+
+    comment.canUpdateBy(userDetails);
+
+    if (request.getContent() != null) {
+      comment.setContent(request.getContent());
+    }
+
+    deleteAttachedImages(request.getDeletedAttachedImages(), comment);
+    deleteAttachedFiles(request.getDeletedAttachedFiles(), comment);
+
+    saveAttachedImages(request.getNewAttachedImages(), comment);
+    saveAttachedFiles(request.getNewAttachedFiles(), comment);
+
+    return CommentDto.CommentResponse.from(comment);
+  }
+
+  @Transactional
+  public void deleteComment(Long commentId, UserDetails userDetails) {
+    Comment comment = commentRepository.findById(commentId)
+        .orElseThrow(() -> new RestException(ErrorCode.COMMENT_NOT_FOUND));
+
+    // 권한 검증 (답변 작성자 또는 스터디 그룹 주최자)
+    comment.canDeleteBy(userDetails);
+
+    // 첨부 파일들 삭제
+    comment.getAttachedImages().forEach(fileHandler::deleteFile);
+    comment.getAttachedFiles().forEach(fileHandler::deleteFile);
+
+    // 댓글 삭제
+    commentRepository.delete(comment);
+  }
+
   private void cannotCommentIfNotMember(StudyGroup studyGroup, UserDetails userDetails) {
     if (!memberQueryRepository.isMember(studyGroup, userDetails.getUser())) {
       throw new RestException(ErrorCode.AUTH_FORBIDDEN);
@@ -82,6 +120,38 @@ public class CommentService {
       attached.setComment(comment);
       comment.addAttachedFile(attached);
       fileHandler.saveFile(file, attached);
+    });
+  }
+
+  private void deleteAttachedImages(List<String> imageIds, Comment comment) {
+    if (imageIds == null || imageIds.isEmpty())
+      return;
+
+    imageIds.forEach(id -> {
+      CommentImageFile image = comment.getAttachedImages().stream()
+          .filter(img -> id.equals(img.getUuid()))
+          .findFirst()
+          .orElse(null);
+      if (image != null) {
+        comment.removeAttachedImage(image);
+        fileHandler.deleteFile(image);
+      }
+    });
+  }
+
+  private void deleteAttachedFiles(List<String> fileIds, Comment comment) {
+    if (fileIds == null || fileIds.isEmpty())
+      return;
+
+    fileIds.forEach(id -> {
+      CommentAttachedFile file = comment.getAttachedFiles().stream()
+          .filter(f -> id.equals(f.getUuid()))
+          .findFirst()
+          .orElse(null);
+      if (file != null) {
+        comment.removeAttachedFile(file);
+        fileHandler.deleteFile(file);
+      }
     });
   }
 }
