@@ -66,11 +66,24 @@ class MemberServiceIntegrationTest {
                 currentTestId = ++testCounter;
 
                 // 기존 데이터 완전 정리 - 외래키 제약조건을 고려한 순서
+                // 연관 관계가 복잡하게 얽혀 있어, 참조하는 모든 테이블을 먼저 정리합니다.
+                entityManager.createQuery("DELETE FROM AttachedFile af").executeUpdate();
+                entityManager.createQuery("DELETE FROM Image i").executeUpdate();
+                entityManager.createQuery("DELETE FROM Comment c").executeUpdate();
+                entityManager.createQuery("DELETE FROM QAndA q").executeUpdate();
+                entityManager.createQuery("DELETE FROM Note n").executeUpdate();
+                entityManager.createQuery("DELETE FROM QuizRecord qr").executeUpdate();
+                entityManager.createQuery("DELETE FROM QuizOption qo").executeUpdate();
+                entityManager.createQuery("DELETE FROM Quiz q").executeUpdate();
                 entityManager.createQuery("DELETE FROM Member m").executeUpdate();
                 entityManager.createQuery("DELETE FROM Application a").executeUpdate();
                 entityManager.createQuery("DELETE FROM Dibs d").executeUpdate();
-                entityManager.createQuery("DELETE FROM StudyGroup s").executeUpdate();
+                entityManager.createQuery("DELETE FROM StudyStep ss").executeUpdate();
+                entityManager.createQuery("DELETE FROM RefreshToken rt").executeUpdate();
+                // 참조하는 테이블을 모두 정리한 후, 참조되는 테이블을 정리합니다.
+                entityManager.createQuery("DELETE FROM StudyGroup sg").executeUpdate();
                 entityManager.createQuery("DELETE FROM User u").executeUpdate();
+                entityManager.createQuery("DELETE FROM GroupCategory gc").executeUpdate();
                 entityManager.flush();
                 entityManager.clear(); // 영속성 컨텍스트 완전 초기화
 
