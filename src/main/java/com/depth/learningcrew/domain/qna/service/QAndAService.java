@@ -57,7 +57,6 @@ public class QAndAService {
 
   @Transactional
   public QAndADto.QAndADetailResponse updateQAndA(
-      Long studyGroupId,
       Long qnaId,
       QAndADto.QAndAUpdateRequest request,
       UserDetails user) {
@@ -65,10 +64,8 @@ public class QAndAService {
     QAndA qAndA = qAndARepository.findById(qnaId)
         .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
 
-    // 권한 검사
     qAndA.canUpdateBy(user.getUser());
 
-    // 제목과 내용 업데이트
     if (request.getTitle() != null) {
       qAndA.setTitle(request.getTitle());
     }
@@ -76,11 +73,9 @@ public class QAndAService {
       qAndA.setContent(request.getContent());
     }
 
-    // 기존 파일 삭제
     deleteAttachedFiles(request.getDeletedAttachedFiles(), qAndA);
     deleteAttachedImages(request.getDeletedAttachedImages(), qAndA);
 
-    // 새 파일 추가
     saveNewAttachedFiles(request.getNewAttachedFiles(), qAndA);
     saveNewAttachedImages(request.getNewAttachedImages(), qAndA);
 

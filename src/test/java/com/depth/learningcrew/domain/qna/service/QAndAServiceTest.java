@@ -307,7 +307,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     assertThat(result).isNotNull();
@@ -326,7 +326,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(999L)).thenReturn(Optional.empty());
 
     // when & then
-    assertThatThrownBy(() -> qAndAService.updateQAndA(1L, 999L, updateRequest, testUserDetails))
+    assertThatThrownBy(() -> qAndAService.updateQAndA(999L, updateRequest, testUserDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_FOUND);
   }
@@ -344,7 +344,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when & then
-    assertThatThrownBy(() -> qAndAService.updateQAndA(1L, 1L, updateRequest, otherUserDetails))
+    assertThatThrownBy(() -> qAndAService.updateQAndA(1L, updateRequest, otherUserDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QANDA_NOT_AUTHORIZED);
   }
@@ -359,7 +359,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     assertThat(result.getTitle()).isEqualTo("제목만 수정");
@@ -376,7 +376,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     assertThat(result.getTitle()).isEqualTo("테스트 질문");
@@ -394,7 +394,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     assertThat(result.getTitle()).isEqualTo("테스트 질문");
@@ -412,7 +412,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     verify(fileHandler, times(1)).saveFile(eq(file1), any());
@@ -431,7 +431,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     verify(fileHandler, times(1)).saveFile(eq(image1), any());
@@ -452,7 +452,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     verify(fileHandler, times(1)).deleteFile(file);
@@ -472,7 +472,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     verify(fileHandler, times(1)).deleteFile(image);
@@ -502,7 +502,7 @@ class QAndAServiceTest {
     when(qAndARepository.findById(1L)).thenReturn(Optional.of(testQAndA));
 
     // when
-    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, 1L, updateRequest, testUserDetails);
+    QAndADto.QAndADetailResponse result = qAndAService.updateQAndA(1L, updateRequest, testUserDetails);
 
     // then
     verify(fileHandler, times(1)).deleteFile(file);
