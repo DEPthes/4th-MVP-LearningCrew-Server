@@ -17,7 +17,7 @@ public class NoteDto {
     @AllArgsConstructor
     @Getter
     @Setter
-    @Schema(description = "노트 생성 요청")
+    @Schema(description = "노트 생성 요청 DTO")
     public static class NoteCreateRequest {
         @Schema(description = "노트 제목")
         private String title;
@@ -43,7 +43,7 @@ public class NoteDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
-    @Schema(description = "노트 응답")
+    @Schema(description = "노트 응답 DTO")
     public static class NoteResponse {
         @Schema(description = "노트 ID", example = "123")
         private Long id;
@@ -90,4 +90,31 @@ public class NoteDto {
                     .build();
         }
     }
+
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Getter
+    @Setter
+    @Schema(description = "노트 수정 요청 DTO")
+    public static class NoteUpdateRequest {
+        @Schema(description = "노트 제목", example = "note title")
+        private String title;
+
+        @Schema(description = "노트 내용", example = "note content")
+        private String content;
+
+        @Schema(description = "새로 추가할 첨부 파일 목록")
+        private List<MultipartFile> newAttachedFiles;
+
+        @Schema(description = "새로 추가할 첨부 이미지 목록")
+        private List<MultipartFile> newAttachedImages;
+
+        @Schema(description = "삭제할 첨부 파일 ID 목록")
+        private List<String> deletedAttachedFiles;
+
+        @Schema(description = "삭제할 이미지 파일 ID 목록")
+        private List<String> deletedAttachedImages;
+    }
+
 }
