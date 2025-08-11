@@ -1,6 +1,5 @@
 package com.depth.learningcrew.domain.quiz.dto;
 
-import com.depth.learningcrew.domain.quiz.entity.Quiz;
 import com.depth.learningcrew.domain.quiz.entity.QuizOption;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
