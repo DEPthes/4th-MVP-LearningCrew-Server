@@ -23,6 +23,12 @@ spring:
     init:
       mode: always
 
+file:
+  save-path: ./test-upload
+
+gemini:
+  api-key: AIzaSyDe3lJt-W5eaF8Ibn4imlvqYRoK3fbTLVs
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
