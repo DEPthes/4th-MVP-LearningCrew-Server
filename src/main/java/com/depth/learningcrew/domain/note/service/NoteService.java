@@ -42,6 +42,10 @@ public class NoteService {
         cannotCreateWhenNotCurrentStep(studyGroup, step);
         cannotCreateWhenNotMember(studyGroup, user);
 
+        if (noteRepository.existsByStudyGroup_IdAndStepAndCreatedBy_Id(groupId, step, user.getUser().getId())) {
+            throw new RestException(ErrorCode.NOTE_ALREADY_EXISTS_IN_STEP);
+        }
+
         Note note = request.toEntity();
         note.setStep(step);
         note.setStudyGroup(studyGroup);
@@ -144,5 +148,19 @@ public class NoteService {
                 }
             });
         }
+    }
+
+    @Transactional(readOnly = true)
+    public NoteDto.NoteResponse getNoteDetail(Long noteId, UserDetails user) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new RestException(ErrorCode.NOTE_NOT_FOUND));
+
+        StudyGroup studyGroup = note.getStudyGroup();
+
+        if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+            throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
+        }
+
+        return NoteDto.NoteResponse.from(note);
     }
 }
