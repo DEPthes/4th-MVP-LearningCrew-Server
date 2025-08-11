@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/quiz")
-@Tag(name = "Quiz", description = "퀴즈 API")
+@Tag(name = "Quiz Generation", description = "퀴즈 생성 API")
 public class QuizGenerationController {
 
     private final QuizScheduler quizScheduler;
