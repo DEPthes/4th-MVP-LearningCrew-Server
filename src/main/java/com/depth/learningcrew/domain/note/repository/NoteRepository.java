@@ -6,5 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface NoteRepository extends JpaRepository<Note, Long> {
+
     List<Note> findByStudyGroup_IdAndStep(Long studyGroupId, Integer step);
+
+    boolean existsByStudyGroup_IdAndStepAndCreatedBy_Id(Long studyGroupId, Integer step, Long userId);
+
 }

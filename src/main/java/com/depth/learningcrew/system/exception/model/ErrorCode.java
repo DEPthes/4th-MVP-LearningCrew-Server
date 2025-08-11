@@ -59,7 +59,7 @@ public enum ErrorCode {
     STUDY_GROUP_NOT_FOUND(404, "스터디 그룹을 찾을 수 없습니다."),
     STUDY_GROUP_OWNER_CANNOT_BE_EXPELLED(400, "스터디 그룹의 소유자는 추방할 수 없습니다."),
     STUDY_GROUP_NOT_CURRENT_STEP(400, "현재 스텝에서는 질문을 생성할 수 없습니다."),
-    STUDY_GROUP_NOT_MEMBER(400, "스터디 그룹의 멤버가 아닙니다."),
+    STUDY_GROUP_NOT_MEMBER(403, "스터디 그룹의 멤버가 아닙니다."),
     STUDY_GROUP_STEP_NOT_WRITABLE(400, "현재 진행 중인 스텝에서만 작성할 수 있습니다."),
     STUDY_GROUP_STEP_DUPLICATE_DATE(400, "중복된 스텝 날짜가 있습니다."),
     STUDY_GROUP_STEP_END_DATE_MISMATCH(400, "스텝의 마지막 날짜와 종료 날짜가 일치하지 않습니다."),
@@ -75,6 +75,7 @@ public enum ErrorCode {
     // Note
     NOTE_NOT_FOUND(404, "노트를 찾을 수 없습니다."),
     NOTE_NOT_AUTHORIZED(403, "노트를 수정할 권한이 없습니다."),
+    NOTE_ALREADY_EXISTS_IN_STEP(409, "해당 스텝에 이미 노트가 존재합니다."),
 
     // Other
     INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."),;
