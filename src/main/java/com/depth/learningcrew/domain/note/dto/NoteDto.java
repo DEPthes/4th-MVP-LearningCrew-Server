@@ -117,4 +117,53 @@ public class NoteDto {
         private List<String> deletedAttachedImages;
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    @Schema(description = "공유 노트 검색 조건 DTO")
+    public static class SearchConditions {
+        @Schema(description = "정렬 기준", example = "created_at", allowableValues = {"created_at", "alphabet"})
+        private String sort;
+
+        @Schema(description = "정렬 순서", example = "desc", allowableValues = {"asc", "desc"})
+        private String order;
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Schema(description = "공유 노트 목록 응답 DTO")
+    public static class SharedNoteResponse {
+        @Schema(description = "노트 ID", example = "123")
+        private Long id;
+
+        @Schema(description = "해당 노트 스텝", example = "1")
+        private Integer step;
+
+        @Schema(description = "노트 제목", example = "note title")
+        private String title;
+
+        @Schema(description = "노트 작성자 정보")
+        private UserDto.UserResponse createdBy;
+
+        @Schema(description = "노트 생성 시간")
+        private LocalDateTime createdAt;
+
+        @Schema(description = "노트 마지막 수정 시간")
+        private LocalDateTime lastModifiedAt;
+
+        public static SharedNoteResponse from(Note note) {
+            return SharedNoteResponse.builder()
+                    .id(note.getId())
+                    .step(note.getStep())
+                    .title(note.getTitle())
+                    .createdBy(UserDto.UserResponse.from(note.getCreatedBy()))
+                    .createdAt(note.getCreatedAt())
+                    .lastModifiedAt(note.getLastModifiedAt())
+                    .build();
+        }
+    }
 }

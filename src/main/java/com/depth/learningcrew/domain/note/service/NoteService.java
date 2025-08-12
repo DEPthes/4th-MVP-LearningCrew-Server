@@ -5,6 +5,7 @@ import com.depth.learningcrew.domain.file.entity.NoteImageFile;
 import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.note.dto.NoteDto;
 import com.depth.learningcrew.domain.note.entity.Note;
+import com.depth.learningcrew.domain.note.repository.NoteQueryRepository;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.MemberQueryRepository;
@@ -26,6 +27,7 @@ public class NoteService {
 
     private final StudyGroupRepository studyGroupRepository;
     private final MemberQueryRepository memberQueryRepository;
+    private final NoteQueryRepository noteQueryRepository;
     private final NoteRepository noteRepository;
     private final FileHandler fileHandler;
 
@@ -162,5 +164,26 @@ public class NoteService {
         }
 
         return NoteDto.NoteResponse.from(note);
+    }
+
+    @Transactional(readOnly = true)
+    public List<NoteDto.SharedNoteResponse> getSharedNotes(
+            Long groupId,
+            Integer step,
+            NoteDto.SearchConditions cond,
+            UserDetails user) {
+
+        StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+        if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+            throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
+        }
+
+        List<Note> notes = noteQueryRepository.findSharedNotes(studyGroup, step, user.getUser().getId(), cond);
+
+        return notes.stream()
+                .map(NoteDto.SharedNoteResponse::from)
+                .toList();
     }
 }

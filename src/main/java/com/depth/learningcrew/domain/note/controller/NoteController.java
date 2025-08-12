@@ -9,9 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -52,6 +55,17 @@ public class NoteController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         return noteService.getNoteDetail(noteId, userDetails);
+    }
 
+    @GetMapping(value = "/study-groups/{groupId}/steps/{step}/notes")
+    @Operation(summary = "스터디 그룹 공유 노트 목록 조회", description = "스터디 그룹의 멤버가 다른 멤버들의 공유 노트를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "공유 노트 목록 조회 성공")
+    public List<NoteDto.SharedNoteResponse> getSharedNotes(
+            @Parameter(description = "스터디 그룹 ID", example = "1") @PathVariable Long groupId,
+            @Parameter(description = "스터디 스텝 번호", example = "1") @PathVariable Integer step,
+            @ModelAttribute @ParameterObject NoteDto.SearchConditions searchConditions,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return noteService.getSharedNotes(groupId, step, searchConditions, userDetails);
     }
 }
