@@ -4,6 +4,7 @@ import com.depth.learningcrew.domain.note.entity.Note;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NoteRepository extends JpaRepository<Note, Long> {
 
@@ -11,4 +12,5 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     boolean existsByStudyGroup_IdAndStepAndCreatedBy_Id(Long studyGroupId, Integer step, Long userId);
 
+    Optional<Note> findByStudyGroup_IdAndStepAndCreatedBy_Id(Long studyGroupId, Integer step, Long userId);
 }
