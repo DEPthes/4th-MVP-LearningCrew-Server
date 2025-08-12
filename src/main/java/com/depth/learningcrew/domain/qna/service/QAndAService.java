@@ -118,6 +118,21 @@ public class QAndAService {
     return new PagedModel<>(page);
   }
 
+  @Transactional(readOnly=true)
+  public QAndADto.QAndADetailResponse getQAndADetail(Long groupId, Long qnaId, UserDetails user) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+            .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+    if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
+
+    QAndA qna = qAndARepository.findById(qnaId)
+            .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    return QAndADto.QAndADetailResponse.from(qna);
+  }
+
   private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
     if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
       throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
