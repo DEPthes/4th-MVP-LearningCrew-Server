@@ -58,14 +58,24 @@ public class QAndAController {
     qAndAService.deleteQAndA(qnaId, user);
   }
 
-  @GetMapping("/study-groups/{groupId}/qna")
+  @GetMapping("/study-groups/{studyGroupId}/qna")
   @Operation(summary = "스터디 그룹 질문 목록 조회", description = "그룹 멤버만 해당 그룹의 질문을 조건에 맞게 페이지네이션하여 조회")
   public PagedModel<QAndADto.QAndAResponse> getGroupQAndAs(
-          @PathVariable Long groupId,
+          @PathVariable Long studyGroupId,
           @ModelAttribute @ParameterObject QAndADto.SearchConditions searchConditions,
           @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
           @AuthenticationPrincipal UserDetails userDetails
   ) {
-    return qAndAService.paginateQAndAListByGroup(groupId, searchConditions, userDetails, pageable);
+    return qAndAService.paginateQAndAListByGroup(studyGroupId, searchConditions, userDetails, pageable);
+  }
+
+  @GetMapping("/study-groups/{studyGroupId}/qna/{qnaId}")
+  @Operation(summary = "스터디 그룹 질문 상세 조회", description = "그룹 멤버만 해당 그룹의 질문 상세를 조회할 수 있다.")
+  public QAndADto.QAndADetailResponse getQAndADetail(
+          @PathVariable Long studyGroupId,
+          @PathVariable Long qnaId,
+          @AuthenticationPrincipal UserDetails userDetails
+  ){
+    return qAndAService.getQAndADetail(studyGroupId, qnaId, userDetails);
   }
 }
