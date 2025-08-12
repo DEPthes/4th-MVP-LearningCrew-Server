@@ -1,16 +1,12 @@
 package com.depth.learningcrew.domain.qna.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.depth.learningcrew.domain.qna.dto.QAndADto;
 import com.depth.learningcrew.domain.qna.service.QAndAService;
@@ -60,5 +56,16 @@ public class QAndAController {
       @AuthenticationPrincipal UserDetails user) {
 
     qAndAService.deleteQAndA(qnaId, user);
+  }
+
+  @GetMapping("/study-groups/{groupId}/qna")
+  @Operation(summary = "스터디 그룹 질문 목록 조회", description = "그룹 멤버만 해당 그룹의 질문을 조건에 맞게 페이지네이션하여 조회")
+  public PagedModel<QAndADto.QAndAResponse> getGroupQAndAs(
+          @PathVariable Long groupId,
+          @ModelAttribute @ParameterObject QAndADto.SearchConditions searchConditions,
+          @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+          @AuthenticationPrincipal UserDetails userDetails
+  ) {
+    return qAndAService.paginateQAndAListByGroup(groupId, searchConditions, userDetails, pageable);
   }
 }
