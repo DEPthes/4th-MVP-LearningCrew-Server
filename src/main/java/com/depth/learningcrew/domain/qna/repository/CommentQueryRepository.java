@@ -61,11 +61,11 @@ public class CommentQueryRepository{
         String order = c.getOrder();
 
         if ("alphabet".equals(sort)) {
-            if ("asc".equals(order)) query.orderBy(qAndA.title.asc());
-            else query.orderBy(qAndA.title.desc());
+            if ("asc".equals(order)) query.orderBy(comment.content.asc());
+            else query.orderBy(comment.content.desc());
         } else { // created_at
-            if ("asc".equals(order)) query.orderBy(qAndA.createdAt.asc());
-            else query.orderBy(qAndA.createdAt.desc());
+            if ("asc".equals(order)) query.orderBy(comment.createdAt.asc());
+            else query.orderBy(comment.createdAt.desc());
         }
     }
 }
