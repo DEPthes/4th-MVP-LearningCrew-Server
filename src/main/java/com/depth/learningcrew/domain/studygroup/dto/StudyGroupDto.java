@@ -254,9 +254,6 @@ public class StudyGroupDto {
         @Schema(description = "마지막 수정 시간", example = "2024-01-01T00:00:00")
         private LocalDateTime lastModifiedAt;
 
-        @Schema(description = "스터디 내용", example = "스터디 내용")
-        private String content;
-
         @Schema(description = "스터디 스텝(진도) 목록")
         private List<StepDto.StepResponse> steps;
 
@@ -280,7 +277,6 @@ public class StudyGroupDto {
                     .owner(UserDto.UserResponse.from(studyGroup.getOwner()))
                     .createdAt(studyGroup.getCreatedAt())
                     .lastModifiedAt(studyGroup.getLastModifiedAt())
-                    .content(studyGroup.getContent())
                     .steps(
                             studyGroup.getSteps().stream()
                                     .map(StepDto.StepResponse::from)
@@ -330,7 +326,6 @@ public class StudyGroupDto {
                     .currentStep(1) // 초기 스텝은 1로 설정
                     .startDate(startDate)
                     .endDate(endDate)
-                    .content("") // 초기 내용은 빈 문자열
                     .build();
         }
     }
