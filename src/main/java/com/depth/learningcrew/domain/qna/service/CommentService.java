@@ -2,6 +2,10 @@ package com.depth.learningcrew.domain.qna.service;
 
 import java.util.List;
 
+import com.depth.learningcrew.domain.qna.repository.CommentQueryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +36,7 @@ public class CommentService {
   private final StudyGroupRepository studyGroupRepository;
   private final MemberQueryRepository memberQueryRepository;
   private final FileHandler fileHandler;
+  private final CommentQueryRepository commentQueryRepository;
 
   @Transactional
   public CommentDto.CommentResponse createComment(Long studyGroupId, Long qnaId,
@@ -91,6 +96,32 @@ public class CommentService {
 
     // 댓글 삭제
     commentRepository.delete(comment);
+  }
+
+  @Transactional(readOnly = true)
+  public PagedModel<CommentDto.CommentResponse> paginateComments(
+          Long studyGroupId,
+          Long qnaId,
+          CommentDto.SearchConditions searchConditions,
+          Pageable pageable,
+          UserDetails userDetails
+  ) {
+    var studyGroup = studyGroupRepository.findById(studyGroupId)
+            .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+    var qna = qAndARepository.findById(qnaId)
+            .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    if (!qna.getStudyGroup().getId().equals(studyGroup.getId())) {
+      throw new RestException(ErrorCode.QANDA_NOT_FOUND);
+    }
+
+    cannotCommentIfNotMember(studyGroup, userDetails);
+
+    Page<CommentDto.CommentResponse> page =
+            commentQueryRepository.paginateByQna(studyGroupId, qnaId, searchConditions, pageable);
+
+    return new PagedModel<>(page);
   }
 
   private void cannotCommentIfNotMember(StudyGroup studyGroup, UserDetails userDetails) {
