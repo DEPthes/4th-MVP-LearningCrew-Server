@@ -186,4 +186,20 @@ public class NoteService {
                 .map(NoteDto.SharedNoteResponse::from)
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public NoteDto.NoteResponse getMyNoteDetail(Long groupId, Integer step, UserDetails user) {
+        StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+        if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+            throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
+        }
+
+        Note note = noteRepository.findByStudyGroup_IdAndStepAndCreatedBy_Id(
+                        groupId, step, user.getUser().getId())
+                .orElseThrow(() -> new RestException(ErrorCode.NOTE_NOT_FOUND));
+
+        return NoteDto.NoteResponse.from(note);
+    }
 }
