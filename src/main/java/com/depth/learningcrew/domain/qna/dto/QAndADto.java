@@ -85,11 +85,8 @@ public class QAndADto {
     @Schema(description = "질문 제목", example = "스프링 부트 설정 관련 질문입니다")
     private String title;
 
-    @Schema(description = "첨부 파일 개수", example = "2")
-    private Integer attachedFiles;
-
-    @Schema(description = "첨부 이미지 개수", example = "1")
-    private Integer attachedImages;
+    @Schema(description = "답변 개수", example = "3")
+    private int commentCount;
 
     @Schema(description = "생성일시", example = "2025-08-06T20:00:00Z")
     private String createdAt;
@@ -103,13 +100,12 @@ public class QAndADto {
     @Schema(description = "수정자 정보")
     private UserDto.UserResponse lastModifiedBy;
 
-    public static QAndAResponse from(QAndA entity) {
+    public static QAndAResponse from(QAndA entity, int commentCount) {
       return QAndAResponse.builder()
           .id(entity.getId())
           .step(entity.getStep())
           .title(entity.getTitle())
-          .attachedFiles(entity.getAttachedFiles().size())
-          .attachedImages(entity.getAttachedImages().size())
+          .commentCount(commentCount)
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
           .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
           .createdAt(entity.getCreatedAt().toString())
@@ -172,5 +168,26 @@ public class QAndADto {
           .lastModifiedAt(entity.getLastModifiedAt().toString())
           .build();
     }
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Data
+  @Schema(description = "Q&A 목록 조회 검색 조건")
+  public static class SearchConditions {
+    @Builder.Default
+    @Schema(description = "정렬 기준", example = "created_at", allowableValues = { "created_at", "alphabet" })
+    private String sort = "created_at";
+
+    @Builder.Default
+    @Schema(description = "정렬 순서", example = "desc", allowableValues = { "asc", "desc" })
+    private String order = "asc";
+
+    @Schema(description = "스텝", example = "1")
+    private Integer step;
+
+    @Schema(description = "검색어", example = "스터디")
+    private String searchKeyword;
   }
 }

@@ -73,6 +73,8 @@ public class CommentDto {
     private List<FileDto.FileResponse> attachedFiles;
     private UserDto.UserResponse createdBy;
     private UserDto.UserResponse lastModifiedBy;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime lastModifiedAt;
 
     public static CommentResponse from(Comment entity) {
       return CommentResponse.builder()
@@ -82,9 +84,24 @@ public class CommentDto {
           .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
           .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
+          .createdAt(entity.getCreatedAt())
+          .lastModifiedAt(entity.getLastModifiedAt())
           .build();
     }
-
   }
 
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Data
+  @Schema(description = "Comment 목록 조회 검색 조건")
+  public static class SearchConditions {
+    @Builder.Default
+    @Schema(description = "정렬 기준", example = "created_at", allowableValues = { "created_at", "alphabet" })
+    private String sort = "created_at";
+
+    @Builder.Default
+    @Schema(description = "정렬 순서", example = "desc", allowableValues = { "asc", "desc" })
+    private String order = "asc";
+  }
 }
