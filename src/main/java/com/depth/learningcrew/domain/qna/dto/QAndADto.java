@@ -100,12 +100,20 @@ public class QAndADto {
     @Schema(description = "수정자 정보")
     private UserDto.UserResponse lastModifiedBy;
 
+    @Schema(description = "첨부된 이미지")
+    private List<FileDto.FileResponse> attachedImages;
+
+    @Schema(description = "첨부된 파일")
+    private List<FileDto.FileResponse> attachedFiles;
+
     public static QAndAResponse from(QAndA entity, int commentCount) {
       return QAndAResponse.builder()
           .id(entity.getId())
           .step(entity.getStep())
           .title(entity.getTitle())
           .commentCount(commentCount)
+          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
           .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
           .createdAt(entity.getCreatedAt().toString())
