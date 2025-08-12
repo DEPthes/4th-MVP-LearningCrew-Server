@@ -21,7 +21,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -52,10 +51,6 @@ public class StudyGroup extends TimeStampedEntity {
 
     @Column(nullable = false, length = 255)
     private String summary;
-
-    @Lob
-    @Column
-    private String content;
 
     @Column(nullable = false)
     private Integer maxMembers;

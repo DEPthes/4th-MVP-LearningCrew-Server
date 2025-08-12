@@ -179,6 +179,8 @@ public class StudyGroupService {
         StudyStep step = StudyStep.builder()
             .id(stepId)
             .endDate(endDate)
+            .title(null)
+            .content(null)
             .build();
         savedGroup.getSteps().add(step);
       }
