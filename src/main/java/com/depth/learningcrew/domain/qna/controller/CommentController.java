@@ -1,15 +1,12 @@
 package com.depth.learningcrew.domain.qna.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.depth.learningcrew.domain.qna.dto.CommentDto;
 import com.depth.learningcrew.domain.qna.service.CommentService;
@@ -62,5 +59,18 @@ public class CommentController {
       @AuthenticationPrincipal UserDetails userDetails) {
 
     commentService.deleteComment(commentId, userDetails);
+  }
+
+  // CommentController.java
+  @GetMapping("/study-groups/{studyGroupId}/qna/{qnaId}/comments")
+  @Operation(summary = "질문에 대한 답변 목록 조회", description = "스터디 그룹 멤버만 조회 가능")
+  public PagedModel<CommentDto.CommentResponse> getComments(
+          @PathVariable Long studyGroupId,
+          @PathVariable Long qnaId,
+          @ModelAttribute @ParameterObject CommentDto.SearchConditions searchConditions,
+          @PageableDefault(page = 0, size = 10) Pageable pageable,
+          @AuthenticationPrincipal UserDetails userDetails
+  ) {
+    return commentService.paginateComments(studyGroupId, qnaId, searchConditions, pageable, userDetails);
   }
 }
