@@ -23,3 +23,6 @@ server:
 
 file:
   save-path: ./upload
+
+gemini:
+  api-key: ${GEMINI_API_KEY}

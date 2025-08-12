@@ -70,6 +70,9 @@ dependencies {
 	implementation 'dev.langchain4j:langchain4j:1.0.0-beta3'
 	implementation 'dev.langchain4j:langchain4j-spring-boot-starter:1.0.0-beta3'
 	implementation 'dev.langchain4j:langchain4j-google-ai-gemini:1.0.0-beta3'
+
+	// dotenv-java
+	implementation 'io.github.cdimascio:dotenv-java:3.2.0'
 }
 
 tasks.named('test') {

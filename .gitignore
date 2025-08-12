@@ -37,9 +37,11 @@ out/
 .vscode/
 
 ### Environment ###
-.env
+# Ignore all env files but allow committed examples
+.env*
+!.env.example
+!.env.sample
 .db
-.env.prod
 
 ### Cursor ###
 .cursor/
