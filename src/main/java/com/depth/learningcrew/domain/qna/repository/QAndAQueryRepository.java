@@ -153,4 +153,13 @@ public class QAndAQueryRepository {
     ) {
         return paginateByType(groupId, c, pageable);
     }
+
+    public Long totalComments(Long qnaId) {
+        Long cnt = queryFactory
+                .select(comment.count())
+                .from(comment)
+                .where(comment.qAndA.id.eq(qnaId))
+                .fetchOne();
+        return cnt != null ? cnt : 0L;
+    }
 }

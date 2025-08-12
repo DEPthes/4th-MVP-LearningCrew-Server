@@ -161,20 +161,32 @@ public class QAndADto {
     @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
     private String lastModifiedAt;
 
-    public static QAndADetailResponse from(QAndA entity) {
+    @Schema(description = "답변 갯수", example = "5")
+    private Long commentCount;
+
+    private static QAndADetailResponse.QAndADetailResponseBuilder baseBuilder(QAndA e) {
       return QAndADetailResponse.builder()
-          .id(entity.getId())
-          .step(entity.getStep())
-          .title(entity.getTitle())
-          .content(entity.getContent())
-          .comments(entity.getComments().stream().map(CommentDto.CommentResponse::from).toList())
-          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
-          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
-          .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
-          .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
-          .createdAt(entity.getCreatedAt().toString())
-          .lastModifiedAt(entity.getLastModifiedAt().toString())
-          .build();
+              .id(e.getId())
+              .step(e.getStep())
+              .title(e.getTitle())
+              .content(e.getContent())
+              .comments(e.getComments().stream().map(CommentDto.CommentResponse::from).toList())
+              .attachedFiles(e.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
+              .attachedImages(e.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+              .createdBy(UserDto.UserResponse.from(e.getCreatedBy()))
+              .lastModifiedBy(UserDto.UserResponse.from(e.getLastModifiedBy()))
+              .createdAt(e.getCreatedAt().toString())
+              .lastModifiedAt(e.getLastModifiedAt().toString());
+    }
+
+    public static QAndADetailResponse from(QAndA entity) {
+      return baseBuilder(entity).build();
+    }
+
+    public static QAndADetailResponse of(QAndA entity, Long commentCount) {
+      return baseBuilder(entity)
+              .commentCount(commentCount)
+              .build();
     }
   }
 

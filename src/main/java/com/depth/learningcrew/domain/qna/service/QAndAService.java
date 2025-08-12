@@ -130,7 +130,9 @@ public class QAndAService {
     QAndA qna = qAndARepository.findById(qnaId)
             .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
 
-    return QAndADto.QAndADetailResponse.from(qna);
+    Long totalComments = qAndAQueryRepository.totalComments(qnaId);
+
+    return QAndADto.QAndADetailResponse.of(qna, totalComments);
   }
 
   private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
