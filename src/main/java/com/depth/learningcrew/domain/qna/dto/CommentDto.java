@@ -67,14 +67,29 @@ public class CommentDto {
   @Data
   @Builder
   public static class CommentResponse {
+    @Schema(description = "답변 ID", example = "42")
     private Long id;
+
+    @Schema(description = "답변 내용", example = "답변 내용입니다.")
     private String content;
+
+    @Schema(description = "첨부된 이미지")
     private List<FileDto.FileResponse> attachedImages;
+
+    @Schema(description = "첨부된 파일")
     private List<FileDto.FileResponse> attachedFiles;
+
+    @Schema(description = "생성일시", example = "2025-08-06T20:00:00Z")
+    private String createdAt;
+
+    @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
+    private String lastModifiedAt;
+
+    @Schema(description = "작성자 정보")
     private UserDto.UserResponse createdBy;
+
+    @Schema(description = "수정자 정보")
     private UserDto.UserResponse lastModifiedBy;
-    private java.time.LocalDateTime createdAt;
-    private java.time.LocalDateTime lastModifiedAt;
 
     public static CommentResponse from(Comment entity) {
       return CommentResponse.builder()
@@ -84,8 +99,8 @@ public class CommentDto {
           .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
           .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
-          .createdAt(entity.getCreatedAt())
-          .lastModifiedAt(entity.getLastModifiedAt())
+          .createdAt(entity.getCreatedAt().toString())
+          .lastModifiedAt(entity.getLastModifiedAt().toString())
           .build();
     }
   }
