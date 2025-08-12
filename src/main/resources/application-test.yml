@@ -39,3 +39,13 @@ cache:
     refresh-token-uuid:
       expiration-week: 2
       maximum-size: 10000
+
+gemini:
+  api-key: test-dummy-key-for-test-environment
+
+llm:
+  tpm:
+    capacity: 1000000
+
+file:
+  save-path: ./test-upload

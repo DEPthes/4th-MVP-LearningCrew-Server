@@ -139,7 +139,7 @@ class CommentServiceTest {
         .build();
 
     comment = Comment.builder()
-        .id(100L)
+        .id(10L)
         .content("original content")
         .qAndA(qAndA)
         .attachedFiles(new java.util.ArrayList<>())
@@ -155,9 +155,7 @@ class CommentServiceTest {
   @DisplayName("작성자가 댓글 내용을 수정할 수 있다")
   void updateComment_ByAuthor_UpdateContent() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content("updated")
@@ -176,9 +174,7 @@ class CommentServiceTest {
   @DisplayName("새 첨부파일/이미지를 추가할 수 있다")
   void updateComment_AddNewFilesAndImages() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     MockMultipartFile file = new MockMultipartFile("newAttachedFiles", "f.txt", "text/plain", "x".getBytes());
     MockMultipartFile image = new MockMultipartFile("newAttachedImages", "i.jpg", "image/jpeg", "y".getBytes());
@@ -201,9 +197,7 @@ class CommentServiceTest {
   @DisplayName("기존 첨부파일/이미지를 삭제할 수 있다")
   void updateComment_DeleteFilesAndImages() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentAttachedFile existingFile = CommentAttachedFile.builder()
         .uuid("file-uuid")
@@ -235,9 +229,7 @@ class CommentServiceTest {
   @DisplayName("존재하지 않는 첨부 ID 삭제 시도시에도 예외 없이 통과한다")
   void updateComment_DeleteNonExisting_NoException() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .deletedAttachedFiles(List.of("not-exist-file"))
@@ -253,18 +245,17 @@ class CommentServiceTest {
   }
 
   @Test
-  @DisplayName("스터디 그룹 멤버가 아니면 수정할 수 없다")
-  void updateComment_NotMember_Forbidden() {
+  @DisplayName("작성자가 아닌 일반 사용자는 수정할 수 없다")
+  void updateComment_NotAuthor_Forbidden() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(false);
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content("updated")
         .build();
 
-    // when & then
-    assertThatThrownBy(() -> commentService.updateComment(10L, request, authorDetails))
+    // when & then (작성자가 아닌 anotherDetails로 테스트)
+    assertThatThrownBy(() -> commentService.updateComment(10L, request, anotherDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
   }
@@ -273,9 +264,7 @@ class CommentServiceTest {
   @DisplayName("작성자가 아니고 관리자가 아니면 수정할 수 없다")
   void updateComment_NotAuthorAndNotAdmin_Forbidden() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, anotherUser)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content("updated")
@@ -291,9 +280,7 @@ class CommentServiceTest {
   @DisplayName("관리자는 댓글을 수정할 수 있다")
   void updateComment_ByAdmin_Success() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, adminUser)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content("admin-updated")
@@ -307,10 +294,10 @@ class CommentServiceTest {
   }
 
   @Test
-  @DisplayName("존재하지 않는 스터디 그룹이면 예외")
-  void updateComment_StudyGroupNotFound() {
+  @DisplayName("존재하지 않는 댓글이면 예외")
+  void updateComment_CommentNotFound_ShouldThrowException() {
     // given
-    when(studyGroupRepository.findById(999L)).thenReturn(Optional.empty());
+    when(commentRepository.findById(999L)).thenReturn(Optional.empty());
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content("u")
@@ -319,24 +306,6 @@ class CommentServiceTest {
     // when & then
     assertThatThrownBy(() -> commentService.updateComment(999L, request, authorDetails))
         .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_FOUND);
-  }
-
-  @Test
-  @DisplayName("존재하지 않는 댓글이면 예외")
-  void updateComment_CommentNotFound() {
-    // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.empty());
-
-    CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
-        .content("u")
-        .build();
-
-    // when & then
-    assertThatThrownBy(() -> commentService.updateComment(10L, request, authorDetails))
-        .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.COMMENT_NOT_FOUND);
   }
 
@@ -344,9 +313,7 @@ class CommentServiceTest {
   @DisplayName("내용이 null이면 기존 내용 유지")
   void updateComment_NullContent_KeepsOriginal() {
     // given
-    when(studyGroupRepository.findById(10L)).thenReturn(Optional.of(studyGroup));
-    when(memberQueryRepository.isMember(studyGroup, author)).thenReturn(true);
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     CommentDto.CommentUpdateRequest request = CommentDto.CommentUpdateRequest.builder()
         .content(null)
@@ -363,10 +330,10 @@ class CommentServiceTest {
   @DisplayName("답변 작성자가 자신의 답변을 삭제할 수 있다")
   void deleteComment_ByAuthor_Success() {
     // given
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     // when
-    commentService.deleteComment(100L, authorDetails);
+    commentService.deleteComment(10L, authorDetails);
 
     // then
     verify(commentRepository).delete(comment);
@@ -376,10 +343,10 @@ class CommentServiceTest {
   @DisplayName("스터디 그룹 주최자가 답변을 삭제할 수 있다")
   void deleteComment_ByOwner_Success() {
     // given
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     // when
-    commentService.deleteComment(100L, authorDetails);
+    commentService.deleteComment(10L, authorDetails);
 
     // then
     verify(commentRepository).delete(comment);
@@ -389,10 +356,10 @@ class CommentServiceTest {
   @DisplayName("관리자가 답변을 삭제할 수 있다")
   void deleteComment_ByAdmin_Success() {
     // given
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     // when
-    commentService.deleteComment(100L, adminDetails);
+    commentService.deleteComment(10L, adminDetails);
 
     // then
     verify(commentRepository).delete(comment);
@@ -402,10 +369,10 @@ class CommentServiceTest {
   @DisplayName("답변 작성자도 아니고 그룹 주최자도 아닌 사용자가 삭제 요청시 403 에러 발생")
   void deleteComment_NotAuthorAndNotOwner_Forbidden() {
     // given
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     // when & then
-    assertThatThrownBy(() -> commentService.deleteComment(100L, anotherDetails))
+    assertThatThrownBy(() -> commentService.deleteComment(10L, anotherDetails))
         .isInstanceOf(RestException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_FORBIDDEN);
   }
@@ -438,10 +405,10 @@ class CommentServiceTest {
         .build();
     comment.addAttachedImage(attachedImage);
 
-    when(commentRepository.findById(100L)).thenReturn(Optional.of(comment));
+    when(commentRepository.findById(10L)).thenReturn(Optional.of(comment));
 
     // when
-    commentService.deleteComment(100L, authorDetails);
+    commentService.deleteComment(10L, authorDetails);
 
     // then
     verify(fileHandler, times(1)).deleteFile(attachedFile);

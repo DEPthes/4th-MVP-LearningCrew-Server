@@ -124,7 +124,6 @@ class QAndAServiceIntegrationTest {
     studyGroup = StudyGroup.builder()
         .name("테스트 스터디 그룹_" + testId)
         .summary("테스트 스터디 그룹입니다.")
-        .content("테스트 스터디 그룹 내용입니다.")
         .maxMembers(10)
         .memberCount(3)
         .currentStep(1)

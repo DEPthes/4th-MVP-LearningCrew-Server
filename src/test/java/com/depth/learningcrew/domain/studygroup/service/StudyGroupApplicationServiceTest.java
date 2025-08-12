@@ -90,7 +90,6 @@ class StudyGroupApplicationServiceTest {
         .id(1L)
         .name("Test Study Group")
         .summary("Test Summary")
-        .content("Test Content")
         .maxMembers(10)
         .memberCount(1)
         .currentStep(1)

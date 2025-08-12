@@ -116,7 +116,6 @@ class StudyGroupServiceIntegrationTest {
     studyGroup = StudyGroup.builder()
         .name("기존 스터디 그룹")
         .summary("기존 스터디 그룹입니다.")
-        .content("기존 스터디 그룹 내용입니다.")
         .maxMembers(10)
         .memberCount(3)
         .currentStep(1)

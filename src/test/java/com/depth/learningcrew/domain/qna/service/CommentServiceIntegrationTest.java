@@ -138,7 +138,6 @@ class CommentServiceIntegrationTest {
     studyGroup = StudyGroup.builder()
         .name("sg_" + currentTestId)
         .summary("sum")
-        .content("content")
         .maxMembers(10)
         .memberCount(2)
         .currentStep(1)
