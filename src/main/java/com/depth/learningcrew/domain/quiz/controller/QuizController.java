@@ -1,50 +1,33 @@
 package com.depth.learningcrew.domain.quiz.controller;
 
-import com.depth.learningcrew.domain.quiz.schedule.QuizScheduler;
-import com.depth.learningcrew.domain.quiz.service.QuizGenerationService;
-import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+import com.depth.learningcrew.domain.quiz.dto.QuizDto;
+import com.depth.learningcrew.domain.quiz.service.QuizService;
+import com.depth.learningcrew.system.security.model.UserDetails;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/quiz")
+@RequestMapping("/api/study-groups/{studyGroupId}/steps")
 @Tag(name = "Quiz", description = "퀴즈 API")
 public class QuizController {
 
-    private final QuizScheduler quizScheduler;
+    private final QuizService quizService;
 
-    /**
-     * 스케줄러와 동일한 스캔 로직을 즉시(비동기) 실행한다.
-     * - 스케줄러의 inProgress 키로 중복 제출은 자동 방지된다.
-     * - 오래 걸릴 수 있으므로 202 Accepted로 즉시 반환한다.
-     */
-    @NoJwtAuth("Admin 레벨에서 다루는거라 인증 제외")
-    @PostMapping("/admin/run/scan")
-    public ResponseEntity<TriggerResponse> runScan() {
-        String jobId = UUID.randomUUID().toString();
-        quizScheduler.generateQuiz(); // 비동기 제출
-        return ResponseEntity.accepted().body(new TriggerResponse("SUBMITTED", jobId));
+    @GetMapping("/{step}/quiz")
+    @Operation(summary = "스터디그룹의 스텝별 퀴즈 조회", description = "해당 스터디 그룹의 스텝별 퀴즈를 리스트 형태로 조회합니다.")
+    public List<QuizDto.QuizResponse> getStepQuizzes(
+            @PathVariable Long studyGroupId,
+            @PathVariable Integer step,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return quizService.getStepQuizzes(studyGroupId, step, userDetails);
     }
-
-    public record TriggerResponse(String status, String jobId) {}
-
-    private final QuizGenerationService quizGenerationService;
-
-    @NoJwtAuth("Admin 레벨에서 다루는거라 인증 제외")
-    @PostMapping("/admin/run/target")
-    public ResponseEntity<?> runTarget(@RequestBody RunTargetRequest req) {
-        quizGenerationService.generateForGroupAndPrevStep(req.groupId(), req.stepNum());
-        return ResponseEntity.accepted().build();
-    }
-
-    public record RunTargetRequest(@NotNull Long groupId, @NotNull Integer stepNum) {}
 }
