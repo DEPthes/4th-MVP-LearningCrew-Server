@@ -77,6 +77,10 @@ public enum ErrorCode {
     NOTE_NOT_AUTHORIZED(403, "노트를 수정할 권한이 없습니다."),
     NOTE_ALREADY_EXISTS_IN_STEP(409, "해당 스텝에 이미 노트가 존재합니다."),
 
+    // Quiz
+    QUIZ_NOT_FOUND(404, "퀴즈를 찾을 수 없습니다."),
+    QUIZ_ALREADY_SUBMITTED_IN_STEP(409, "해당 스텝의 답변을 이미 제출했습니다."),
+
     // Other
     INTERNAL_SERVER_ERROR(500, "오류가 발생했습니다."),;
 
