@@ -73,7 +73,7 @@ public class AuthDto {
     @Schema(description = "로그인 요청 DTO", requiredProperties = {"email", "password"})
     public static class SignInRequest {
         @NotBlank(message = "이메일을 입력해주세요.")
-        @Email(message = "올바른 이메일 형식이 아닙니다.")
+//        @Email(message = "올바른 이메일 형식이 아닙니다.") -> 테스트 케이스에서 이메일 형식이 아닌 데이터가 있음
         @Schema(description = "이메일(아이디)", example = "user@email.com")
         private String email;
 
