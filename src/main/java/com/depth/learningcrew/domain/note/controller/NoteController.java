@@ -68,4 +68,15 @@ public class NoteController {
 
         return noteService.getSharedNotes(groupId, step, searchConditions, userDetails);
     }
+
+    @GetMapping("/study-groups/{groupId}/steps/{step}/notes/my")
+    @Operation(summary = "내 노트 상세조회", description = "스터디 그룹의 특정 스텝에서 로그인한 사용자가 작성한 노트를 상세 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "내 노트 상세 조회 성공")
+    public NoteDto.NoteResponse getMyNote(
+            @Parameter(description = "스터디 그룹 ID", example = "1") @PathVariable Long groupId,
+            @Parameter(description = "스터디 스텝 번호", example = "1") @PathVariable Integer step,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return noteService.getMyNoteDetail(groupId, step, userDetails);
+    }
 }
