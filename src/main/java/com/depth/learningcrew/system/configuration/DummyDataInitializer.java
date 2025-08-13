@@ -72,7 +72,7 @@ public class DummyDataInitializer implements ApplicationRunner {
   }
 
   private boolean isDatabaseEmpty() {
-    return userRepository.count() == 0 && studyGroupRepository.count() == 0;
+    return studyGroupRepository.count() == 0;
   }
 
   private void seedUsers() throws Exception {
