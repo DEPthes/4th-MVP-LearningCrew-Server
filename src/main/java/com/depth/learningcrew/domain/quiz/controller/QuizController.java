@@ -34,7 +34,7 @@ public class QuizController {
     }
 
     @PostMapping("/{step}/submit")
-    @Operation(summary = "스텝별 퀴즈에 대한 답변 제출", description = "해당 스터기 그룹의 스텝별 퀴즈에 대한 답변을 제출합니다.")
+    @Operation(summary = "스텝별 퀴즈에 대한 답변 제출", description = "해당 스터디 그룹의 스텝별 퀴즈에 대한 답변을 제출합니다.")
     public QuizRecordDto.QuizSubmitResponse submitQuizInStep(
             @PathVariable Long studyGroupId,
             @PathVariable Integer step,
@@ -44,6 +44,7 @@ public class QuizController {
     }
 
     @GetMapping("/records")
+    @Operation(summary = "기존에 제출한 점수 조회", description = "해당 스터디 그룹에서 멤버들이 제출한 점수를 조회합니다.")
     public PagedModel<QuizRecordDto.QuizRecordResponse> getQuizRecords(
             @PathVariable Long studyGroupId,
             @ModelAttribute @ParameterObject QuizRecordDto.SearchConditions searchConditions,
