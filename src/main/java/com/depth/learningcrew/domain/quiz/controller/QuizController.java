@@ -1,16 +1,14 @@
 package com.depth.learningcrew.domain.quiz.controller;
 
 import com.depth.learningcrew.domain.quiz.dto.QuizDto;
+import com.depth.learningcrew.domain.quiz.dto.QuizRecordDto;
 import com.depth.learningcrew.domain.quiz.service.QuizService;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -29,5 +27,14 @@ public class QuizController {
             @PathVariable Integer step,
             @AuthenticationPrincipal UserDetails userDetails) {
         return quizService.getStepQuizzes(studyGroupId, step, userDetails);
+    }
+
+    @PostMapping("/{step}/submit")
+    public QuizRecordDto.QuizSubmitResponse submitQuizInStep(
+            @PathVariable Long studyGroupId,
+            @PathVariable Integer step,
+            @RequestBody QuizRecordDto.QuizSubmitRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return quizService.submitStepAnswers(studyGroupId, step, request, userDetails);
     }
 }
