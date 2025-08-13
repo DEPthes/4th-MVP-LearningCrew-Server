@@ -1,18 +1,26 @@
 package com.depth.learningcrew.domain.quiz.dto;
 
+import com.depth.learningcrew.domain.quiz.entity.QuizRecord;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class QuizRecordDto {
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Data
+    public static class SearchConditions {
+        private String sort;
+
+        private String order;
+    }
 
     @Builder
     @NoArgsConstructor
@@ -67,6 +75,32 @@ public class QuizRecordDto {
                     .correctCount(correct)
                     .score(total == 0 ? 0 : Math.round((float) correct * 100 / total))
                     .createdAt(now)
+                    .build();
+        }
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    public static class QuizRecordResponse {
+        private Long userId;
+
+        private Integer step;
+
+        private Integer totalQuizCount;
+
+        private Integer correctCount;
+
+        private Integer score;
+
+        public static QuizRecordResponse from(User user, StudyGroup studyGroup, int total, QuizRecord quizRecord) {
+            return QuizRecordResponse.builder()
+                    .userId(user.getId())
+                    .step(studyGroup.getCurrentStep())
+                    .totalQuizCount(total)
+                    .correctCount(quizRecord.getCorrectCount())
+                    .score(total == 0 ? 0 : Math.round((float) quizRecord.getCorrectCount() * 100 / total))
                     .build();
         }
     }
