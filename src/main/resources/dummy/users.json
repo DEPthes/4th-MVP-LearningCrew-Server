@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "email": "study_usera@example.com",
+      "password": "study123!",
+      "nickname": "김하린",
+      "birthday": "2004-08-15",
+      "gender": "FEMALE"
+    },
+    {
+      "email": "study_userb@example.com",
+      "password": "study123!",
+      "nickname": "박지훈",
+      "birthday": "1999-03-12",
+      "gender": "MALE"
+    },
+    {
+      "email": "study_userc@example.com",
+      "password": "study123!",
+      "nickname": "최현우",
+      "birthday": "1998-07-02",
+      "gender": "MALE"
+    },
+    {
+      "email": "study_userd@example.com",
+      "password": "study123!",
+      "nickname": "이지우",
+      "birthday": "2001-05-20",
+      "gender": "FEMALE"
+    },
+    {
+      "email": "study_usere@example.com",
+      "password": "study123!",
+      "nickname": "윤민석",
+      "birthday": "2000-10-10",
+      "gender": "MALE"
+    },
+    {
+      "email": "study_userf@example.com",
+      "password": "study123!",
+      "nickname": "박서연",
+      "birthday": "2002-12-28",
+      "gender": "FEMALE"
+    }
+  ]
+}
