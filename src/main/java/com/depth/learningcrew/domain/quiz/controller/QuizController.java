@@ -7,6 +7,10 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,5 +41,14 @@ public class QuizController {
             @RequestBody QuizRecordDto.QuizSubmitRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         return quizService.submitStepAnswers(studyGroupId, step, request, userDetails);
+    }
+
+    @GetMapping("/records")
+    public PagedModel<QuizRecordDto.QuizRecordResponse> getQuizRecords(
+            @PathVariable Long studyGroupId,
+            @ModelAttribute @ParameterObject QuizRecordDto.SearchConditions searchConditions,
+            @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return quizService.paginateQuizRecords(studyGroupId, searchConditions, userDetails, pageable);
     }
 }
