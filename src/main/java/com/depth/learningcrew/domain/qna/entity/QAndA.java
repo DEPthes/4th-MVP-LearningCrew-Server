@@ -52,7 +52,7 @@ public class QAndA extends UserStampedEntity {
   private String title;
 
   @Lob
-  @Column
+  @Column(columnDefinition = "LONGTEXT")
   private String content;
 
   @ManyToOne(fetch = FetchType.LAZY)

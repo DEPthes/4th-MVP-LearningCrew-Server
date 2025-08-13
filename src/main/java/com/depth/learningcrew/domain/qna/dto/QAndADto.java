@@ -85,11 +85,8 @@ public class QAndADto {
     @Schema(description = "질문 제목", example = "스프링 부트 설정 관련 질문입니다")
     private String title;
 
-    @Schema(description = "첨부 파일 개수", example = "2")
-    private Integer attachedFiles;
-
-    @Schema(description = "첨부 이미지 개수", example = "1")
-    private Integer attachedImages;
+    @Schema(description = "답변 개수", example = "3")
+    private int commentCount;
 
     @Schema(description = "생성일시", example = "2025-08-06T20:00:00Z")
     private String createdAt;
@@ -103,13 +100,20 @@ public class QAndADto {
     @Schema(description = "수정자 정보")
     private UserDto.UserResponse lastModifiedBy;
 
-    public static QAndAResponse from(QAndA entity) {
+    @Schema(description = "첨부된 이미지")
+    private List<FileDto.FileResponse> attachedImages;
+
+    @Schema(description = "첨부된 파일")
+    private List<FileDto.FileResponse> attachedFiles;
+
+    public static QAndAResponse from(QAndA entity, int commentCount) {
       return QAndAResponse.builder()
           .id(entity.getId())
           .step(entity.getStep())
           .title(entity.getTitle())
-          .attachedFiles(entity.getAttachedFiles().size())
-          .attachedImages(entity.getAttachedImages().size())
+          .commentCount(commentCount)
+          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
           .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
           .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
           .createdAt(entity.getCreatedAt().toString())
@@ -157,20 +161,53 @@ public class QAndADto {
     @Schema(description = "수정일시", example = "2025-08-07T10:30:00Z")
     private String lastModifiedAt;
 
-    public static QAndADetailResponse from(QAndA entity) {
+    @Schema(description = "답변 갯수", example = "5")
+    private Long commentCount;
+
+    private static QAndADetailResponse.QAndADetailResponseBuilder baseBuilder(QAndA e) {
       return QAndADetailResponse.builder()
-          .id(entity.getId())
-          .step(entity.getStep())
-          .title(entity.getTitle())
-          .content(entity.getContent())
-          .comments(entity.getComments().stream().map(CommentDto.CommentResponse::from).toList())
-          .attachedFiles(entity.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
-          .attachedImages(entity.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
-          .createdBy(UserDto.UserResponse.from(entity.getCreatedBy()))
-          .lastModifiedBy(UserDto.UserResponse.from(entity.getLastModifiedBy()))
-          .createdAt(entity.getCreatedAt().toString())
-          .lastModifiedAt(entity.getLastModifiedAt().toString())
-          .build();
+              .id(e.getId())
+              .step(e.getStep())
+              .title(e.getTitle())
+              .content(e.getContent())
+              .comments(e.getComments().stream().map(CommentDto.CommentResponse::from).toList())
+              .attachedFiles(e.getAttachedFiles().stream().map(FileDto.FileResponse::from).toList())
+              .attachedImages(e.getAttachedImages().stream().map(FileDto.FileResponse::from).toList())
+              .createdBy(UserDto.UserResponse.from(e.getCreatedBy()))
+              .lastModifiedBy(UserDto.UserResponse.from(e.getLastModifiedBy()))
+              .createdAt(e.getCreatedAt().toString())
+              .lastModifiedAt(e.getLastModifiedAt().toString());
     }
+
+    public static QAndADetailResponse from(QAndA entity) {
+      return baseBuilder(entity).build();
+    }
+
+    public static QAndADetailResponse of(QAndA entity, Long commentCount) {
+      return baseBuilder(entity)
+              .commentCount(commentCount)
+              .build();
+    }
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Data
+  @Schema(description = "Q&A 목록 조회 검색 조건")
+  public static class SearchConditions {
+    @Builder.Default
+    @Schema(description = "정렬 기준", example = "created_at", allowableValues = { "created_at", "alphabet" })
+    private String sort = "created_at";
+
+    @Builder.Default
+    @Schema(description = "정렬 순서", example = "desc", allowableValues = { "asc", "desc" })
+    private String order = "asc";
+
+    @Schema(description = "스텝", example = "1")
+    private Integer step;
+
+    @Schema(description = "검색어", example = "스터디")
+    private String searchKeyword;
   }
 }

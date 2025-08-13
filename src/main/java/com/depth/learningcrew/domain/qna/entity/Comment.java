@@ -46,7 +46,7 @@ public class Comment extends UserStampedEntity {
   private Long id;
 
   @Lob
-  @Column
+  @Column(columnDefinition = "LONGTEXT")
   private String content;
 
   @ManyToOne(fetch = FetchType.LAZY)

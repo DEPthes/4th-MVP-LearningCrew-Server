@@ -3,6 +3,10 @@ package com.depth.learningcrew.domain.qna.service;
 import java.util.List;
 import java.util.Objects;
 
+import com.depth.learningcrew.domain.qna.repository.QAndAQueryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +34,7 @@ public class QAndAService {
   private final StudyGroupRepository studyGroupRepository;
   private final MemberQueryRepository memberQueryRepository;
   private final FileHandler fileHandler;
+  private final QAndAQueryRepository qAndAQueryRepository;
 
   @Transactional
   public QAndADto.QAndADetailResponse createQAndA(
@@ -91,6 +96,43 @@ public class QAndAService {
 
     deleteAllRelatedFiles(qAndA);
     qAndARepository.delete(qAndA);
+  }
+
+  @Transactional(readOnly = true)
+  public PagedModel<QAndADto.QAndAResponse> paginateQAndAListByGroup(
+          Long groupId,
+          QAndADto.SearchConditions searchConditions,
+          UserDetails user,
+          Pageable pageable
+  ) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+            .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+    if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
+
+    Page<QAndADto.QAndAResponse> page = qAndAQueryRepository
+            .paginateByGroup(groupId, searchConditions, pageable);
+
+    return new PagedModel<>(page);
+  }
+
+  @Transactional(readOnly=true)
+  public QAndADto.QAndADetailResponse getQAndADetail(Long groupId, Long qnaId, UserDetails user) {
+    StudyGroup studyGroup = studyGroupRepository.findById(groupId)
+            .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+    if (!memberQueryRepository.isMember(studyGroup, user.getUser())) {
+      throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+    }
+
+    QAndA qna = qAndARepository.findById(qnaId)
+            .orElseThrow(() -> new RestException(ErrorCode.QANDA_NOT_FOUND));
+
+    Long totalComments = qAndAQueryRepository.totalComments(qnaId);
+
+    return QAndADto.QAndADetailResponse.of(qna, totalComments);
   }
 
   private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
