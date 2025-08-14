@@ -8,6 +8,7 @@ import com.depth.learningcrew.domain.quiz.entity.QuizRecord;
 import com.depth.learningcrew.domain.quiz.entity.QuizRecordId;
 import com.depth.learningcrew.domain.quiz.repository.QuizQueryRepository;
 import com.depth.learningcrew.domain.quiz.repository.QuizRecordQueryRepository;
+import com.depth.learningcrew.domain.quiz.repository.QuizRecordRepository;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.MemberQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
@@ -34,6 +35,7 @@ public class QuizService {
     private final MemberQueryRepository memberQueryRepository;
     private final QuizQueryRepository quizQueryRepository;
     private final QuizRecordQueryRepository quizRecordQueryRepository;
+    private final QuizRecordRepository quizRecordRepository;
 
     @Transactional(readOnly = true)
     public List<QuizDto.QuizResponse> getStepQuizzes(
@@ -114,6 +116,9 @@ public class QuizService {
                     .build();
             toSave.add(record);
         }
+
+        // 퀴즈 기록 저장
+        quizRecordRepository.saveAll(toSave);
 
         LocalDateTime now = LocalDateTime.now();
 
