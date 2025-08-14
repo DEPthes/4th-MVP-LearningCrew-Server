@@ -7,6 +7,10 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,12 +34,22 @@ public class QuizController {
     }
 
     @PostMapping("/{step}/submit")
-    @Operation(summary = "스텝별 퀴즈에 대한 답변 제출", description = "해당 스터기 그룹의 스텝별 퀴즈에 대한 답변을 제출합니다.")
+    @Operation(summary = "스텝별 퀴즈에 대한 답변 제출", description = "해당 스터디 그룹의 스텝별 퀴즈에 대한 답변을 제출합니다.")
     public QuizRecordDto.QuizSubmitResponse submitQuizInStep(
             @PathVariable Long studyGroupId,
             @PathVariable Integer step,
             @RequestBody QuizRecordDto.QuizSubmitRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         return quizService.submitStepAnswers(studyGroupId, step, request, userDetails);
+    }
+
+    @GetMapping("/records")
+    @Operation(summary = "기존에 제출한 점수 조회", description = "해당 스터디 그룹에서 멤버들이 제출한 점수를 조회합니다.")
+    public PagedModel<QuizRecordDto.QuizRecordResponse> getQuizRecords(
+            @PathVariable Long studyGroupId,
+            @ModelAttribute @ParameterObject QuizRecordDto.SearchConditions searchConditions,
+            @PageableDefault(page = 0, size = 10) @ParameterObject Pageable pageable,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return quizService.paginateQuizRecords(studyGroupId, searchConditions, userDetails, pageable);
     }
 }

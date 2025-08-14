@@ -15,6 +15,9 @@ import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +44,7 @@ public class QuizService {
         StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
                 .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
 
-        cannotReadWhenNotMember(studyGroup, user);
+        cannotViewIfNotMember(studyGroup, user);
 
         return quizQueryRepository.findAllOfStepWithOptions(studyGroup, step)
                 .stream()
@@ -49,7 +52,7 @@ public class QuizService {
                 .toList();
     }
 
-    private void cannotReadWhenNotMember(StudyGroup studyGroup, UserDetails user) {
+    private void cannotViewIfNotMember(StudyGroup studyGroup, UserDetails user) {
         if(!memberQueryRepository.isMember(studyGroup, user.getUser())) {
             throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
         }
@@ -65,7 +68,7 @@ public class QuizService {
         StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
                 .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
 
-        cannotWriteWhenNotMember(studyGroup, user);
+        cannotWriteIfNotMember(studyGroup, user);
         cannotWriteWhenAlreadySubmitted(studyGroup, user, step);
 
         List<Quiz> quizzes = quizQueryRepository.findAllOfStepWithOptions(studyGroup, step);
@@ -117,7 +120,7 @@ public class QuizService {
         return QuizRecordDto.QuizSubmitResponse.from(user.getUser(), studyGroup, quizzes.size(), correctCount, now);
     }
 
-    private void cannotWriteWhenNotMember(StudyGroup studyGroup, UserDetails user) {
+    private void cannotWriteIfNotMember(StudyGroup studyGroup, UserDetails user) {
         if(!memberQueryRepository.isMember(studyGroup, user.getUser())) {
             throw new RestException(ErrorCode.STUDY_GROUP_NOT_MEMBER);
         }
@@ -127,5 +130,23 @@ public class QuizService {
         if(quizRecordQueryRepository.existsUserSubmittedStep(studyGroup, user.getUser(), step)) {
             throw new RestException(ErrorCode.QUIZ_ALREADY_SUBMITTED_IN_STEP);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public PagedModel<QuizRecordDto.QuizRecordResponse> paginateQuizRecords(
+            Long studyGroupId,
+            QuizRecordDto.SearchConditions searchConditions,
+            UserDetails user,
+            Pageable pageable) {
+
+        StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
+                .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
+
+        cannotViewIfNotMember(studyGroup, user);
+
+        Page<QuizRecordDto.QuizRecordResponse> result = quizRecordQueryRepository.paginateQuizRecords(
+                studyGroup, user, searchConditions, pageable);
+
+        return new PagedModel<>(result);
     }
 }
