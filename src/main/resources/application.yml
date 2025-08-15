@@ -26,3 +26,11 @@ file:
 
 gemini:
   api-key: ${GEMINI_API_KEY}
+
+springdoc:
+  swagger-ui:
+    validator-url: ""
+    url: /v3/api-docs
+    config-url: ""
+  api-docs:
+    path: /v3/api-docs
