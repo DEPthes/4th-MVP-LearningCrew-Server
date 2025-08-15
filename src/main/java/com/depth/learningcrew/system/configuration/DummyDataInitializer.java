@@ -171,6 +171,11 @@ public class DummyDataInitializer implements ApplicationRunner {
         }
         studyGroupRepository.save(entity);
 
+        // owner도 멤버로 추가
+        Member ownerMember = Member.builder().id(MemberId.of(owner, entity)).build();
+        memberRepository.save(ownerMember);
+        entity.setMemberCount(entity.getMemberCount() + 1);
+
         // applications
         for (String nick : Optional.ofNullable(g.getApplications()).orElseGet(Collections::emptyList)) {
           User applicant = nickToUser.get(nick);
