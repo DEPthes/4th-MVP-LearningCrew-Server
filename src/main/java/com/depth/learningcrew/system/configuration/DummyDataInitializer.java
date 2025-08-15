@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -73,6 +74,7 @@ public class DummyDataInitializer implements ApplicationRunner {
   private final NoteRepository noteRepository; // added
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final FileHandler fileHandler;
 
   @Value("${file.save-path:./upload}")
   private String fileSavePath;
@@ -235,7 +237,6 @@ public class DummyDataInitializer implements ApplicationRunner {
    * - steps, notes 디렉토리는 이번 단계에서 무시 (요구사항)
    */
   private void seedImages() throws IOException {
-    ensureSaveDir();
 
     seedUserProfileImages();
     seedStudyGroupImages();
@@ -285,7 +286,7 @@ public class DummyDataInitializer implements ApplicationRunner {
           user.setProfileImage(profileImage);
 
           // 파일 저장 (uuid로 저장)
-          writeToDisk(profileImage.getUuid(), bytes);
+          fileHandler.saveFile(mf, profileImage);
 
           // ProfileImage는 소유측(owning)이므로 profileImage를 persist
           em.persist(profileImage);
@@ -335,7 +336,7 @@ public class DummyDataInitializer implements ApplicationRunner {
         StudyGroupImage sgi = StudyGroupImage.from(mf, group); // 소유측 엔티티
         group.setStudyGroupImage(sgi); // 양방향 세팅
 
-        writeToDisk(sgi.getUuid(), bytes); // 실제 파일 저장
+        fileHandler.saveFile(mf, sgi);
         em.persist(sgi); // 명시적 persist (안전)
 
         log.info("Seeded study group image for '{}' -> {}", groupName, fileName);
@@ -465,7 +466,7 @@ public class DummyDataInitializer implements ApplicationRunner {
         targetNote.addAttachedImage(noteImg);
 
         // 디스크 저장
-        writeToDisk(noteImg.getUuid(), bytes);
+        fileHandler.saveFile(mf, noteImg);
 
         // 명시적 저장(안전)
         em.persist(noteImg);
@@ -477,19 +478,6 @@ public class DummyDataInitializer implements ApplicationRunner {
         log.error("Failed to seed note image for file {}: {}", fileName, ex.getMessage(), ex);
       }
     }
-  }
-
-  private void ensureSaveDir() throws IOException {
-    Path p = Path.of(fileSavePath);
-    if (!Files.exists(p)) {
-      Files.createDirectories(p);
-    }
-  }
-
-  private void writeToDisk(String uuid, byte[] bytes) throws IOException {
-    // 실제 업로드 저장과 유사하게 uuid 파일명으로 저장
-    Path target = Path.of(fileSavePath, uuid);
-    Files.write(target, bytes);
   }
 
   // JSON payload DTOs
