@@ -6,13 +6,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.depth.learningcrew.domain.file.entity.ProfileImage;
-import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -24,7 +25,10 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.depth.learningcrew.domain.file.entity.ProfileImage;
+import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
 // added imports
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
@@ -47,10 +51,11 @@ import com.depth.learningcrew.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Component
@@ -84,6 +89,7 @@ public class DummyDataInitializer implements ApplicationRunner {
     }
 
     seedUsers();
+    seedCategories(); // added
     seedGroups();
     seedImages();
 
@@ -110,6 +116,20 @@ public class DummyDataInitializer implements ApplicationRunner {
             .build();
         userRepository.save(toSave);
       }
+    }
+  }
+
+  private void seedCategories() throws Exception {
+    ClassPathResource categoriesRes = new ClassPathResource("dummy/categories.json");
+    try (InputStream in = categoriesRes.getInputStream()) {
+      List<String> categories = objectMapper.readValue(in,
+          objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+      for (String catName : categories) {
+        if (!groupCategoryRepository.findByName(catName).isPresent()) {
+          groupCategoryRepository.save(GroupCategory.builder().name(catName).build());
+        }
+      }
+      log.info("Seeded {} categories from categories.json", categories.size());
     }
   }
 
@@ -232,13 +252,12 @@ public class DummyDataInitializer implements ApplicationRunner {
     }
 
     Map<String, String> emailByBaseName = Map.of(
-            "study_usera", "study_usera@example.com",
-            "study_userb", "study_userb@example.com",
-            "study_userc", "study_userc@example.com",
-            "study_userd", "study_userd@example.com",
-            "study_usere", "study_usere@example.com",
-            "study_userf", "study_userf@example.com"
-    );
+        "study_usera", "study_usera@example.com",
+        "study_userb", "study_userb@example.com",
+        "study_userc", "study_userc@example.com",
+        "study_userd", "study_userd@example.com",
+        "study_usere", "study_usere@example.com",
+        "study_userf", "study_userf@example.com");
 
     for (String base : emailByBaseName.keySet()) {
       String fileName = base + ".jpg";
@@ -283,13 +302,12 @@ public class DummyDataInitializer implements ApplicationRunner {
   private void seedStudyGroupImages() throws IOException {
     // 미리 모든 그룹을 조회하여 이름 → 엔티티 매핑
     Map<String, StudyGroup> byName = studyGroupRepository.findAll().stream()
-            .collect(Collectors.toMap(StudyGroup::getName, g -> g, (a,b) -> a));
+        .collect(Collectors.toMap(StudyGroup::getName, g -> g, (a, b) -> a));
 
     Map<String, String> groupNameByCode = Map.of(
-            "g_group.jpg", "일본어 기초부터 실전까지",
-            "h_group.jpg", "기획 첫걸음",
-            "i_group.jpg", "타이포그래피 공부"
-    );
+        "g_group.jpg", "일본어 기초부터 실전까지",
+        "h_group.jpg", "기획 첫걸음",
+        "i_group.jpg", "타이포그래피 공부");
 
     for (var e : groupNameByCode.entrySet()) {
       String fileName = e.getKey();
@@ -315,10 +333,10 @@ public class DummyDataInitializer implements ApplicationRunner {
       try {
         MultipartFile mf = new BytesMultipartFile("file", fileName, bytes);
         StudyGroupImage sgi = StudyGroupImage.from(mf, group); // 소유측 엔티티
-        group.setStudyGroupImage(sgi);                          // 양방향 세팅
+        group.setStudyGroupImage(sgi); // 양방향 세팅
 
-        writeToDisk(sgi.getUuid(), bytes);                      // 실제 파일 저장
-        em.persist(sgi);                                        // 명시적 persist (안전)
+        writeToDisk(sgi.getUuid(), bytes); // 실제 파일 저장
+        em.persist(sgi); // 명시적 persist (안전)
 
         log.info("Seeded study group image for '{}' -> {}", groupName, fileName);
       } catch (Exception ex) {
@@ -330,41 +348,38 @@ public class DummyDataInitializer implements ApplicationRunner {
   private void seedNoteImages() throws IOException {
     // 1) 그룹 이름 캐시
     Map<String, StudyGroup> groupByName = studyGroupRepository.findAll().stream()
-            .collect(Collectors.toMap(StudyGroup::getName, g -> g, (a,b)->a));
+        .collect(Collectors.toMap(StudyGroup::getName, g -> g, (a, b) -> a));
 
     // 2) 그룹 코드 → 이름
     Map<String, String> groupCodeToName = Map.of(
-            "g", "일본어 기초부터 실전까지",
-            "h", "기획 첫걸음",
-            "i", "타이포그래피 공부"
-    );
+        "g", "일본어 기초부터 실전까지",
+        "h", "기획 첫걸음",
+        "i", "타이포그래피 공부");
 
     // 3) user코드 → 닉네임 (users.json 기준)
     Map<String, String> userCodeToNickname = Map.of(
-            "a", "김하린",
-            "b", "박지훈",
-            "c", "최현우",
-            "d", "이지우",
-            "e", "윤민석",
-            "f", "박서연"
-    );
+        "a", "김하린",
+        "b", "박지훈",
+        "c", "최현우",
+        "d", "이지우",
+        "e", "윤민석",
+        "f", "박서연");
 
     // 4) 모든 노트 미리 로드(관리 상태), 작성자/그룹/스텝 기준으로 조회하기 쉽게 인메모리 인덱스 구성
     List<Note> allNotes = noteRepository.findAll();
     // Map<groupId, Map<step, Map<authorUserId, List<Note>>>> 형태
     Map<Long, Map<Integer, Map<Long, List<Note>>>> noteIndex = allNotes.stream()
-            .collect(Collectors.groupingBy(n -> n.getStudyGroup().getId(),
-                    Collectors.groupingBy(Note::getStep,
-                            Collectors.groupingBy(n -> Optional.ofNullable(n.getCreatedBy()).map(User::getId).orElse(-1L)))));
+        .collect(Collectors.groupingBy(n -> n.getStudyGroup().getId(),
+            Collectors.groupingBy(Note::getStep,
+                Collectors.groupingBy(n -> Optional.ofNullable(n.getCreatedBy()).map(User::getId).orElse(-1L)))));
 
     // 5) 닉네임 → UserId 매핑(작성자 식별)
     Map<String, Long> nickToUserId = userRepository.findAll().stream()
-            .collect(Collectors.toMap(User::getNickname, User::getId, (a,b)->a));
+        .collect(Collectors.toMap(User::getNickname, User::getId, (a, b) -> a));
 
     // 6) notes 디렉터리 순회
     ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-    org.springframework.core.io.Resource[] resources =
-            resolver.getResources("classpath*:dummy/images/notes/*.jpg");
+    org.springframework.core.io.Resource[] resources = resolver.getResources("classpath*:dummy/images/notes/*.jpg");
 
     if (resources.length == 0) {
       log.info("No note images found under dummy/images/notes");
@@ -372,11 +387,13 @@ public class DummyDataInitializer implements ApplicationRunner {
     }
 
     // 파일명 파서
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile("^([ghi])_group_step(\\d+)_user([a-f])_note_(\\d+)\\.jpg$");
+    java.util.regex.Pattern p = java.util.regex.Pattern
+        .compile("^([ghi])_group_step(\\d+)_user([a-f])_note_(\\d+)\\.jpg$");
 
     for (org.springframework.core.io.Resource res : resources) {
       String fileName = res.getFilename();
-      if (fileName == null) continue;
+      if (fileName == null)
+        continue;
 
       var m = p.matcher(fileName);
       if (!m.matches()) {
@@ -384,10 +401,10 @@ public class DummyDataInitializer implements ApplicationRunner {
         continue;
       }
 
-      String groupCode = m.group(1);                   // g/h/i
-      int step = Integer.parseInt(m.group(2));         // step number
-      String userCode = m.group(3);                    // a~f
-      int nth = Integer.parseInt(m.group(4));          // 1-based index
+      String groupCode = m.group(1); // g/h/i
+      int step = Integer.parseInt(m.group(2)); // step number
+      String userCode = m.group(3); // a~f
+      int nth = Integer.parseInt(m.group(4)); // 1-based index
 
       String groupName = groupCodeToName.get(groupCode);
       if (groupName == null) {
@@ -410,17 +427,17 @@ public class DummyDataInitializer implements ApplicationRunner {
 
       // 해당 그룹/스텝/작성자의 노트 목록(오름차순 정렬)
       List<Note> notes = Optional.ofNullable(
-                      Optional.ofNullable(noteIndex.get(group.getId()))
-                              .map(byStep -> byStep.get(step)).orElse(null))
-              .map(byAuthor -> byAuthor.get(authorId))
-              .orElseGet(Collections::emptyList)
-              .stream()
-              .sorted(Comparator.comparing(Note::getId))
-              .toList();
+          Optional.ofNullable(noteIndex.get(group.getId()))
+              .map(byStep -> byStep.get(step)).orElse(null))
+          .map(byAuthor -> byAuthor.get(authorId))
+          .orElseGet(Collections::emptyList)
+          .stream()
+          .sorted(Comparator.comparing(Note::getId))
+          .toList();
 
       if (notes.isEmpty()) {
         log.warn("No notes found for group='{}', step={}, author='{}'. File={}",
-                groupName, step, authorNickname, fileName);
+            groupName, step, authorNickname, fileName);
         continue; // 노트가 없으면 스킵 (임의 생성 X)
       }
 
@@ -454,7 +471,7 @@ public class DummyDataInitializer implements ApplicationRunner {
         em.persist(noteImg);
 
         log.info("Seeded note image: file='{}' -> noteId={}, group='{}', step={}, author='{}' (image #{})",
-                fileName, targetNote.getId(), groupName, step, authorNickname, nth);
+            fileName, targetNote.getId(), groupName, step, authorNickname, nth);
 
       } catch (Exception ex) {
         log.error("Failed to seed note image for file {}: {}", fileName, ex.getMessage(), ex);
@@ -546,13 +563,44 @@ public class DummyDataInitializer implements ApplicationRunner {
       this.content = (content != null ? content : new byte[0]);
     }
 
-    @Override public String getName() { return name; }
-    @Override public String getOriginalFilename() { return originalFilename; }
-    @Override public String getContentType() { return null; }
-    @Override public boolean isEmpty() { return content.length == 0; }
-    @Override public long getSize() { return content.length; }
-    @Override public byte[] getBytes() { return content; }
-    @Override public InputStream getInputStream() { return new ByteArrayInputStream(content); }
-    @Override public void transferTo(java.io.File dest) throws IOException { Files.write(dest.toPath(), content); }
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public String getOriginalFilename() {
+      return originalFilename;
+    }
+
+    @Override
+    public String getContentType() {
+      return null;
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return content.length == 0;
+    }
+
+    @Override
+    public long getSize() {
+      return content.length;
+    }
+
+    @Override
+    public byte[] getBytes() {
+      return content;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+      return new ByteArrayInputStream(content);
+    }
+
+    @Override
+    public void transferTo(java.io.File dest) throws IOException {
+      Files.write(dest.toPath(), content);
+    }
   }
 }
