@@ -47,3 +47,4 @@ out/
 .cursor/
 /upload/
 .DS_Store
+/test-upload/
