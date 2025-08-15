@@ -55,6 +55,7 @@ public class StudyGroupQueryRepository {
                 .leftJoin(studyGroup.steps).fetchJoin()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .distinct()
                 .fetch();
 
         Long totalCount = buildCountQuery(searchConditions, user, filterType)
