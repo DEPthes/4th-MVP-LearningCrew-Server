@@ -59,6 +59,7 @@ public class StudyGroupQueryRepository {
                 .fetch();
 
         Long totalCount = buildCountQuery(searchConditions, user, filterType)
+                .distinct()
                 .fetchOne();
 
         List<StudyGroupDto.StudyGroupResponse> content = results.stream()
