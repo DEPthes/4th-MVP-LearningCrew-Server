@@ -122,7 +122,8 @@ public class StudyGroupQueryRepository {
         if (filterType == StudyGroupFilterType.MEMBERED) {
             query
                     .join(member).on(member.id.studyGroup.eq(studyGroup))
-                    .where(member.id.user.id.eq(user.getUser().getId()));
+                    .where(member.id.user.id.eq(user.getUser().getId()),
+                            studyGroup.owner.id.ne(user.getUser().getId()));
         }
     }
 
