@@ -52,7 +52,6 @@ public class StudyGroupQueryRepository {
         List<Tuple> results = contentQuery
                 .leftJoin(studyGroup.studyGroupImage).fetchJoin()
                 .leftJoin(studyGroup.owner).fetchJoin()
-                .leftJoin(studyGroup.steps).fetchJoin()
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .distinct()

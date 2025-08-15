@@ -88,7 +88,7 @@ public class StudyGroupController {
     return studyGroupService.createStudyGroup(request, userDetails);
   }
 
-  @GetMapping("my/membered")
+  @GetMapping("/my/membered")
   @Operation(summary = "내가 가입한 스터디 그룹 목록 조회", description = "가입한 스터디 그룹 목록을 조건에 맞게 페이지네이션하여 조회합니다.")
   public PagedModel<StudyGroupDto.StudyGroupResponse> getMyMemberedStudyGroups(
       @ModelAttribute @ParameterObject StudyGroupDto.SearchConditions searchConditions,
