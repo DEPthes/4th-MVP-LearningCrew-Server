@@ -21,7 +21,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - TZ=Asia/Seoul
     volumes:
-      - ${DEPLOY_PATH}/uploaded:/uploaded
+      - ~/deploy/learnit/uploaded:/uploaded
 
 networks:
   mariadb_net:
