@@ -38,5 +38,7 @@ gemini:
 # Gemini flash 2.0 기준 1M TPM
 # N번째 시도에서 1분 안에 토큰 초과 시 실패에 따른 재시도 로직 구현을 위한 설정
 llm:
-  tpm:
-    capacity:1000000
+  tpm: capacity:1000000
+
+file:
+  save-path: /uploaded
