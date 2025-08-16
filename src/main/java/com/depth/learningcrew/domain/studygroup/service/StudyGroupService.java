@@ -41,6 +41,14 @@ public class StudyGroupService {
   private final DibsRepository dibsRepository;
   private final MemberRepository memberRepository;
 
+  @Transactional
+  public void updateStudyGroupCurrentStep() {
+    List<StudyGroup> studyGroups = studyGroupQueryRepository.findStudyGroupsToUpdateStep();
+    for (StudyGroup studyGroup : studyGroups) {
+      studyGroup.setCurrentStep(studyGroup.getCurrentStep() + 1);
+    }
+  }
+
   @Transactional(readOnly = true)
   public PagedModel<StudyGroupDto.StudyGroupResponse> paginateMyOwnedStudyGroups(
       StudyGroupDto.SearchConditions searchConditions,

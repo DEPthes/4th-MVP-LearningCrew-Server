@@ -8,14 +8,11 @@ import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyG
 import static com.depth.learningcrew.domain.studygroup.entity.QStudyStep.studyStep;
 import static com.depth.learningcrew.domain.user.entity.QUser.user;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.depth.learningcrew.system.exception.model.ErrorCode;
-import com.depth.learningcrew.system.exception.model.RestException;
-import com.querydsl.core.types.dsl.Expressions;
-import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -28,11 +25,13 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -40,12 +39,24 @@ import lombok.RequiredArgsConstructor;
 public class StudyGroupQueryRepository {
     private final JPAQueryFactory queryFactory;
 
+    public List<StudyGroup> findStudyGroupsToUpdateStep() {
+        return queryFactory.selectFrom(studyGroup)
+                .join(studyGroup.steps, studyStep)
+                .where(
+                        studyStep.id.step.eq(studyGroup.currentStep)
+                                .and(studyStep.endDate.before(LocalDate.now()))
+                                .and(studyGroup.currentStep.lt(JPAExpressions
+                                        .select(studyStep.count().intValue())
+                                        .from(studyStep)
+                                        .where(studyStep.id.studyGroupId.eq(studyGroup)))))
+                .fetch();
+    }
+
     public Page<StudyGroupDto.StudyGroupResponse> paginateByType(
             StudyGroupDto.SearchConditions searchConditions,
             @Nullable UserDetails user,
             Pageable pageable,
-            StudyGroupFilterType filterType
-    ) {
+            StudyGroupFilterType filterType) {
         var contentQuery = buildBaseQuery(searchConditions, user, filterType);
         applySorting(contentQuery, searchConditions);
 
@@ -71,20 +82,16 @@ public class StudyGroupQueryRepository {
     private JPAQuery<Tuple> buildBaseQuery(
             StudyGroupDto.SearchConditions searchConditions,
             @Nullable UserDetails user,
-            StudyGroupFilterType filterType
-    ) {
+            StudyGroupFilterType filterType) {
         JPAQuery<Tuple> query = queryFactory
                 .select(
                         studyGroup,
-                        Objects.nonNull(user) ?
-                        JPAExpressions.selectOne()
+                        Objects.nonNull(user) ? JPAExpressions.selectOne()
                                 .from(dibs)
                                 .where(
                                         dibs.id.studyGroup.eq(studyGroup),
-                                        dibs.id.user.id.eq(user.getUser().getId())
-                                )
-                                .exists() : Expressions.asBoolean(false)
-                )
+                                        dibs.id.user.id.eq(user.getUser().getId()))
+                                .exists() : Expressions.asBoolean(false))
                 .from(studyGroup);
 
         applyFilterTypeCondition(query, user, filterType);
@@ -97,8 +104,7 @@ public class StudyGroupQueryRepository {
     private JPAQuery<Long> buildCountQuery(
             StudyGroupDto.SearchConditions searchConditions,
             @Nullable UserDetails user,
-            StudyGroupFilterType filterType
-    ) {
+            StudyGroupFilterType filterType) {
         JPAQuery<Long> query = queryFactory
                 .select(studyGroup.count())
                 .from(studyGroup);
@@ -110,8 +116,9 @@ public class StudyGroupQueryRepository {
         return query;
     }
 
-    private void applyFilterTypeCondition(JPAQuery<?> query, @Nullable UserDetails user, StudyGroupFilterType filterType) {
-        if (user == null || user.getUser() == null){
+    private void applyFilterTypeCondition(JPAQuery<?> query, @Nullable UserDetails user,
+            StudyGroupFilterType filterType) {
+        if (user == null || user.getUser() == null) {
             return;
         }
 
@@ -159,7 +166,7 @@ public class StudyGroupQueryRepository {
     }
 
     private void applySorting(JPAQuery<Tuple> query,
-                              StudyGroupDto.SearchConditions searchConditions) {
+            StudyGroupDto.SearchConditions searchConditions) {
         String sort = searchConditions.getSort();
         String order = searchConditions.getOrder();
 
@@ -210,8 +217,7 @@ public class StudyGroupQueryRepository {
         Boolean dibsValue = tuple.get(1, Boolean.class);
         return StudyGroupDto.StudyGroupResponse.from(
                 Objects.requireNonNull(entity),
-                dibsValue != null && dibsValue
-        );
+                dibsValue != null && dibsValue);
     }
 
     /**
@@ -267,8 +273,7 @@ public class StudyGroupQueryRepository {
                 .leftJoin(studyGroup.studyGroupImage, studyGroupImage).fetchJoin()
                 .where(studyGroup.id.eq(groupId))
                 .distinct()
-                .fetchOne()
-        );
+                .fetchOne());
 
     }
 }
