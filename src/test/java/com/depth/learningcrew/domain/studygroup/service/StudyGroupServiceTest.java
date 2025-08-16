@@ -22,6 +22,7 @@ import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.DibsRepository;
 import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
+import com.depth.learningcrew.domain.studygroup.repository.StudyGroupQueryRepository;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
@@ -30,6 +31,9 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
 class StudyGroupServiceTest {
+
+        @Mock
+        private StudyGroupQueryRepository studyGroupQueryRepository;
 
         @Mock
         private StudyGroupRepository studyGroupRepository;
@@ -60,6 +64,30 @@ class StudyGroupServiceTest {
                                 .nickname("testUser")
                                 .build();
                 userDetails = new UserDetails(testUser);
+        }
+
+        @Test
+        @DisplayName("스케줄러가 스터디 그룹의 현재 단계를 업데이트한다")
+        void updateStudyGroupCurrentStep() {
+                // given
+                StudyGroup group1 = StudyGroup.builder()
+                                .id(1L)
+                                .currentStep(1)
+                                .build();
+                StudyGroup group2 = StudyGroup.builder()
+                                .id(2L)
+                                .currentStep(2)
+                                .build();
+                List<StudyGroup> groupsToUpdate = Arrays.asList(group1, group2);
+
+                when(studyGroupQueryRepository.findStudyGroupsToUpdateStep()).thenReturn(groupsToUpdate);
+
+                // when
+                studyGroupService.updateStudyGroupCurrentStep();
+
+                // then
+                assertThat(group1.getCurrentStep()).isEqualTo(2);
+                assertThat(group2.getCurrentStep()).isEqualTo(3);
         }
 
         @Test
