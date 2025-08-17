@@ -62,7 +62,7 @@ public class User extends TimeStampedEntity {
     @Builder.Default
     private Role role = Role.USER;
 
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user")
+    @OneToOne(mappedBy = "user")
     @JoinColumn(name = "profile_image_id")
     private ProfileImage profileImage;
 }

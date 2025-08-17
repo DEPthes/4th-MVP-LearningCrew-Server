@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.user.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,8 @@ public class UserDto {
         private Gender gender;
         @Schema(description = "사용자 프로필 이미지")
         private FileDto.FileResponse profileImage;
+        @Schema(description = "사용자 생일", example = "YYYY-MM-DD")
+        private LocalDate birthday;
         @Schema(description = "계정 생성 시간", example = "ISO Datetime")
         private LocalDateTime createdAt;
         @Schema(description = "마지막 정보 수정 시간", example = "ISO Datetime")
@@ -49,6 +52,7 @@ public class UserDto {
                     .role(user.getRole())
                     .gender(user.getGender())
                     .profileImage(FileDto.FileResponse.from(user.getProfileImage()))
+                    .birthday(user.getBirthday())
                     .createdAt(user.getCreatedAt())
                     .lastModifiedAt(user.getLastModifiedAt())
                     .build();
