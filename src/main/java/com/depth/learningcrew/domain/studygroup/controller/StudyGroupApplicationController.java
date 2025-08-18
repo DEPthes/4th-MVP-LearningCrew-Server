@@ -6,6 +6,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,6 +52,15 @@ public class StudyGroupApplicationController {
             @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
 
         return studyGroupApplicationService.joinStudyGroup(groupId, userDetails);
+    }
+
+    @DeleteMapping("/{groupId}/join")
+    @Operation(summary = "스터디 그룹 가입 신청 취소", description = "로그인한 사용자가 특정 스터디 그룹에 대한 가입 신청을 취소합니다.")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelApplication(
+            @Parameter(description = "스터디 그룹 ID") @PathVariable Long groupId,
+            @Parameter(hidden = true) @AuthenticationPrincipal UserDetails userDetails) {
+        studyGroupApplicationService.cancelApplication(groupId, userDetails);
     }
 
     @PostMapping("/{groupId}/applications/{userId}/approve")

@@ -130,6 +130,15 @@ public class StudyGroupApplicationService {
     }
   }
 
+  @Transactional
+  public void cancelApplication(Long groupId, UserDetails userDetails) {
+    Application application = applicationRepository.findById_User_IdAndId_StudyGroup_Id(userDetails.getUser().getId(),
+        groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    applicationRepository.delete(application);
+  }
+
   @Transactional(readOnly = true)
   public PagedModel<ApplicationDto.ApplicationResponse> getMyApplications(
       ApplicationDto.SearchConditions searchConditions,
