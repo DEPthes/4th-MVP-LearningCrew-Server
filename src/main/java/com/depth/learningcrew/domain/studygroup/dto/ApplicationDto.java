@@ -38,10 +38,10 @@ public class ApplicationDto {
     @Schema(description = "신청 상태", example = "PENDING", allowableValues = { "PENDING", "APPROVED", "REJECTED" })
     private State state;
 
-    public static ApplicationResponse from(Application application) {
+    public static ApplicationResponse from(Application application, Boolean dibs) {
       return ApplicationResponse.builder()
           .user(UserDto.UserResponse.from(application.getId().getUser()))
-          .studyGroup(StudyGroupDto.StudyGroupResponse.from(application.getId().getStudyGroup(), false))
+          .studyGroup(StudyGroupDto.StudyGroupResponse.from(application.getId().getStudyGroup(), dibs))
           .createdAt(application.getCreatedAt())
           .lastModifiedAt(application.getLastModifiedAt())
           .approvedAt(application.getApprovedAt())
