@@ -73,8 +73,8 @@ public class AuthService {
             throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
 
         User toSave = request.toEntity(passwordEncoder);
-        saveProfileImage(request.getProfileImage(), toSave);
         User saved = userRepository.save(toSave);
+        saveProfileImage(request.getProfileImage(), saved);
 
         return UserDto.UserResponse.from(saved);
     }

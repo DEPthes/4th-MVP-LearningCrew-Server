@@ -5,17 +5,7 @@ import java.time.LocalDate;
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
 import com.depth.learningcrew.domain.file.entity.ProfileImage;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,7 +51,7 @@ public class User extends TimeStampedEntity {
     @Builder.Default
     private Role role = Role.USER;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @JoinColumn(name = "profile_image_id")
     private ProfileImage profileImage;
 }
