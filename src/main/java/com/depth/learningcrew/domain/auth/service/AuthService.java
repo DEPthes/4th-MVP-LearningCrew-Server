@@ -1,11 +1,18 @@
 package com.depth.learningcrew.domain.auth.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.depth.learningcrew.domain.auth.dto.AuthDto;
 import com.depth.learningcrew.domain.auth.token.dto.RefreshTokenDto;
 import com.depth.learningcrew.domain.auth.token.entity.RefreshToken;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenCacheRepository;
 import com.depth.learningcrew.domain.auth.token.repository.RefreshTokenRepository;
 import com.depth.learningcrew.domain.auth.token.validator.RefreshTokenValidator;
+import com.depth.learningcrew.domain.file.entity.ProfileImage;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.user.dto.UserDto;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.domain.user.repository.UserRepository;
@@ -17,11 +24,9 @@ import com.depth.learningcrew.system.security.model.UserDetails;
 import com.depth.learningcrew.system.security.service.UserLoadService;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenProvider;
 import com.depth.learningcrew.system.security.utility.jwt.JwtTokenResolver;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +39,10 @@ public class AuthService {
     private final RefreshTokenValidator refreshTokenValidator;
     private final UserLoadService userLoadService;
     private final PasswordEncoder passwordEncoder;
+    private final FileHandler fileHandler;
 
     @Transactional
-    public JwtDto.TokenInfo recreateToken(AuthDto.RecreateRequest request){
+    public JwtDto.TokenInfo recreateToken(AuthDto.RecreateRequest request) {
         String refreshTokenUuid = request.getRefreshToken();
         String id = jwtTokenResolver.resolveTokenFromString(refreshTokenUuid).getSubject();
 
@@ -52,8 +58,7 @@ public class AuthService {
         RefreshToken newRefreshToken = RefreshTokenDto.toEntity(
                 newRefreshUuid,
                 authDetails.getKey(),
-                tokenPair.getRefreshToken().getExpireAt()
-        );
+                tokenPair.getRefreshToken().getExpireAt());
 
         refreshTokenRepository.save(newRefreshToken);
         refreshTokenCacheRepository.cacheRefreshUuid(newRefreshUuid, authDetails.getKey());
@@ -64,13 +69,25 @@ public class AuthService {
     @Transactional
     public UserDto.UserResponse signUp(AuthDto.SignUpRequest request) {
         boolean isExisting = userRepository.existsByEmail(request.getEmail());
-        if(isExisting)
+        if (isExisting)
             throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
 
         User toSave = request.toEntity(passwordEncoder);
+        saveProfileImage(request.getProfileImage(), toSave);
         User saved = userRepository.save(toSave);
 
         return UserDto.UserResponse.from(saved);
+    }
+
+    private void saveProfileImage(MultipartFile file, User user) {
+        if (file != null && !file.isEmpty()) {
+            ProfileImage profileImage = ProfileImage.from(file);
+            if (profileImage == null)
+                return;
+            user.setProfileImage(profileImage);
+            profileImage.setUser(user);
+            fileHandler.saveFile(file, profileImage);
+        }
     }
 
     @Transactional
@@ -78,7 +95,7 @@ public class AuthService {
         var found = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-        if(!passwordEncoder.matches(request.getPassword(), found.getPassword()))
+        if (!passwordEncoder.matches(request.getPassword(), found.getPassword()))
             throw new RestException(ErrorCode.AUTH_PASSWORD_NOT_MATCH);
 
         var userDetails = UserDetails.from(found);
@@ -89,8 +106,7 @@ public class AuthService {
         RefreshToken refreshToken = RefreshTokenDto.toEntity(
                 refreshUuid,
                 userDetails.getKey(),
-                tokenPair.getRefreshToken().getExpireAt()
-        );
+                tokenPair.getRefreshToken().getExpireAt());
 
         refreshTokenRepository.save(refreshToken);
         refreshTokenCacheRepository.cacheRefreshUuid(refreshUuid, userDetails.getKey());
