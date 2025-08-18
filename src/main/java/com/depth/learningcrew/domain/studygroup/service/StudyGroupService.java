@@ -233,6 +233,11 @@ public class StudyGroupService {
       fileHandler.deleteFile(studyGroup.getStudyGroupImage());
     }
 
+    studyGroup.getSteps().forEach(studyStep -> {
+      studyStep.getFiles().forEach(fileHandler::deleteFile);
+      studyStep.getImages().forEach(fileHandler::deleteFile);
+    });
+
     studyGroupRepository.delete(studyGroup);
   }
 }
