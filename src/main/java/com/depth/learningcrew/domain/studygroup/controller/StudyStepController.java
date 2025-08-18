@@ -2,12 +2,7 @@ package com.depth.learningcrew.domain.studygroup.controller;
 
 import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.depth.learningcrew.domain.studygroup.dto.StepDto;
 import com.depth.learningcrew.domain.studygroup.service.StudyStepService;
@@ -40,7 +35,7 @@ public class StudyStepController {
   public StepDto.StepResponse updateStep(
       @PathVariable Long groupId,
       @PathVariable Integer step,
-      @Valid @RequestBody StepDto.StepUpdateRequest request,
+      @Valid @ModelAttribute StepDto.StepUpdateRequest request,
       @AuthenticationPrincipal UserDetails user) {
     return studyStepService.updateStep(groupId, step, request, user);
   }
