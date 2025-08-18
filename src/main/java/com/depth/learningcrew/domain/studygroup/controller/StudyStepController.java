@@ -1,6 +1,7 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
 import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +36,7 @@ public class StudyStepController {
   public StepDto.StepResponse updateStep(
       @PathVariable Long groupId,
       @PathVariable Integer step,
-      @Valid @ModelAttribute StepDto.StepUpdateRequest request,
+      @Valid @ModelAttribute @ParameterObject StepDto.StepUpdateRequest request,
       @AuthenticationPrincipal UserDetails user) {
     return studyStepService.updateStep(groupId, step, request, user);
   }

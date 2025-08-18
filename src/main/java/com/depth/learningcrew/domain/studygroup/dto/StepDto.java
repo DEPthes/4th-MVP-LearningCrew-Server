@@ -69,11 +69,11 @@ public class StepDto {
         @Schema(description = "스텝 내용", example = "이 주차에는 스터디 방향을 정하고 환경을 세팅합니다.")
         private String content;
 
-        @Schema(description = "새로 첨부된 이미지 목록")
+        @Schema(description = "새로 첨부된 이미지 목록 (멀티파트 파일 목록)")
         private List<MultipartFile> newAttachedImages;
 
-        @Schema(description = "새로 첨부된 파일 목록")
-        private List<MultipartFile> attachedFiles;
+        @Schema(description = "새로 첨부된 파일 목록 (멀티파트 파일 목록)")
+        private List<MultipartFile> newAttachedFiles;
 
         @Schema(description = "삭제된 첨부 이미지 목록 (파일 UUID 목록)")
         private List<String> deletedAttachedImages;

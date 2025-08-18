@@ -62,7 +62,7 @@ public class StudyStepService {
 
     deleteAttachedFiles(request.getDeletedAttachedFiles(), step);
     deleteAttachedImages(request.getDeletedAttachedImages(), step);
-    saveAttachedFiles(request.getAttachedFiles(), step);
+    saveAttachedFiles(request.getNewAttachedFiles(), step);
     saveAttachedImages(request.getNewAttachedImages(), step);
 
     return StepDto.StepResponse.from(step);
