@@ -1,5 +1,24 @@
 package com.depth.learningcrew.domain.studygroup.repository;
 
+import static com.depth.learningcrew.domain.file.entity.QStudyGroupImage.studyGroupImage;
+import static com.depth.learningcrew.domain.studygroup.entity.QDibs.dibs;
+import static com.depth.learningcrew.domain.studygroup.entity.QGroupCategory.groupCategory;
+import static com.depth.learningcrew.domain.studygroup.entity.QMember.member;
+import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyGroup;
+import static com.depth.learningcrew.domain.studygroup.entity.QStudyStep.studyStep;
+import static com.depth.learningcrew.domain.user.entity.QUser.user;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
+
 import com.depth.learningcrew.domain.studygroup.dto.StudyGroupDto;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.system.security.model.UserDetails;
@@ -11,26 +30,9 @@ import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import static com.depth.learningcrew.domain.file.entity.QStudyGroupImage.studyGroupImage;
-import static com.depth.learningcrew.domain.studygroup.entity.QDibs.dibs;
-import static com.depth.learningcrew.domain.studygroup.entity.QGroupCategory.groupCategory;
-import static com.depth.learningcrew.domain.studygroup.entity.QMember.member;
-import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyGroup;
-import static com.depth.learningcrew.domain.studygroup.entity.QStudyStep.studyStep;
-import static com.depth.learningcrew.domain.user.entity.QUser.user;
 
 @Repository
 @RequiredArgsConstructor
@@ -194,9 +196,9 @@ public class StudyGroupQueryRepository {
             }
         } else { // created_at (기본값)
             if ("asc".equals(order)) {
-                query.orderBy(studyGroup.createdAt.asc());
+                query.orderBy(studyGroup.startDate.asc());
             } else {
-                query.orderBy(studyGroup.createdAt.desc());
+                query.orderBy(studyGroup.startDate.desc());
             }
         }
     }
