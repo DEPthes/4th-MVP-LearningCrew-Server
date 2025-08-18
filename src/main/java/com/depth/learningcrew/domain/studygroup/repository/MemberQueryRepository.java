@@ -58,14 +58,18 @@ public class MemberQueryRepository {
     return queryFactory
         .selectFrom(member)
         .leftJoin(member.id.user, user).fetchJoin()
-        .where(member.id.studyGroup.eq(studyGroup));
+        .where(
+            member.id.studyGroup.eq(studyGroup),
+            member.id.user.id.ne(studyGroup.getOwner().getId()));
   }
 
   private JPAQuery<Long> buildCountQuery(StudyGroup studyGroup) {
     return queryFactory
         .select(member.count())
         .from(member)
-        .where(member.id.studyGroup.eq(studyGroup));
+        .where(
+            member.id.studyGroup.eq(studyGroup),
+            member.id.user.id.ne(studyGroup.getOwner().getId()));
   }
 
   private void applySorting(JPAQuery<Member> query, MemberDto.SearchConditions searchConditions) {
