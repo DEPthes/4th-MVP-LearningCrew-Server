@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.studygroup.controller;
 
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,6 +28,7 @@ public class StudyStepController {
 
   @GetMapping("/{step}")
   @Operation(summary = "특정 스텝 조회", description = "그룹 ID와 스텝 번호로 스텝 정보를 조회합니다.")
+  @NoJwtAuth
   public StepDto.StepResponse getStep(
       @PathVariable Long groupId,
       @PathVariable Integer step) {
