@@ -3,6 +3,7 @@ package com.depth.learningcrew.domain.user.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,16 +15,12 @@ import com.depth.learningcrew.domain.user.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 public class UserDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Getter
+    @Data
     public static class UserResponse {
         @Schema(description = "사용자 ID", example = "1")
         private Long id;
@@ -62,7 +59,7 @@ public class UserDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Getter
+    @Data
     public static class UserUpdateRequest {
         @Email(message = "올바른 이메일 형식이 아닙니다.")
         @Schema(description = "이메일(아이디)", example = "user@email.com")
