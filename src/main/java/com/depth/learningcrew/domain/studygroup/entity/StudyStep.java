@@ -1,12 +1,12 @@
 package com.depth.learningcrew.domain.studygroup.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
+import com.depth.learningcrew.domain.file.entity.StudyStepFile;
+import com.depth.learningcrew.domain.file.entity.StudyStepImage;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,5 +34,13 @@ public class StudyStep {
     @Lob
     @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
+
+    @OneToMany(mappedBy = "studyStep", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<StudyStepFile> files = new ArrayList<>();
+
+    @OneToMany(mappedBy = "studyStep", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<StudyStepImage> images = new ArrayList<>();
 
 }
