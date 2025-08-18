@@ -1,5 +1,6 @@
 package com.depth.learningcrew.domain.studygroup.service;
 
+import com.depth.learningcrew.domain.studygroup.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
@@ -13,10 +14,6 @@ import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.MemberId;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.repository.ApplicationQueryRepository;
-import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
-import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
 import com.depth.learningcrew.system.security.model.UserDetails;
@@ -31,6 +28,7 @@ public class StudyGroupApplicationService {
   private final ApplicationRepository applicationRepository;
   private final ApplicationQueryRepository applicationQueryRepository;
   private final MemberRepository memberRepository;
+  private final DibsRepository dibsRepository;
 
   @Transactional(readOnly = true)
   public PagedModel<ApplicationDto.ApplicationResponse> getApplicationsByGroupId(
@@ -68,12 +66,15 @@ public class StudyGroupApplicationService {
         .build();
 
     Application savedApplication = applicationRepository.save(application);
-    return ApplicationDto.ApplicationResponse.from(savedApplication);
+
+    boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), studyGroup);
+
+    return ApplicationDto.ApplicationResponse.from(savedApplication, dibs);
   }
 
   @Transactional
   public ApplicationDto.ApplicationResponse approveApplication(Long groupId, Long userId,
-      UserDetails ownerDetails) {
+                                                               UserDetails ownerDetails) {
     StudyGroup studyGroup = studyGroupRepository.findById(groupId)
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
@@ -86,9 +87,11 @@ public class StudyGroupApplicationService {
 
     boolean isAlreadyMember = memberRepository.existsById_UserAndId_StudyGroup(application.getId().getUser(),
         studyGroup);
+    Boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(application.getId().getUser(), studyGroup);
+
 
     if (isAlreadyMember) {
-      return ApplicationDto.ApplicationResponse.from(application);
+      return ApplicationDto.ApplicationResponse.from(application, dibs);
     }
 
     MemberId memberId = MemberId.of(application.getId().getUser(), studyGroup);
@@ -99,7 +102,7 @@ public class StudyGroupApplicationService {
     studyGroup.setMemberCount(studyGroup.getMemberCount() + 1);
     studyGroupRepository.save(studyGroup);
 
-    return ApplicationDto.ApplicationResponse.from(application);
+    return ApplicationDto.ApplicationResponse.from(application, dibs);
   }
 
   @Transactional
@@ -115,7 +118,9 @@ public class StudyGroupApplicationService {
     application.canRejectNow();
     application.reject();
 
-    return ApplicationDto.ApplicationResponse.from(application);
+    Boolean dibs = dibsRepository.existsById_UserAndId_StudyGroup(application.getId().getUser(), application.getId().getStudyGroup());
+
+    return ApplicationDto.ApplicationResponse.from(application, dibs);
   }
 
   private void cannotApplicateIfAlreadyMember(UserDetails userDetails, StudyGroup studyGroup) {
@@ -128,6 +133,15 @@ public class StudyGroupApplicationService {
     if (applicationRepository.existsById_UserAndId_StudyGroup(userDetails.getUser(), studyGroup)) {
       throw new RestException(ErrorCode.STUDY_GROUP_ALREADY_APPLIED);
     }
+  }
+
+  @Transactional
+  public void cancelApplication(Long groupId, UserDetails userDetails) {
+    Application application = applicationRepository.findById_User_IdAndId_StudyGroup_Id(userDetails.getUser().getId(),
+            groupId)
+        .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
+
+    applicationRepository.delete(application);
   }
 
   @Transactional(readOnly = true)

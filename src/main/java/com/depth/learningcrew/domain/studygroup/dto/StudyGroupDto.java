@@ -89,6 +89,12 @@ public class StudyGroupDto {
         @Schema(description = "마지막 수정 시간", example = "2024-01-01T00:00:00")
         private LocalDateTime lastModifiedAt;
 
+        @Schema(description = "현재 진행 중인 스텝", example = "1")
+        private Integer currentStep;
+
+        @Schema(description = "전체 스텝 수", example = "5")
+        private Integer totalSteps;
+
         public static StudyGroupResponse from(StudyGroup studyGroup, Boolean dibs) {
             return StudyGroupResponse.builder()
                     .id(studyGroup.getId())
@@ -106,6 +112,8 @@ public class StudyGroupDto {
                     .owner(UserDto.UserResponse.from(studyGroup.getOwner()))
                     .createdAt(studyGroup.getCreatedAt())
                     .lastModifiedAt(studyGroup.getLastModifiedAt())
+                    .currentStep(studyGroup.getCurrentStep())
+                    .totalSteps(studyGroup.getSteps().size())
                     .build();
         }
     }
@@ -260,6 +268,9 @@ public class StudyGroupDto {
         @Schema(description = "현재 진행 중인 스텝", example = "1")
         private Integer currentStep;
 
+        @Schema(description = "전체 스텝 수", example = "5")
+        private Integer totalSteps;
+
         public static StudyGroupDetailResponse from(StudyGroup studyGroup, Boolean dibs) {
             return StudyGroupDetailResponse.builder()
                     .id(studyGroup.getId())
@@ -282,6 +293,7 @@ public class StudyGroupDto {
                                     .map(StepDto.StepResponse::from)
                                     .collect(Collectors.toList()))
                     .currentStep(studyGroup.getCurrentStep())
+                    .totalSteps(studyGroup.getSteps().size())
                     .build();
         }
     }

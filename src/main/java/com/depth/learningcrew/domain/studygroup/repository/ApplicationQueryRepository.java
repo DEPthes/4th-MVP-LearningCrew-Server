@@ -1,11 +1,17 @@
 package com.depth.learningcrew.domain.studygroup.repository;
 
 import static com.depth.learningcrew.domain.studygroup.entity.QApplication.application;
+import static com.depth.learningcrew.domain.studygroup.entity.QDibs.dibs;
 import static com.depth.learningcrew.domain.studygroup.entity.QStudyGroup.studyGroup;
 import static com.depth.learningcrew.domain.user.entity.QUser.user;
 
 import java.util.List;
+import java.util.Objects;
 
+import com.depth.learningcrew.domain.studygroup.entity.QDibs;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +47,14 @@ public class ApplicationQueryRepository {
       Pageable pageable) {
 
     var query = queryFactory
-        .select(application)
+        .select(application,
+            JPAExpressions.selectOne()
+                .from(dibs)
+                .where(
+                    dibs.id.studyGroup.eq(studyGroup),
+                    dibs.id.user.id.eq(user.getId()))
+                .exists()
+            )
         .from(application)
         .join(application.id.studyGroup).fetchJoin()
         .join(application.id.user).fetchJoin()
@@ -54,7 +67,7 @@ public class ApplicationQueryRepository {
 
     applySorting(query, searchConditions);
 
-    List<Application> results = query
+    List<Tuple> results = query
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
@@ -71,7 +84,12 @@ public class ApplicationQueryRepository {
     Long totalCount = countQuery.fetchOne();
 
     List<ApplicationDto.ApplicationResponse> content = results.stream()
-        .map(ApplicationDto.ApplicationResponse::from)
+        .map(it -> {
+          Application application = Objects.requireNonNull(it.get(0, Application.class));
+          Boolean dibs = it.get(1, Boolean.class);
+
+          return ApplicationDto.ApplicationResponse.from(application, dibs);
+        })
         .toList();
 
     return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
@@ -93,7 +111,14 @@ public class ApplicationQueryRepository {
       Pageable pageable) {
 
     var query = queryFactory
-        .select(application)
+        .select(application,
+            JPAExpressions.selectOne()
+                .from(dibs)
+                .where(
+                    dibs.id.studyGroup.eq(studyGroup),
+                    dibs.id.user.id.eq(userDetails.getUser().getId()))
+                .exists()
+        )
         .from(application)
         .join(application.id.studyGroup, studyGroup)
         .join(application.id.user, user)
@@ -109,7 +134,7 @@ public class ApplicationQueryRepository {
     // 정렬 조건 적용
     applySorting(query, searchConditions);
 
-    List<Application> results = query
+    List<Tuple> results = query
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())
         .fetch();
@@ -129,7 +154,12 @@ public class ApplicationQueryRepository {
     Long totalCount = countQuery.fetchOne();
 
     List<ApplicationDto.ApplicationResponse> content = results.stream()
-        .map(ApplicationDto.ApplicationResponse::from)
+        .map(it -> {
+          Application application = Objects.requireNonNull(it.get(0, Application.class));
+          Boolean dibs = it.get(1, Boolean.class);
+
+          return ApplicationDto.ApplicationResponse.from(application, dibs);
+        })
         .toList();
 
     return new PageImpl<>(content, pageable, totalCount != null ? totalCount : 0L);
@@ -177,7 +207,7 @@ public class ApplicationQueryRepository {
     return predicate;
   }
 
-  private void applySorting(JPAQuery<Application> query, ApplicationDto.SearchConditions searchConditions) {
+  private void applySorting(JPAQuery<Tuple> query, ApplicationDto.SearchConditions searchConditions) {
     String sort = searchConditions.getSort();
     String order = searchConditions.getOrder();
 

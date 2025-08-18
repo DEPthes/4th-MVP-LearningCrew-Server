@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import com.depth.learningcrew.domain.studygroup.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,10 +29,6 @@ import com.depth.learningcrew.domain.studygroup.entity.ApplicationId;
 import com.depth.learningcrew.domain.studygroup.entity.Member;
 import com.depth.learningcrew.domain.studygroup.entity.State;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
-import com.depth.learningcrew.domain.studygroup.repository.ApplicationQueryRepository;
-import com.depth.learningcrew.domain.studygroup.repository.ApplicationRepository;
-import com.depth.learningcrew.domain.studygroup.repository.MemberRepository;
-import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
 import com.depth.learningcrew.domain.user.entity.Gender;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
@@ -50,6 +47,9 @@ class StudyGroupApplicationServiceTest {
 
   @Mock
   private MemberRepository memberRepository;
+
+  @Mock
+  private DibsRepository dibsRepository;
 
   @Mock
   private ApplicationQueryRepository applicationQueryRepository;
@@ -117,6 +117,7 @@ class StudyGroupApplicationServiceTest {
     when(memberRepository.existsById_UserAndId_StudyGroup(applicant, studyGroup)).thenReturn(false);
     when(memberRepository.save(any(Member.class))).thenReturn(new Member());
     when(studyGroupRepository.save(any(StudyGroup.class))).thenReturn(studyGroup);
+    when(dibsRepository.existsById_UserAndId_StudyGroup(applicant, studyGroup)).thenReturn(false);
 
     // when
     ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(1L, 2L, ownerDetails);
@@ -185,6 +186,7 @@ class StudyGroupApplicationServiceTest {
     when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(studyGroup));
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2L, 1L)).thenReturn(Optional.of(application));
     when(memberRepository.existsById_UserAndId_StudyGroup(applicant, studyGroup)).thenReturn(true);
+    when(dibsRepository.existsById_UserAndId_StudyGroup(applicant, studyGroup)).thenReturn(false);
 
     // when
     ApplicationDto.ApplicationResponse response = studyGroupApplicationService.approveApplication(1L, 2L, ownerDetails);
@@ -200,6 +202,7 @@ class StudyGroupApplicationServiceTest {
     // given
     when(studyGroupRepository.existsById(1L)).thenReturn(true);
     when(applicationRepository.findById_User_IdAndId_StudyGroup_Id(2L, 1L)).thenReturn(Optional.of(application));
+    when(dibsRepository.existsById_UserAndId_StudyGroup(applicant, studyGroup)).thenReturn(false);
 
     // when
     ApplicationDto.ApplicationResponse response = studyGroupApplicationService.rejectApplication(1L, 2L, ownerDetails);
