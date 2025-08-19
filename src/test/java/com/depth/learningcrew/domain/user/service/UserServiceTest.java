@@ -94,7 +94,7 @@ class UserServiceTest {
     when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
+    UserDto.UserResponse response = userService.update(testUser, updateRequest);
 
     // then
     verify(fileHandler, times(1)).saveFile(eq(newImage), any(ProfileImage.class));
@@ -133,7 +133,7 @@ class UserServiceTest {
     when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
+    UserDto.UserResponse response = userService.update(testUser, updateRequest);
 
     // then
     verify(fileHandler, times(1)).deleteFile(existingProfileImage);
@@ -158,7 +158,7 @@ class UserServiceTest {
     when(userRepository.existsByEmail("newemail@example.com")).thenReturn(false);
 
     // when
-    UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
+    UserDto.UserResponse response = userService.update(testUser, updateRequest);
 
     // then
     verify(fileHandler, never()).saveFile(any(MultipartFile.class), any(ProfileImage.class));
@@ -186,7 +186,7 @@ class UserServiceTest {
     when(userRepository.findById(testUser.getId())).thenReturn(java.util.Optional.of(testUser));
 
     // when
-    UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
+    UserDto.UserResponse response = userService.update(testUser, updateRequest);
 
     // then
     verify(fileHandler, never()).saveFile(any(MultipartFile.class), any(ProfileImage.class));
@@ -261,7 +261,7 @@ class UserServiceTest {
     when(attachedFileRepository.save(any(ProfileImage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // when
-    UserDto.UserUpdateResponse response = userService.update(testUser, updateRequest);
+    UserDto.UserResponse response = userService.update(testUser, updateRequest);
 
     // then
     verify(passwordEncoder, times(1)).encode("newPassword123");

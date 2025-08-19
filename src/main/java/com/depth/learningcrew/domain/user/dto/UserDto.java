@@ -76,6 +76,12 @@ public class UserDto {
         @Schema(description = "사용자 프로필 이미지", example = "MultipartFile", type = "file")
         private MultipartFile profileImage;
 
+        @Schema(description = "사용자 성별")
+        private Gender gender;
+
+        @Schema(description = "사용자 생년월일", example = "YYYY-MM-DD")
+        private LocalDate birthday;
+
         public void applyTo(User user, PasswordEncoder encoder) {
             if (email != null && !email.equals(user.getEmail())) {
                 user.setEmail(email);
@@ -83,36 +89,15 @@ public class UserDto {
             if (nickname != null && !nickname.equals(user.getNickname())) {
                 user.setNickname(nickname);
             }
+            if (gender != null) {
+                user.setGender(gender);
+            }
+            if (birthday != null) {
+                user.setBirthday(birthday);
+            }
             if (password != null) {
                 user.setPassword(encoder.encode(password));
             }
-        }
-    }
-
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    public static class UserUpdateResponse {
-        @Schema(description = "이메일(아이디)", example = "user@example.com")
-        private String email;
-        @Schema(description = "사용자 닉네임", example = "user nickname")
-        private String nickname;
-        @Schema(description = "사용자 역할", example = "USER | ADMIN")
-        private Role role;
-        @Schema(description = "계정 생성 시간", example = "ISO Datetime")
-        private LocalDateTime createdAt;
-        @Schema(description = "마지막 정보 수정 시간", example = "ISO Datetime")
-        private LocalDateTime lastModifiedAt;
-
-        public static UserUpdateResponse from(User user) {
-            return UserUpdateResponse.builder()
-                    .email(user.getEmail())
-                    .nickname(user.getNickname())
-                    .role(user.getRole())
-                    .createdAt(user.getCreatedAt())
-                    .lastModifiedAt(user.getLastModifiedAt())
-                    .build();
         }
     }
 }

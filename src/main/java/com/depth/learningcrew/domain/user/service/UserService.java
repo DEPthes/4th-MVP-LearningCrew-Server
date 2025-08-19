@@ -25,26 +25,23 @@ public class UserService {
     private final AttachedFileRepository attachedFileRepository;
 
     @Transactional
-    public UserDto.UserUpdateResponse update(User user, UserDto.UserUpdateRequest request) {
+    public UserDto.UserResponse update(User user, UserDto.UserUpdateRequest request) {
 
         User found = userRepository.findById(user.getId())
                 .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
-        if (request.getNickname() != null &&
-                !found.getNickname().equals(request.getNickname()) &&
-                userRepository.existsByNickname(request.getNickname())) {
-            throw new RestException(ErrorCode.USER_NICKNAME_ALREADY_EXISTS);
-        }
-
-        if (request.getEmail() != null &&
-                !found.getEmail().equals(request.getEmail()) &&
-                userRepository.existsByEmail(request.getEmail())) {
-            throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
-        }
+        cannotCreateWithDuplicatedNicknameOrEmail(request, found);
 
         request.applyTo(found, passwordEncoder);
 
         ProfileImage imageToSave = ProfileImage.from(request.getProfileImage());
+
+        updateProfileImage(request, imageToSave, found);
+
+        return UserDto.UserResponse.from(found);
+    }
+
+    private void updateProfileImage(UserDto.UserUpdateRequest request, ProfileImage imageToSave, User found) {
         if (imageToSave != null) {
             imageToSave.setUser(found);
 
@@ -57,7 +54,19 @@ public class UserService {
 
             found.setProfileImage(savedProfileImage);
         }
+    }
 
-        return UserDto.UserUpdateResponse.from(found);
+    private void cannotCreateWithDuplicatedNicknameOrEmail(UserDto.UserUpdateRequest request, User found) {
+        if (request.getNickname() != null &&
+                !found.getNickname().equals(request.getNickname()) &&
+                userRepository.existsByNickname(request.getNickname())) {
+            throw new RestException(ErrorCode.USER_NICKNAME_ALREADY_EXISTS);
+        }
+
+        if (request.getEmail() != null &&
+                !found.getEmail().equals(request.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
+            throw new RestException(ErrorCode.USER_ALREADY_EMAIL_EXISTS);
+        }
     }
 }
