@@ -36,24 +36,19 @@ public class UserService {
 
         ProfileImage imageToSave = ProfileImage.from(request.getProfileImage());
 
-        updateProfileImage(request, imageToSave, found);
-
-        return UserDto.UserResponse.from(found);
-    }
-
-    private void updateProfileImage(UserDto.UserUpdateRequest request, ProfileImage imageToSave, User found) {
         if (imageToSave != null) {
-            imageToSave.setUser(found);
-
-            fileHandler.saveFile(request.getProfileImage(), imageToSave);
-            ProfileImage savedProfileImage = attachedFileRepository.save(imageToSave);
-
             if (found.getProfileImage() != null) {
                 fileHandler.deleteFile(found.getProfileImage());
             }
 
+            ProfileImage savedProfileImage = attachedFileRepository.save(imageToSave);
+            savedProfileImage.setUser(found);
             found.setProfileImage(savedProfileImage);
+
+            fileHandler.saveFile(request.getProfileImage(), imageToSave);
         }
+
+        return UserDto.UserResponse.from(found);
     }
 
     private void cannotCreateWithDuplicatedNicknameOrEmail(UserDto.UserUpdateRequest request, User found) {
