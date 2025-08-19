@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Paths;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -17,6 +18,7 @@ import com.depth.learningcrew.system.exception.model.RestException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class FileHandler {
@@ -65,7 +67,8 @@ public class FileHandler {
         File targetFile = Paths.get(savePath, attachedFile.getUuid()).toFile();
 
         if (!targetFile.exists()) {
-            throw new RestException(ErrorCode.FILE_NOT_FOUND);
+            log.warn("File {} does not exist", targetFile.getAbsolutePath());
+            return;
         }
 
         if (!targetFile.delete()) {
