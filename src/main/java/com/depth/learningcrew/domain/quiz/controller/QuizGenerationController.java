@@ -1,18 +1,20 @@
 package com.depth.learningcrew.domain.quiz.controller;
 
-import com.depth.learningcrew.domain.quiz.schedule.QuizScheduler;
-import com.depth.learningcrew.domain.quiz.service.QuizGenerationService;
-import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import com.depth.learningcrew.domain.quiz.schedule.QuizScheduler;
+import com.depth.learningcrew.domain.quiz.service.QuizGenerationService;
+import com.depth.learningcrew.system.security.annotation.NoJwtAuth;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,4 +49,11 @@ public class QuizGenerationController {
     }
 
     public record RunTargetRequest(@NotNull Long groupId, @NotNull Integer stepNum) {}
+
+    @NoJwtAuth("Admin 레벨에서 다루는거라 인증 제외")
+    @PostMapping("/admin/run/backfill-missing")
+    public ResponseEntity<?> runBackfillMissing() {
+        quizGenerationService.generateForAllEndedStepsWithoutQuizzes();
+        return ResponseEntity.accepted().build();
+    }
 }

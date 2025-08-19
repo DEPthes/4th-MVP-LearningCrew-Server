@@ -1,5 +1,22 @@
 package com.depth.learningcrew.domain.quiz.service;
 
+import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.depth.learningcrew.domain.ai.llm.dto.OptionsPayload;
 import com.depth.learningcrew.domain.ai.llm.dto.QuizzesPayload;
 import com.depth.learningcrew.domain.ai.llm.service.OptionGenerator;
@@ -11,19 +28,9 @@ import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.repository.StudyGroupRepository;
 import com.depth.learningcrew.system.limiter.llm.TpmRateLimiter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.security.SecureRandom;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -38,11 +45,22 @@ public class QuizGenerationService {
     private final ObjectMapper objectMapper;
     private final TpmRateLimiter tpmRateLimiter;
     private final QuizPersistService persistService;
+    private final com.depth.learningcrew.domain.studygroup.repository.StudyStepQueryRepository studyStepQueryRepository;
 
     private final Map<GenKey, ReentrantLock> locks = new ConcurrentHashMap<>();
     private final Semaphore inFlightLimiter = new Semaphore(4, true);
 
     private static final int OPTION_MAX_LEN = 255;
+
+    public void generateForAllEndedStepsWithoutQuizzes() {
+        LocalDate today = LocalDate.now();
+        var steps = studyStepQueryRepository.findEndedStepsWithoutQuizzes(today);
+        for (var step : steps) {
+            Long groupId = step.getId().getStudyGroupId().getId();
+            Integer stepNum = step.getId().getStep();
+            generateForGroupAndPrevStep(groupId, stepNum);
+        }
+    }
 
     public void generateForGroupAndPrevStep(Long studyGroupId, Integer step) {
         GenKey key = new GenKey(studyGroupId, step, LocalDate.now());
@@ -70,8 +88,7 @@ public class QuizGenerationService {
             long quizTokensEst = estimateTokensForQuiz(mergedNotes);
             tpmRateLimiter.acquire(quizTokensEst);
 
-            QuizzesPayload q = withPermitAndRetry(() ->
-                    quizGenerator.generate(group.getName(), step, mergedNotes));
+            QuizzesPayload q = withPermitAndRetry(() -> quizGenerator.generate(group.getName(), step, mergedNotes));
             validateQuizzes(q);
 
             // LLM 호출 2: 보기 생성
@@ -116,7 +133,8 @@ public class QuizGenerationService {
             Thread.currentThread().interrupt();
             throw new RuntimeException(ie);
         } finally {
-            if (acquired) inFlightLimiter.release();
+            if (acquired)
+                inFlightLimiter.release();
         }
     }
 
@@ -138,7 +156,9 @@ public class QuizGenerationService {
     }
 
     private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException e) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
@@ -169,9 +189,11 @@ public class QuizGenerationService {
         StringBuilder sb = new StringBuilder(400_000);
         for (Note n : notes) {
             sb.append("## ");
-            if (n.getTitle() != null) sb.append(n.getTitle());
+            if (n.getTitle() != null)
+                sb.append(n.getTitle());
             sb.append("\n");
-            if (n.getContent() != null) sb.append(n.getContent());
+            if (n.getContent() != null)
+                sb.append(n.getContent());
             sb.append("\n\n");
         }
         return sb.toString();
@@ -200,10 +222,12 @@ public class QuizGenerationService {
             throw new IllegalStateException("Questions must be exactly 20");
         }
         long distinct = q.getQuizzes().stream().map(QuizzesPayload.Item::getId).distinct().count();
-        if (distinct != 20) throw new IllegalStateException("Question IDs must be unique");
+        if (distinct != 20)
+            throw new IllegalStateException("Question IDs must be unique");
         boolean anyBlank = q.getQuizzes().stream()
                 .anyMatch(it -> isBlank(it.getId()) || isBlank(it.getStem()) || isBlank(it.getAnswer()));
-        if (anyBlank) throw new IllegalStateException("id/stem/answer must be non-empty");
+        if (anyBlank)
+            throw new IllegalStateException("id/stem/answer must be non-empty");
     }
 
     private void validateOptions(QuizzesPayload q, OptionsPayload opts) {
@@ -213,13 +237,16 @@ public class QuizGenerationService {
         Map<String, QuizzesPayload.Item> qMap = q.getQuizzes().stream()
                 .collect(Collectors.toMap(QuizzesPayload.Item::getId, it -> it));
         for (OptionsPayload.Opt o : opts.getOptions()) {
-            if (!qMap.containsKey(o.getId())) throw new IllegalStateException("Option id not found: " + o.getId());
-            if (o.getChoices() == null || o.getChoices().size() != 4) throw new IllegalStateException("Choices must be 4");
+            if (!qMap.containsKey(o.getId()))
+                throw new IllegalStateException("Option id not found: " + o.getId());
+            if (o.getChoices() == null || o.getChoices().size() != 4)
+                throw new IllegalStateException("Choices must be 4");
             if (o.getAnswerIndex() == null || o.getAnswerIndex() < 0 || o.getAnswerIndex() > 3) {
                 throw new IllegalStateException("answerIndex must be 0..3");
             }
             long dc = o.getChoices().stream().distinct().count();
-            if (dc != 4) throw new IllegalStateException("Choices must be all distinct for id=" + o.getId());
+            if (dc != 4)
+                throw new IllegalStateException("Choices must be all distinct for id=" + o.getId());
         }
     }
 
@@ -249,17 +276,23 @@ public class QuizGenerationService {
         return s == null ? "" : s.trim().replaceAll("\\s+", " ");
     }
 
-    private boolean isBlank(String s) { return s == null || s.trim().isEmpty(); }
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
 
-    private record GenKey(Long groupId, Integer step, LocalDate date) {}
+    private record GenKey(Long groupId, Integer step, LocalDate date) {
+    }
 
     private OptionsPayload shuffleAndReindex(QuizzesPayload q, OptionsPayload opts) {
         Map<String, String> ansById = q.getQuizzes().stream()
                 .collect(Collectors.toMap(QuizzesPayload.Item::getId, QuizzesPayload.Item::getAnswer));
 
         Random rnd;
-        try { rnd = SecureRandom.getInstanceStrong(); }
-        catch (Exception ignore) { rnd = new SecureRandom(); }
+        try {
+            rnd = SecureRandom.getInstanceStrong();
+        } catch (Exception ignore) {
+            rnd = new SecureRandom();
+        }
 
         List<OptionsPayload.Opt> shuffled = new ArrayList<>();
         for (OptionsPayload.Opt o : opts.getOptions()) {
@@ -275,7 +308,8 @@ public class QuizGenerationService {
                     break;
                 }
             }
-            if (newIdx < 0) throw new IllegalStateException("Correct choice not found after shuffle id=" + o.getId());
+            if (newIdx < 0)
+                throw new IllegalStateException("Correct choice not found after shuffle id=" + o.getId());
 
             OptionsPayload.Opt neo = new OptionsPayload.Opt();
             neo.setId(o.getId());
