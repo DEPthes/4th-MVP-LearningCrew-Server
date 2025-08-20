@@ -41,6 +41,20 @@
       "nickname": "박서연",
       "birthday": "2002-12-28",
       "gender": "FEMALE"
+    },
+    {
+      "email": "study_userg@example.com",
+      "password": "study123!",
+      "nickname": "한민재",
+      "birthday": "2007-06-29",
+      "gender": "MALE"
+    },
+    {
+      "email": "study_userh@example.com",
+      "password": "study123!",
+      "nickname": "이수연",
+      "birthday": "2005-02-16",
+      "gender": "FEMALE"
     }
   ]
 }

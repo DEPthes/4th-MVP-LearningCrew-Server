@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.depth.learningcrew.domain.file.handler.FileHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -30,6 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.depth.learningcrew.domain.file.entity.ProfileImage;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.file.entity.StudyStepImage;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 // added imports
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.note.repository.NoteRepository;
@@ -100,7 +100,7 @@ public class DummyDataInitializer implements ApplicationRunner {
 
   private boolean isDatabaseEmpty() {
     return studyGroupRepository.count() == 0 &&
-           userRepository.count() == 0;
+        userRepository.count() == 0;
   }
 
   private void seedUsers() throws Exception {
@@ -155,7 +155,7 @@ public class DummyDataInitializer implements ApplicationRunner {
             .name(g.getName())
             .summary(g.getSummary())
             .maxMembers(g.getMaxMembers())
-            .memberCount(1)
+            .memberCount(0)
             .currentStep(g.getCurrentStep())
             .startDate(LocalDate.parse(g.getStartDate()))
             .endDate(LocalDate.parse(g.getEndDate()))
@@ -241,6 +241,7 @@ public class DummyDataInitializer implements ApplicationRunner {
 
     seedUserProfileImages();
     seedStudyGroupImages();
+    seedStepImages();
     seedNoteImages();
 
     log.info("Dummy image seed done.");
@@ -259,7 +260,9 @@ public class DummyDataInitializer implements ApplicationRunner {
         "study_userc", "study_userc@example.com",
         "study_userd", "study_userd@example.com",
         "study_usere", "study_usere@example.com",
-        "study_userf", "study_userf@example.com");
+        "study_userf", "study_userf@example.com",
+        "study_userg", "study_userg@example.com",
+        "study_userh", "study_userh@example.com");
 
     for (String base : emailByBaseName.keySet()) {
       String fileName = base + ".jpg";
@@ -301,6 +304,101 @@ public class DummyDataInitializer implements ApplicationRunner {
     }
   }
 
+  private void seedStepImages() throws IOException {
+    // 1) 그룹 이름 캐시
+    Map<String, StudyGroup> groupByName = studyGroupRepository.findAll().stream()
+        .collect(Collectors.toMap(StudyGroup::getName, g -> g, (a, b) -> a));
+
+    // 2) 그룹 코드 → 이름
+    Map<String, String> groupCodeToName = Map.of(
+        "g", "일본어 기초부터 실전까지",
+        "h", "기획 첫걸음",
+        "i", "타이포그래피 공부",
+        "j", "수능 영어 공부");
+
+    // 3) steps 디렉터리 순회
+    ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+    org.springframework.core.io.Resource[] resources = resolver.getResources("classpath*:dummy/images/steps/*.jpg");
+
+    if (resources.length == 0) {
+      log.info("No step images found under dummy/images/steps");
+      return;
+    }
+
+    // 파일명 파서: {g|h|i|j}_group_step{num}_study_{nth}.jpg
+    java.util.regex.Pattern p = java.util.regex.Pattern
+        .compile("^([ghij])_group_step(\\d+)_study_(\\d+)\\.jpg$");
+
+    for (org.springframework.core.io.Resource res : resources) {
+      String fileName = res.getFilename();
+      if (fileName == null)
+        continue;
+
+      var m = p.matcher(fileName);
+      if (!m.matches()) {
+        log.warn("Skip step image with unrecognized name: {}", fileName);
+        continue;
+      }
+
+      String groupCode = m.group(1); // g/h/i/j
+      int stepNo = Integer.parseInt(m.group(2)); // step number
+      int nth = Integer.parseInt(m.group(3)); // 이미지 인덱스
+
+      String groupName = groupCodeToName.get(groupCode);
+      if (groupName == null) {
+        log.warn("Unknown group code '{}' for file {}", groupCode, fileName);
+        continue;
+      }
+
+      StudyGroup group = groupByName.get(groupName);
+      if (group == null) {
+        log.warn("StudyGroup not found for name '{}' (file: {})", groupName, fileName);
+        continue;
+      }
+
+      // 스텝 엔티티 조회
+      var stepId = StudyStepId.of(stepNo, group);
+      var stepOpt = studyStepRepository.findById(stepId);
+      if (stepOpt.isEmpty()) {
+        log.warn("StudyStep not found for group='{}', step={} (file: {})", groupName, stepNo, fileName);
+        continue;
+      }
+      StudyStep step = stepOpt.get();
+
+      // 바이트 로드
+      byte[] bytes;
+      try (InputStream in = res.getInputStream()) {
+        bytes = in.readAllBytes();
+      } catch (IOException e) {
+        log.error("Failed to read step image {}: {}", fileName, e.getMessage(), e);
+        continue;
+      }
+
+      try {
+        MultipartFile mf = new BytesMultipartFile("file", fileName, bytes);
+        StudyStepImage stepImg = StudyStepImage.from(mf);
+        if (stepImg == null) {
+          log.warn("StudyStepImage.from returned null for {}", fileName);
+          continue;
+        }
+
+        stepImg.setStudyStep(step);
+        // 양방향 컬렉션에도 추가(안전)
+        step.getImages().add(stepImg);
+
+        // 디스크 저장
+        fileHandler.saveFile(mf, stepImg);
+
+        // 명시적 저장(안전)
+        em.persist(stepImg);
+
+        log.info("Seeded step image: file='{}' -> group='{}', step={}, image #{}", fileName, groupName, stepNo, nth);
+      } catch (Exception ex) {
+        log.error("Failed to seed step image for file {}: {}", fileName, ex.getMessage(), ex);
+      }
+    }
+  }
+
   private void seedStudyGroupImages() throws IOException {
     // 미리 모든 그룹을 조회하여 이름 → 엔티티 매핑
     Map<String, StudyGroup> byName = studyGroupRepository.findAll().stream()
@@ -309,7 +407,8 @@ public class DummyDataInitializer implements ApplicationRunner {
     Map<String, String> groupNameByCode = Map.of(
         "g_group.jpg", "일본어 기초부터 실전까지",
         "h_group.jpg", "기획 첫걸음",
-        "i_group.jpg", "타이포그래피 공부");
+        "i_group.jpg", "타이포그래피 공부",
+        "j_group.jpg", "수능 영어 공부");
 
     for (var e : groupNameByCode.entrySet()) {
       String fileName = e.getKey();
@@ -356,7 +455,8 @@ public class DummyDataInitializer implements ApplicationRunner {
     Map<String, String> groupCodeToName = Map.of(
         "g", "일본어 기초부터 실전까지",
         "h", "기획 첫걸음",
-        "i", "타이포그래피 공부");
+        "i", "타이포그래피 공부",
+        "j", "수능 영어 공부");
 
     // 3) user코드 → 닉네임 (users.json 기준)
     Map<String, String> userCodeToNickname = Map.of(
@@ -365,7 +465,9 @@ public class DummyDataInitializer implements ApplicationRunner {
         "c", "최현우",
         "d", "이지우",
         "e", "윤민석",
-        "f", "박서연");
+        "f", "박서연",
+        "g", "한민재",
+        "h", "이수연");
 
     // 4) 모든 노트 미리 로드(관리 상태), 작성자/그룹/스텝 기준으로 조회하기 쉽게 인메모리 인덱스 구성
     List<Note> allNotes = noteRepository.findAll();
@@ -390,7 +492,7 @@ public class DummyDataInitializer implements ApplicationRunner {
 
     // 파일명 파서
     java.util.regex.Pattern p = java.util.regex.Pattern
-        .compile("^([ghi])_group_step(\\d+)_user([a-f])_note_(\\d+)\\.jpg$");
+        .compile("^([ghij])_group_step(\\d+)_user([a-h])_note_(\\d+)\\.jpg$");
 
     for (org.springframework.core.io.Resource res : resources) {
       String fileName = res.getFilename();
@@ -403,9 +505,9 @@ public class DummyDataInitializer implements ApplicationRunner {
         continue;
       }
 
-      String groupCode = m.group(1); // g/h/i
+      String groupCode = m.group(1); // g/h/i/j
       int step = Integer.parseInt(m.group(2)); // step number
-      String userCode = m.group(3); // a~f
+      String userCode = m.group(3); // a~h
       int nth = Integer.parseInt(m.group(4)); // 1-based index
 
       String groupName = groupCodeToName.get(groupCode);
