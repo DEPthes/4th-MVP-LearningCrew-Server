@@ -93,7 +93,7 @@ public class QAndAService {
 
     qAndA.canDeleteBy(user.getUser());
 
-    deleteAllRelatedFiles(qAndA);
+    qAndA.cleanup(fileHandler);
     qAndARepository.delete(qAndA);
   }
 
@@ -214,22 +214,4 @@ public class QAndAService {
     }
   }
 
-  private void deleteAllRelatedFiles(QAndA qAndA) {
-    // 질문 첨부 파일 삭제
-    if (qAndA.getAttachedFiles() != null) {
-      qAndA.getAttachedFiles().forEach(fileHandler::deleteFile);
-    }
-    if (qAndA.getAttachedImages() != null) {
-      qAndA.getAttachedImages().forEach(fileHandler::deleteFile);
-    }
-
-    // 댓글 첨부 이미지 삭제
-    if (qAndA.getComments() != null) {
-      qAndA.getComments().forEach(comment -> {
-        if (comment.getAttachedImages() != null) {
-          comment.getAttachedImages().forEach(fileHandler::deleteFile);
-        }
-      });
-    }
-  }
 }
