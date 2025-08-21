@@ -46,7 +46,6 @@ public class QAndAService {
     StudyGroup studyGroup = studyGroupRepository.findById(studyGroupId)
         .orElseThrow(() -> new RestException(ErrorCode.STUDY_GROUP_NOT_FOUND));
 
-    cannotCreateWhenNotCurrentStep(studyGroup, step);
     cannotCreateWhenNotMember(studyGroup, user);
 
     QAndA toSave = request.toEntity();
@@ -133,12 +132,6 @@ public class QAndAService {
     Long totalComments = qAndAQueryRepository.totalComments(qnaId);
 
     return QAndADto.QAndADetailResponse.of(qna, totalComments);
-  }
-
-  private void cannotCreateWhenNotCurrentStep(StudyGroup studyGroup, Integer step) {
-    if (!Objects.equals(studyGroup.getCurrentStep(), step)) {
-      throw new RestException(ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
-    }
   }
 
   private void cannotCreateWhenNotMember(StudyGroup studyGroup, UserDetails user) {
