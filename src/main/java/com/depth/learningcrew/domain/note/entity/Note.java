@@ -8,11 +8,11 @@ import com.depth.learningcrew.domain.file.entity.NoteAttachedFile;
 import com.depth.learningcrew.domain.file.entity.NoteImageFile;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.studygroup.entity.StudyStep;
-
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

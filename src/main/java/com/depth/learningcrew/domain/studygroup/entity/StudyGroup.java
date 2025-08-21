@@ -6,6 +6,9 @@ import java.util.List;
 
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.note.entity.Note;
+import com.depth.learningcrew.domain.qna.entity.QAndA;
+import com.depth.learningcrew.domain.quiz.entity.Quiz;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
@@ -94,6 +97,18 @@ public class StudyGroup extends TimeStampedEntity {
     @OneToMany(mappedBy = "id.studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Application> applications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Note> notes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Quiz> quizzes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "studyGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<QAndA> qAndAs = new ArrayList<>();
 
     public void canUpdateBy(UserDetails user) {
         if (user.getUser().getRole().equals(Role.ADMIN)) {
