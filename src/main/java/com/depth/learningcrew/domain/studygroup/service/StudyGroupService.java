@@ -228,15 +228,7 @@ public class StudyGroupService {
         .orElseThrow(() -> new RestException(ErrorCode.GLOBAL_NOT_FOUND));
 
     studyGroup.canDeleteBy(user);
-
-    if (studyGroup.getStudyGroupImage() != null) {
-      fileHandler.deleteFile(studyGroup.getStudyGroupImage());
-    }
-
-    studyGroup.getSteps().forEach(studyStep -> {
-      studyStep.getFiles().forEach(fileHandler::deleteFile);
-      studyStep.getImages().forEach(fileHandler::deleteFile);
-    });
+    studyGroup.cleanup(fileHandler);
 
     studyGroupRepository.delete(studyGroup);
   }

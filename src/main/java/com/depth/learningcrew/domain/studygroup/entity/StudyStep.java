@@ -6,7 +6,16 @@ import java.util.List;
 
 import com.depth.learningcrew.domain.file.entity.StudyStepFile;
 import com.depth.learningcrew.domain.file.entity.StudyStepImage;
-import jakarta.persistence.*;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Lob;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,4 +52,8 @@ public class StudyStep {
     @Builder.Default
     private List<StudyStepImage> images = new ArrayList<>();
 
+    public void cleanRelavantFiles(FileHandler fileHandler) {
+        files.forEach(fileHandler::deleteFile);
+        images.forEach(fileHandler::deleteFile);
+    }
 }

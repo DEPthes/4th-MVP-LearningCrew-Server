@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.common.auditor.UserStampedEntity;
+import com.depth.learningcrew.common.entitybase.CleanableEntity;
 import com.depth.learningcrew.domain.file.entity.QAndAAttachedFile;
 import com.depth.learningcrew.domain.file.entity.QAndAImageFile;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.studygroup.entity.StudyGroup;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.domain.user.entity.User;
@@ -38,7 +40,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @Setter
-public class QAndA extends UserStampedEntity {
+public class QAndA extends UserStampedEntity implements CleanableEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -136,5 +138,11 @@ public class QAndA extends UserStampedEntity {
     }
 
     throw new RestException(ErrorCode.QANDA_NOT_AUTHORIZED);
+  }
+
+  public void cleanup(FileHandler fileHandler) {
+    this.attachedFiles.forEach(fileHandler::deleteFile);
+    this.attachedImages.forEach(fileHandler::deleteFile);
+    this.comments.forEach(comment -> comment.cleanup(fileHandler));
   }
 }

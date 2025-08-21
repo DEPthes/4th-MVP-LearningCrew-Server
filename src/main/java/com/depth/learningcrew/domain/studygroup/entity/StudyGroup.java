@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.common.auditor.TimeStampedEntity;
+import com.depth.learningcrew.common.entitybase.CleanableEntity;
 import com.depth.learningcrew.domain.file.entity.StudyGroupImage;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.note.entity.Note;
 import com.depth.learningcrew.domain.qna.entity.QAndA;
 import com.depth.learningcrew.domain.quiz.entity.Quiz;
@@ -42,7 +44,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class StudyGroup extends TimeStampedEntity {
+public class StudyGroup extends TimeStampedEntity implements CleanableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -146,5 +148,21 @@ public class StudyGroup extends TimeStampedEntity {
         if (this.memberCount > 0) {
             this.memberCount--;
         }
+    }
+
+    public void cleanup(FileHandler fileHandler) {
+        // clean study group image
+        if (this.studyGroupImage != null) {
+            fileHandler.deleteFile(this.studyGroupImage);
+        }
+
+        // clean step files
+        this.steps.forEach(step -> step.cleanRelavantFiles(fileHandler));
+
+        // clean note files
+        this.notes.forEach(note -> note.cleanup(fileHandler));
+
+        // clean q&a files
+        this.qAndAs.forEach(qAndA -> qAndA.cleanup(fileHandler));
     }
 }

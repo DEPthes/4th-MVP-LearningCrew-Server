@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.depth.learningcrew.common.auditor.UserStampedEntity;
+import com.depth.learningcrew.common.entitybase.CleanableEntity;
 import com.depth.learningcrew.domain.file.entity.CommentAttachedFile;
 import com.depth.learningcrew.domain.file.entity.CommentImageFile;
+import com.depth.learningcrew.domain.file.handler.FileHandler;
 import com.depth.learningcrew.domain.user.entity.Role;
 import com.depth.learningcrew.system.exception.model.ErrorCode;
 import com.depth.learningcrew.system.exception.model.RestException;
@@ -38,7 +40,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Comment extends UserStampedEntity {
+public class Comment extends UserStampedEntity implements CleanableEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -114,6 +116,11 @@ public class Comment extends UserStampedEntity {
     }
 
     throw new RestException(ErrorCode.AUTH_FORBIDDEN);
+  }
+
+  public void cleanup(FileHandler fileHandler) {
+    this.attachedFiles.forEach(fileHandler::deleteFile);
+    this.attachedImages.forEach(fileHandler::deleteFile);
   }
 
 }
