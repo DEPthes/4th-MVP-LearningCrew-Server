@@ -31,4 +31,9 @@ public class ApiPathPattern {
                 .method(method)
                 .build();
     }
+
+    public boolean equals(ApiPathPattern other) {
+        if (other == null) return false;
+        return this.pattern.equals(other.pattern) && this.method.equals(other.method);
+    }
 }

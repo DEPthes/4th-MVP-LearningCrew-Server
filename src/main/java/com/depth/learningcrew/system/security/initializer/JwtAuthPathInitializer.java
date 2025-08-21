@@ -1,10 +1,7 @@
 package com.depth.learningcrew.system.security.initializer;
 
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationListener;
@@ -12,6 +9,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -28,6 +27,9 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
   private final RequestMappingHandlerMapping handlerMapping;
 
   private final Set<ApiPathPattern> excludePaths = new HashSet<>();
+  private final Set<ApiPathPattern> conflictPaths = new HashSet<>();
+  private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
   private volatile boolean initialized = false;
 
   public JwtAuthPathInitializer(
@@ -41,10 +43,69 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
       synchronized (this) {
         if (!initialized) {
           scanAndCollectExcludePaths();
+          scanAndCollectConflictingPaths();
           initialized = true;
         }
       }
     }
+  }
+
+  private void scanAndCollectConflictingPaths() {
+    Map<RequestMappingInfo, HandlerMethod> handlerMethods = handlerMapping.getHandlerMethods();
+
+    for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMethods.entrySet()) {
+      RequestMappingInfo mappingInfo = entry.getKey();
+
+      Set<String> patterns = Objects.requireNonNull(mappingInfo.getPathPatternsCondition()).getPatternValues();
+      if(patterns.isEmpty()) {
+        continue;
+      }
+
+      Set<RequestMethod> methods = mappingInfo.getMethodsCondition().getMethods();
+      Optional<RequestMethod> firstMethod = methods.stream().findFirst();
+      if (firstMethod.isEmpty()) {
+        continue; // No methods defined for this mapping
+      }
+
+      patterns.forEach(pattern -> {
+        ApiPathPattern apiPathPattern = ApiPathPattern.of(pattern, ApiPathPattern.METHODS.valueOf(firstMethod.get().name()));
+
+        if (isAlreadyExcluded(apiPathPattern)) {
+//          log.info("JWT 인증 제외 경로에 이미 존재하는 경로 발견: {} {}", firstMethod.get().name(), pattern);
+          return; // 이미 제외된 경로는 무시
+        }
+
+        if (isConflictingPath(apiPathPattern)) {
+          conflictPaths.add(apiPathPattern);
+          log.warn("JWT 인증 제외 경로와 충돌하는 경로 발견: {} {}", firstMethod.get().name(), pattern);
+        }
+      });
+    }
+
+    if (!conflictPaths.isEmpty()) {
+      log.warn("총 {}개의 충돌하는 경로가 발견되었습니다 인증 제외 목록에서 제외합니다: {}", conflictPaths.size(), conflictPaths);
+    } else {
+      log.info("충돌하는 경로가 없습니다.");
+    }
+  }
+
+  private boolean isAlreadyExcluded(ApiPathPattern path) {
+    for (ApiPathPattern existingPath : excludePaths) {
+      if (existingPath.equals(path)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isConflictingPath(ApiPathPattern path) {
+    for (ApiPathPattern existingPath : excludePaths) {
+      if (pathMatcher.match(existingPath.getPattern(), path.getPattern())
+          && existingPath.getMethod() == path.getMethod()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void scanAndCollectExcludePaths() {
@@ -89,6 +150,10 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
 
   public Set<ApiPathPattern> getExcludePaths() {
     return new HashSet<>(excludePaths);
+  }
+
+  public Set<ApiPathPattern> getConflictPaths() {
+    return new HashSet<>(conflictPaths);
   }
 
   public void addExcludePath(String path, ApiPathPattern.METHODS method) {

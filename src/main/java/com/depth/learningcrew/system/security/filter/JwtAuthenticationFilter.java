@@ -28,104 +28,109 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final List<ApiPathPattern> ignorePatterns;
-    private final List<ApiPathPattern> allowedPatterns;
-    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
+  private final List<ApiPathPattern> ignorePatterns;
+  private final List<ApiPathPattern> allowedPatterns;
+  private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
-    private final JwtTokenResolver jwtTokenResolver;
-    private final UserLoadService userLoadService;
-    private final HandlerExceptionResolver handlerExceptionResolver;
-    private final RefreshTokenValidator refreshTokenValidator;
-    private final JwtAuthPathInitializer jwtAuthPathInitializer;
+  private final JwtTokenResolver jwtTokenResolver;
+  private final UserLoadService userLoadService;
+  private final HandlerExceptionResolver handlerExceptionResolver;
+  private final RefreshTokenValidator refreshTokenValidator;
+  private final JwtAuthPathInitializer jwtAuthPathInitializer;
 
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String servletPath = request.getServletPath();
-        boolean requiresAuth = this.isMatchingURI(servletPath, request.getMethod());
+    String servletPath = request.getServletPath();
+    boolean requiresAuth = this.isMatchingURI(servletPath, request.getMethod());
 
-        try {
-            authenticateWithJwt(request, requiresAuth);
-            filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            if (requiresAuth) {
-                handleAuthenticationError(request, response, e);
-            } else {
-                SecurityContextHolder.clearContext();
-                filterChain.doFilter(request, response);
-            }
-        }
+    try {
+      authenticateWithJwt(request, requiresAuth);
+      filterChain.doFilter(request, response);
+    } catch (Exception e) {
+      if (requiresAuth) {
+        handleAuthenticationError(request, response, e);
+      } else {
+        SecurityContextHolder.clearContext();
+        filterChain.doFilter(request, response);
+      }
+    }
+  }
+
+  private void authenticateWithJwt(HttpServletRequest request, boolean requiresAuth) {
+    var accessTokenOpt = jwtTokenResolver.parseTokenFromRequest(request);
+
+    if (accessTokenOpt.isEmpty()) {
+      if (requiresAuth) {
+        throw new JwtTokenMissingException();
+      }
+      return;
     }
 
-    private void authenticateWithJwt(HttpServletRequest request, boolean requiresAuth) {
-        var accessTokenOpt = jwtTokenResolver.parseTokenFromRequest(request);
+    String accessToken = accessTokenOpt.get();
 
-        if (accessTokenOpt.isEmpty()) {
-            if (requiresAuth) {
-                throw new JwtTokenMissingException();
-            }
-            return;
-        }
-
-        String accessToken = accessTokenOpt.get();
-
-        if (!jwtTokenResolver.validateToken(accessToken)) {
-            if (requiresAuth) {
-                throw new JwtBlacklistedTokenException();
-            }
-            return;
-        }
-
-        var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
-        var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
-
-        if (userDetails.isEmpty()) {
-            if (requiresAuth) {
-                throw new JwtInvalidTokenException();
-            }
-            return;
-        }
-
-        // Refresh UUID 검증
-        refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
-
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails.get(),
-                                null,
-                                userDetails.get().getAuthorities()));
+    if (!jwtTokenResolver.validateToken(accessToken)) {
+      if (requiresAuth) {
+        throw new JwtBlacklistedTokenException();
+      }
+      return;
     }
 
-    private void handleAuthenticationError(HttpServletRequest request, HttpServletResponse response, Exception e) {
-        if (e instanceof JwtAuthenticationException) {
-            handlerExceptionResolver.resolveException(request, response, null, e);
-        } else {
-            handlerExceptionResolver.resolveException(
-                    request, response, null,
-                    new JwtAuthenticationException("Authentication failed", 401, e));
-        }
+    var parsedTokenData = jwtTokenResolver.resolveTokenFromString(accessToken);
+    var userDetails = userLoadService.loadUserByKey(parsedTokenData.getSubject());
+
+    if (userDetails.isEmpty()) {
+      if (requiresAuth) {
+        throw new JwtInvalidTokenException();
+      }
+      return;
     }
 
-    private boolean isMatchingURI(String servletPath, String method) {
-        ApiPathPattern.METHODS apiMethod = ApiPathPattern.METHODS.parse(method);
+    // Refresh UUID 검증
+    refreshTokenValidator.validateOrThrow(userDetails.get().getKey(), parsedTokenData.getRefreshUuid());
 
-        if (apiMethod == null) {
-            return false;
-        }
+    SecurityContextHolder.getContext()
+        .setAuthentication(
+            new UsernamePasswordAuthenticationToken(
+                userDetails.get(),
+                null,
+                userDetails.get().getAuthorities()));
+  }
 
-        boolean isAllowed = allowedPatterns.stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
-
-        boolean isIgnored = ignorePatterns.stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
-
-        // 어노테이션을 통해 제외된 경로 확인
-        boolean isExcluded = jwtAuthPathInitializer.getExcludePaths().stream()
-                .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
-
-        return isAllowed && !isIgnored && !isExcluded;
+  private void handleAuthenticationError(HttpServletRequest request, HttpServletResponse response, Exception e) {
+    if (e instanceof JwtAuthenticationException) {
+      handlerExceptionResolver.resolveException(request, response, null, e);
+    } else {
+      handlerExceptionResolver.resolveException(
+          request, response, null,
+          new JwtAuthenticationException("Authentication failed", 401, e));
     }
+  }
+
+  private boolean isMatchingURI(String servletPath, String method) {
+    ApiPathPattern.METHODS apiMethod = ApiPathPattern.METHODS.parse(method);
+
+    if (apiMethod == null) {
+      return false;
+    }
+
+    boolean isAllowed = allowedPatterns.stream()
+        .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
+
+    boolean isIgnored = ignorePatterns.stream()
+        .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
+
+    // 어노테이션을 통해 제외된 경로 확인
+    boolean isExcluded = jwtAuthPathInitializer.getExcludePaths().stream()
+        .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
+
+    // 충돌 경로는 인증을 수행해야 함
+    boolean isConflicting = jwtAuthPathInitializer.getConflictPaths().stream()
+        .anyMatch(pattern -> antPathMatcher.match(pattern.getPattern(), servletPath) && pattern.getMethod() == apiMethod);
+
+
+    return isAllowed && !isIgnored && (!isExcluded || isConflicting);
+  }
 }
