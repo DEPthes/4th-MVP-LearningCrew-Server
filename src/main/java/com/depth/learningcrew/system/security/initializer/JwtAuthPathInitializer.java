@@ -77,13 +77,13 @@ public class JwtAuthPathInitializer implements ApplicationListener<ContextRefres
 
         if (isConflictingPath(apiPathPattern)) {
           conflictPaths.add(apiPathPattern);
-          log.warn("JWT 인증 제외 경로와 충돌하는 경로 발견: {} {}", firstMethod.get().name(), pattern);
+          log.info("JWT 인증 제외 경로와 중첩되는 경로 발견: {} {}", firstMethod.get().name(), pattern);
         }
       });
     }
 
     if (!conflictPaths.isEmpty()) {
-      log.warn("총 {}개의 충돌하는 경로가 발견되었습니다 인증 제외 목록에서 제외합니다: {}", conflictPaths.size(), conflictPaths);
+      log.info("총 {}개의 중첩 경로가 발견되어 마스킹 처리되었습니다: {}", conflictPaths.size(), conflictPaths);
     } else {
       log.info("충돌하는 경로가 없습니다.");
     }
