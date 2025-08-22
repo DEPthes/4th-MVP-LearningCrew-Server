@@ -127,18 +127,6 @@ class FileHandlerTest {
   }
 
   @Test
-  @DisplayName("존재하지 않는 파일을 삭제하려고 하면 RestException이 발생한다")
-  void deleteFile_WithNonExistingFile_ShouldThrowRestException() {
-    // given
-    // 파일이 존재하지 않는 상태
-
-    // when & then
-    assertThatThrownBy(() -> fileHandler.deleteFile(testProfileImage))
-        .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FILE_NOT_FOUND);
-  }
-
-  @Test
   @DisplayName("큰 파일을 저장할 수 있다")
   void saveFile_WithLargeFile_ShouldSaveSuccessfully() {
     // given

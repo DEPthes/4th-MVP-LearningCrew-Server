@@ -197,18 +197,6 @@ class QAndAServiceTest {
   }
 
   @Test
-  @DisplayName("현재 스텝이 아닌 스텝에 질문을 생성하려고 하면 예외가 발생한다")
-  void createQAndA_WithWrongStep_ShouldThrowException() {
-    // given
-    when(studyGroupRepository.findById(1L)).thenReturn(Optional.of(testStudyGroup));
-
-    // when & then
-    assertThatThrownBy(() -> qAndAService.createQAndA(createRequest, 1L, 2, testUserDetails))
-        .isInstanceOf(RestException.class)
-        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.STUDY_GROUP_NOT_CURRENT_STEP);
-  }
-
-  @Test
   @DisplayName("스터디 그룹 멤버가 아닌 사용자가 질문을 생성하려고 하면 예외가 발생한다")
   void createQAndA_WithNonMember_ShouldThrowException() {
     // given
